@@ -24,12 +24,26 @@ def build_users(client):
 
     user_names = ["Aflah", "Aadit", "Mohit", "Kush", "Ritwick", "Neemesh", "Sohum", "Kushagra", "Nishaant", "Abhik"]
 
+    user_friends = {
+    }
+
+    for i in range(10):
+        if str(i+1) not in user_friends:
+            user_friends[str(i+1)] = []
+        random_friends = random.sample(range(1, 11), 1)
+        for friend in random_friends:
+            if str(friend) not in user_friends[str(i+1)]:
+                user_friends[str(i+1)].append(str(friend))
+            if str(friend) in user_friends:
+                if str(i+1) not in user_friends[str(friend)]:
+                    user_friends[str(friend)].append(str(i+1))
+            else:
+                user_friends[str(friend)] = [str(i+1)]
+
     # Populate the collection with 10 random entries
     for i in range(10):
         # Generate random friends for the user
-        userfriends = random.sample(range(1, 11), 3)
-        for friend in userfriends:
-            userfriends[userfriends.index(friend)] = str(friend)
+        userfriends = user_friends[str(i+1)]
         
         # Generate random groups for the user
         groups = random.sample(range(1, 6), 2)

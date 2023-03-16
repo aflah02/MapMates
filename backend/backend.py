@@ -66,6 +66,32 @@ async def delete_user(user_id: str):
     users.delete_one({"_id": user_id})
     return {"message": "User deleted successfully"}
 
+# add friend
+@app.post("/users/addfriend")
+async def add_friend(user_id: str, friend_id: str):
+    user = users.find_one({"_id": user_id})
+    if user:
+        userfriends = user["userfriends"]
+        userfriends.append(friend_id)
+        update_1 = {
+            "$set": {
+                "userfriends": userfriends,
+            }
+        }
+        users.update_one({"_id": user_id}, update_1)
+        friend = users.find_one({"_id": friend_id})
+        friendfriends = friend["userfriends"]
+        friendfriends.append(user_id)
+        update_2 = {
+            "$set": {
+                "userfriends": friendfriends,
+            }
+        }
+        users.update_one({"_id": friend_id}, update_2)
+        return {"message": "Friend added successfully"}
+    else:
+        return {"message": "Invalid user_id"}
+
 # Validate a user's credentials
 @app.post("/users/validate")
 async def validate_user(username: str, password: str):
