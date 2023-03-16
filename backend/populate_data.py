@@ -28,16 +28,20 @@ def build_users(client):
     for i in range(10):
         # Generate random friends for the user
         userfriends = random.sample(range(1, 11), 3)
+        for friend in userfriends:
+            userfriends[userfriends.index(friend)] = str(friend)
         
         # Generate random groups for the user
         groups = random.sample(range(1, 6), 2)
+        for group in groups:
+            groups[groups.index(group)] = str(group)
 
         # Add the user to the group_vs_users dictionary
         for group in groups:
             if group in group_vs_users:
-                group_vs_users[group].append(i+1)
+                group_vs_users[group].append(str(i+1))
             else:
-                group_vs_users[group] = [i+1]
+                group_vs_users[group] = [str(i+1)]
         
         # Hash the password using bcrypt
         password = user_names[i]
@@ -45,6 +49,8 @@ def build_users(client):
 
         random.seed(i)
         markers = random.sample(range(1, num_markers+1), 3)
+        for marker in markers:
+            markers[markers.index(marker)] = str(marker)
         
         user = {
             "_id": str(i+1),
@@ -77,6 +83,8 @@ def build_groups(client, group_vs_users):
     for i, group in enumerate(group_vs_users):
         random.seed(i)
         markers = random.sample(range(1, num_markers+1), 3)
+        for marker in markers:
+            markers[markers.index(marker)] = str(marker)
         group = {
             "_id": str(group),
             "users": group_vs_users[group],
