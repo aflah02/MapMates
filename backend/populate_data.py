@@ -2,7 +2,6 @@ import pymongo
 import random
 import string
 import bcrypt
-from marker import Marker
 
 def build_users(client):
     # Create a database named "userdb"
@@ -48,7 +47,7 @@ def build_users(client):
         markers = random.sample(range(1, num_markers+1), 3)
         
         user = {
-            "_id": i+1,
+            "_id": str(i+1),
             "username": user_names[i],
             "password": hashed_password,
             "userfriends": userfriends,
@@ -79,7 +78,7 @@ def build_groups(client, group_vs_users):
         random.seed(i)
         markers = random.sample(range(1, num_markers+1), 3)
         group = {
-            "_id": group,
+            "_id": str(group),
             "users": group_vs_users[group],
             "markers": markers,
         }
@@ -104,7 +103,7 @@ def build_markers(client):
 
     for i, place in enumerate(famous_places):
         marker = {
-            "_id": i+1,
+            "_id": str(i+1),
             "lat": famous_places[place][0],
             "lon": famous_places[place][1],
             "name": place,
