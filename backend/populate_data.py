@@ -56,11 +56,7 @@ def build_users(client, user_friends, group_vs_users):
         letters = string.ascii_lowercase
         return ''.join(random.choice(letters) for i in range(length))
 
-    group_vs_users = {
-    }
-
     user_names = ["Aflah", "Aadit", "Mohit", "Kush", "Ritwick", "Neemesh", "Sohum", "Kushagra", "Nishaant", "Abhik"]
-
 
     # Populate the collection with 10 random entries
     for i in range(10):
@@ -164,12 +160,13 @@ def build_markers(client, user_friends, group_vs_users):
         random_choice = random.randint(0, 1)
         with open("assets/" + picture, "rb") as f:
             if random_choice == 0:
-                pic_user = fs_user_marker_images.put(f, filename=picture, metadata={"user_id": str(random_user), "group_id": None})
+                pic_user = fs_user_marker_images.put(f, filename=picture, metadata={"user_id": str(random_user), 
+                                                                                    "shared_with_friends": random.choice([True, False])})
             elif random_choice == 1:
                 group_members = group_vs_users[str(random_group)]
                 random_user = random.choice(group_members)
-                pic_group = fs_group_marker_images.put(f, filename=picture, metadata={"group_id": str(random_group),
-                                                                                "uploader_id": str(random_user)})
+                pic_group = fs_group_marker_images.put(f, filename=picture, metadata={"group_id": str(random_group), 
+                                                                                      "uploader_id": str(random_user)})
         group_vs_images = {}
         user_vs_images = {}
         for i in range(5):
