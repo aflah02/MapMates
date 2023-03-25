@@ -21,7 +21,7 @@
         android:id="@+id/navigation_upload"
         android:name="com.example.mapmates.ui.upload.UploadFragment"
         android:label="@string/title_upload"
-        tools:layout="@layout/fragment_dashboard" />
+        tools:layout="@layout/fragment_upload" />
 
     <fragment
         android:id="@+id/navigation_people"
