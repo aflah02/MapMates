@@ -15,6 +15,10 @@ import com.example.mapmates.R
 import com.example.mapmates.databinding.FragmentHomeBinding
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
+import org.osmdroid.util.GeoPoint
+import org.osmdroid.views.CustomZoomButtonsController
+import org.osmdroid.views.overlay.Marker
+import org.osmdroid.views.overlay.compass.CompassOverlay
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 
@@ -26,6 +30,8 @@ class HomeFragment : Fragment() {
     // This property is only valid between onCreateView and
     // onDestroyView.
     private val binding get() = _binding!!
+    private var latitude = 28.6139
+    private var longitude = 77.2090
 
     @RequiresApi(Build.VERSION_CODES.M)
     override fun onCreateView(
@@ -39,18 +45,27 @@ class HomeFragment : Fragment() {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         val root: View = binding.root
         Configuration.getInstance().userAgentValue = "github-firefishy-map/0.1"
-        var map = binding.map
-        val controller = map.controller
-        map.setTileSource(TileSourceFactory.MAPNIK)
-        map.setBuiltInZoomControls(true)
-        map.setMultiTouchControls(true)
-        controller.setZoom(9.5)
 
-        // Showing marker on current location
-        val locationManager = requireActivity().getSystemService(LocationManager::class.java)
-        val myLocationOverlay = MyLocationNewOverlay(GpsMyLocationProvider(requireContext()), map)
-        myLocationOverlay.enableMyLocation()
-        map.overlays.add(myLocationOverlay)
+        // Map initialization
+        val map = binding.map
+        val startMarker = Marker(map)
+        map.setTileSource(TileSourceFactory.MAPNIK)
+        map.controller.setZoom(9.4)
+        map.zoomController.setVisibility(CustomZoomButtonsController.Visibility.ALWAYS)
+        map.setMultiTouchControls(true)
+
+
+        val compassOverlay = CompassOverlay(context, map)
+        compassOverlay.enableCompass()
+        map.overlays.add(compassOverlay)
+
+        val point = GeoPoint(latitude, longitude)
+
+        startMarker.position = point
+        startMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
+        map.overlays.add(startMarker)
+
+        map.controller.setCenter(point)
 
         val textView: TextView = binding.textHome
         homeViewModel.text.observe(viewLifecycleOwner, Observer {
