@@ -1,4 +1,4 @@
-package com.example.mapmates.ui.upload
+package com.example.mapmates.ui.create
 
 
 import android.os.Bundle
@@ -9,12 +9,12 @@ import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
-import com.example.mapmates.databinding.FragmentUploadBinding
+import com.example.mapmates.databinding.FragmentCreateBinding
 
-class UploadFragment : Fragment() {
+class CreateFragment : Fragment() {
 
-    private lateinit var uploadViewModel: UploadViewModel
-    private var _binding: FragmentUploadBinding? = null
+    private lateinit var createViewModel: CreateViewModel
+    private var _binding: FragmentCreateBinding? = null
 
     // This property is only valid between onCreateView and
     // onDestroyView.
@@ -25,14 +25,14 @@ class UploadFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        uploadViewModel =
-            ViewModelProvider(this).get(UploadViewModel::class.java)
+        createViewModel =
+            ViewModelProvider(this).get(CreateViewModel::class.java)
 
-        _binding = FragmentUploadBinding.inflate(inflater, container, false)
+        _binding = FragmentCreateBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
-        val textView: TextView = binding.textUpload
-        uploadViewModel.text.observe(viewLifecycleOwner, Observer {
+        val textView: TextView = binding.textCreate
+        createViewModel.text.observe(viewLifecycleOwner, Observer {
             textView.text = it
         })
         return root

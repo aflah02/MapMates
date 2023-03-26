@@ -18,10 +18,10 @@
         tools:layout="@layout/fragment_explore" />
 
     <fragment
-        android:id="@+id/navigation_upload"
-        android:name="com.example.mapmates.ui.upload.UploadFragment"
-        android:label="@string/title_upload"
-        tools:layout="@layout/fragment_upload" />
+        android:id="@+id/navigation_create"
+        android:name="com.example.mapmates.ui.create.CreateFragment"
+        android:label="@string/title_create"
+        tools:layout="@layout/fragment_create" />
 
     <fragment
         android:id="@+id/navigation_people"
