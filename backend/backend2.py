@@ -45,7 +45,7 @@ async def register(username: str, password: str):
 	if(users.find_one({"username": username})):
 		raise HTTPException(status_code=400, detail="Username already exists")
 
-	hashed_password = pwd_context.hash(password.encode('utf-8'))
+	hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
 	max_id = users.find_one(sort=[("_id", -1)])["_id"]
 	user = {
         "_id": str(int(max_id) + 2),
