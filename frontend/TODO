@@ -1,9 +1,11 @@
 User Profile CRUD = Integrated with backend
 Groups and Friends CRUD = Integrated with backend
-Theme
-App Icon
-Onboarding Screen
 
 
 Low Priority
 Make Bottom Navbar Text always showing
+Anim
+Theme
+App Icon
+Onboarding Screen
+Login signup form errors shown not as toast but on screen + Form validation
