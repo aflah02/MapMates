@@ -3,6 +3,9 @@ from pymongo import MongoClient
 from bson.objectid import ObjectId
 import bcrypt
 import uvicorn
+import pydantic
+from bson import ObjectId
+pydantic.json.ENCODERS_BY_TYPE[ObjectId]=str
 
 app = FastAPI()
 
@@ -13,7 +16,7 @@ db = client["master_db"]
 # Get the "users" collection
 users = db["users"]
 # Get the "groups" collection
-groups = db["groups "]
+groups = db["groups"]
 # Get the "markers" collection
 markers = db["markers"]
 
