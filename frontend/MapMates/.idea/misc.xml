@@ -8,7 +8,9 @@
         <entry key="app/src/main/res/drawable/home_selector.xml" value="0.1125" />
         <entry key="app/src/main/res/drawable/people_selector.xml" value="0.1125" />
         <entry key="app/src/main/res/drawable/upload_selector.xml" value="0.1125" />
+        <entry key="app/src/main/res/layout/activity_login.xml" value="0.25" />
         <entry key="app/src/main/res/layout/activity_main.xml" value="0.22" />
+        <entry key="app/src/main/res/layout/activity_signup.xml" value="0.1966824644549763" />
         <entry key="app/src/main/res/layout/fragment_create.xml" value="0.1625" />
         <entry key="app/src/main/res/layout/fragment_dashboard.xml" value="0.1" />
         <entry key="app/src/main/res/layout/fragment_explore.xml" value="0.1" />
