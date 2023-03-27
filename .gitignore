@@ -4,3 +4,4 @@ deploy/.space
 deploy/.spaceignore
 deploy/.venv
 .idea/*
+.idea/*
