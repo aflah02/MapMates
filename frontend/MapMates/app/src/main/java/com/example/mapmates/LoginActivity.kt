@@ -46,6 +46,8 @@ class LoginActivity : AppCompatActivity() {
     }
     private fun logInUser(username : String, password: String): Int? {
         //Make the API Call to log in here, fetch the id on successful login else null
+        if(username.isBlank() || password.isBlank())return null
+        
         return 1
     }
 

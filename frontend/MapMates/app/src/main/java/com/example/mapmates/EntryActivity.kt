@@ -18,7 +18,7 @@ class EntryActivity : AppCompatActivity() {
 
     private fun userLoggedIn() : Boolean {
         //Check if a user is already logged in, if not redirect to login screen.
-        return true
-//        return false
+//        return true
+        return false
     }
 }

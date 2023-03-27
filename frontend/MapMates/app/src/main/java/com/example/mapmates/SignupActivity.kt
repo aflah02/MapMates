@@ -22,7 +22,6 @@ class SignupActivity : AppCompatActivity() {
         val signupButton : Button = findViewById(R.id.sign_up)
         val userNameView : TextView = findViewById(R.id.username_field)
         val passwordView : TextView = findViewById(R.id.password_field)
-        val emailView : TextView = findViewById(R.id.email_field)
 
         loginRedirect.setOnClickListener{
             val intent : Intent = Intent(applicationContext,LoginActivity::class.java)
@@ -31,7 +30,7 @@ class SignupActivity : AppCompatActivity() {
         }
 
         signupButton.setOnClickListener {
-            val userId : Int? = signUpUser(userNameView.text.toString(),emailView.text.toString(),passwordView.text.toString())
+            val userId : Int? = signUpUser(userNameView.text.toString(),passwordView.text.toString())
             if(userId == null){
                 Toast.makeText(applicationContext,"Cannot Signup!", Toast.LENGTH_SHORT).show()
             }
@@ -47,7 +46,7 @@ class SignupActivity : AppCompatActivity() {
         }
     }
 
-    private fun signUpUser(username : String, email : String, password: String): Int? {
+    private fun signUpUser(username : String, password: String): Int? {
         //Make the API Call to sign up here, fetch the id on successful login else null
         return 1
     }

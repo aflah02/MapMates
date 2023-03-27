@@ -1,2 +1,6 @@
 backend/__pycache__/
 backend/config.py
+deploy/.space
+deploy/.spaceignore
+deploy/.venv
+.idea/*
