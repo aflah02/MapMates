@@ -11,4 +11,5 @@ Onboarding Screen
 Login signup form errors shown not as toast but on screen + Form validation
 Random String ID
 Password Hashing before sending
-Session
+Session Token
+Loading Screen for blocking API Calls

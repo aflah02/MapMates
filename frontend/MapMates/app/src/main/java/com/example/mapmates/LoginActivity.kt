@@ -3,9 +3,22 @@ package com.example.mapmates
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
+import androidx.annotation.RequiresApi
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import okhttp3.*
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.RequestBody.Companion.toRequestBody
+import org.json.JSONObject
+import java.io.IOException
+import java.util.concurrent.CountDownLatch
 
 class LoginActivity : AppCompatActivity() {
 
@@ -14,6 +27,7 @@ class LoginActivity : AppCompatActivity() {
         overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
     }
 
+    @RequiresApi(33)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
@@ -30,7 +44,7 @@ class LoginActivity : AppCompatActivity() {
         }
 
         loginButton.setOnClickListener {
-            val userId : Int? = logInUser(userNameView.text.toString(),passwordView.text.toString())
+            val userId : String? = logInUser(userNameView.text.toString(),passwordView.text.toString())
             if(userId == null){
                 Toast.makeText(applicationContext,"Invalid Credentials!",Toast.LENGTH_SHORT).show()
             }
@@ -44,12 +58,53 @@ class LoginActivity : AppCompatActivity() {
             }
         }
     }
-    private fun logInUser(username : String, password: String): Int? {
+    @RequiresApi(33)
+    private fun logInUser(username : String, password: String): String? {
+        var userId : String? = null
         //Make the API Call to log in here, fetch the id on successful login else null
-        if(username.isBlank() || password.isBlank())return null
-        
-        return 1
+        if(username.isBlank() || password.isBlank())return userId
+        val url = "https://mapsapp-1-m9050519.deta.app/login"
+        val mediaType = "application/json; charset=utf-8".toMediaType()
+        val requestJSON = JSONObject()
+        requestJSON.put("username",username)
+        requestJSON.put("password",password)
+
+        val requestBody = requestJSON.toString().toRequestBody(mediaType)
+        val request = Request.Builder()
+            .addHeader("accept","application/json")
+            .addHeader("Content-Type","application/json")
+            .url(url)
+            .post(requestBody)
+            .build()
+        val client = OkHttpClient()
+
+        lifecycleScope.launch(Dispatchers.IO) {
+            val response = client.newCall(request).execute()
+            val responseData = response.body?.string()
+            val jsonResponse = JSONObject(responseData)
+            withContext(Dispatchers.Main){
+                if(response.isSuccessful)
+                    userId = jsonResponse.get("id") as String
+            }
+        }
+
+//            client.newCall(request).enqueue(object : Callback{
+//                override fun onFailure(call: Call, e: IOException) {
+//                    Log.e("Login API",e.message.toString())
+//                }
+//
+//                override fun onResponse(call: Call, response: Response) {
+//                    val responseData = response.body?.string()
+//                    val jsonResponse = JSONObject(responseData)
+//                    if(!response.isSuccessful)return
+//                    userId = jsonResponse.get("id") as String
+//                    Log.i("Login",jsonResponse.toString(4))
+//                }
+//            }
+//            )
+
+        if(userId != null)Log.i("Login",userId!!)
+        return userId
     }
 
 }
-
