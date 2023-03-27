@@ -11,6 +11,7 @@ import android.location.LocationManager
 import android.os.Build
 import android.os.Bundle
 import android.os.Looper
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -19,11 +20,9 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
-import com.example.mapmates.R
 import com.example.mapmates.databinding.FragmentHomeBinding
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
@@ -38,11 +37,9 @@ import org.osmdroid.views.CustomZoomButtonsController
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Polygon
 import org.osmdroid.views.overlay.Polyline
-import org.osmdroid.views.overlay.compass.CompassOverlay
-import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
-import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
+import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
 import timber.log.Timber
-import java.util.Random
+import java.util.*
 
 class HomeFragment : Fragment() {
 
@@ -59,7 +56,7 @@ class HomeFragment : Fragment() {
     private lateinit var locationCallback: LocationCallback
     private lateinit var locationRequest: LocationRequest
     private var requestingLocationUpdates = false
-    var startPoint: GeoPoint = GeoPoint(0.0, 10.0);
+    var startPoint: GeoPoint = GeoPoint(28.6139, 77.2090)
     lateinit var mapController: IMapController
     var marker: Marker? = null
     var path1: Polyline? = null
@@ -116,6 +113,10 @@ class HomeFragment : Fragment() {
         map = binding.map
         map.setTileSource(TileSourceFactory.MAPNIK)
         map.setMultiTouchControls(true)
+        val mRotationGestureOverlay = RotationGestureOverlay(context, map)
+        mRotationGestureOverlay.isEnabled = true
+        map.setMultiTouchControls(true)
+        map.overlays.add(mRotationGestureOverlay)
         map.controller.setZoom(9.4)
         map.zoomController.setVisibility(CustomZoomButtonsController.Visibility.ALWAYS)
         mapController = binding.map.controller
@@ -164,13 +165,6 @@ class HomeFragment : Fragment() {
                 Manifest.permission.ACCESS_COARSE_LOCATION
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
             return
         }
         fusedLocationClient.requestLocationUpdates(
@@ -288,6 +282,7 @@ class HomeFragment : Fragment() {
         var currentPoint: GeoPoint = GeoPoint(newLocation.latitude, newLocation.longitude);
         startPoint.longitude = newLocation.longitude
         startPoint.latitude = newLocation.latitude
+        Log.i("Location", "updateLocation: $startPoint")
         mapController.setCenter(startPoint)
         getPositionMarker().position = startPoint
         binding.map.invalidate()
