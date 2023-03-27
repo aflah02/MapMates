@@ -49,6 +49,12 @@ class LoginActivity : AppCompatActivity() {
                 Toast.makeText(applicationContext,"Invalid Credentials!",Toast.LENGTH_SHORT).show()
             }
             else{
+                //Store Login Information
+                val sharedPref = getSharedPreferences("Login", MODE_PRIVATE)
+                val ed = sharedPref.edit()
+                ed.putString("UserId",userId)
+                ed.apply()
+
                 //Successful Log-in
                 val intent : Intent = Intent(applicationContext,MainActivity::class.java)
                 intent.putExtra("UserId",userId)
@@ -78,32 +84,29 @@ class LoginActivity : AppCompatActivity() {
             .build()
         val client = OkHttpClient()
 
-        lifecycleScope.launch(Dispatchers.IO) {
-            val response = client.newCall(request).execute()
-            val responseData = response.body?.string()
-            val jsonResponse = JSONObject(responseData)
-            withContext(Dispatchers.Main){
-                if(response.isSuccessful)
-                    userId = jsonResponse.get("id") as String
+        val latch = CountDownLatch(1)
+
+        client.newCall(request).enqueue(object : Callback{
+            override fun onFailure(call: Call, e: IOException) {
+                Log.e("Login API",e.message.toString())
+                latch.countDown()
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                val responseData = response.body?.string()
+                val jsonResponse = JSONObject(responseData)
+                if(!response.isSuccessful){
+                    latch.countDown()
+                    return
+                }
+                userId = jsonResponse.get("id") as String
+                Log.i("Login",jsonResponse.toString(4))
+                latch.countDown()
             }
         }
+        )
 
-//            client.newCall(request).enqueue(object : Callback{
-//                override fun onFailure(call: Call, e: IOException) {
-//                    Log.e("Login API",e.message.toString())
-//                }
-//
-//                override fun onResponse(call: Call, response: Response) {
-//                    val responseData = response.body?.string()
-//                    val jsonResponse = JSONObject(responseData)
-//                    if(!response.isSuccessful)return
-//                    userId = jsonResponse.get("id") as String
-//                    Log.i("Login",jsonResponse.toString(4))
-//                }
-//            }
-//            )
-
-        if(userId != null)Log.i("Login",userId!!)
+        latch.await()
         return userId
     }
 

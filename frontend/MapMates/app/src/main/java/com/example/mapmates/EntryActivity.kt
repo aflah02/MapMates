@@ -18,7 +18,8 @@ class EntryActivity : AppCompatActivity() {
 
     private fun userLoggedIn() : Boolean {
         //Check if a user is already logged in, if not redirect to login screen.
-//        return true
-        return false
+        val sharedPrefs = getSharedPreferences("Login", MODE_PRIVATE)
+        val userId = sharedPrefs.getString("UserId",null)
+        return !userId.isNullOrBlank()
     }
 }

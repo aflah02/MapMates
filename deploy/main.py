@@ -15,6 +15,7 @@ class UserCredentials(BaseModel):
     password: str
 
 # Create a MongoClient instance
+connection_string = "mongodb+srv://mapmates:mapmates123@mapmatescluster.qr7ojw0.mongodb.net/test"
 client = MongoClient(connection_string)
 # Get the "master_db" database
 db = client["master_db"]
@@ -58,9 +59,7 @@ async def register(userCredentials: UserCredentials):
         raise HTTPException(status_code=400, detail="Username already exists")
 
     hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-    max_id = users.find_one(sort=[("_id", -1)])["_id"]
     user = {
-        "_id": str(int(max_id) + 2),
         "username": username,
         "password": hashed_password,
         "userfriends": [],
@@ -115,7 +114,7 @@ async def read_users():
 
 @app.get("/users/{user_id}")
 async def read_user(user_id: str):
-    return users.find_one({"_id": user_id})
+    return users.find_one({"_id": ObjectId(user_id)})
 
 
 @app.post("/users")
