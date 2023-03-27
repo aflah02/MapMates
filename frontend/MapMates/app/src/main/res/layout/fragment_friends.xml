@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="10dp"
+    tools:context=".ui.people.friends.FriendsFragment">
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/FriendsNum"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="24dp"
+            android:layout_marginTop="16dp"
+            android:text="My Friends"
+            android:textColor="@android:color/black"
+            android:textSize="24sp"
+           />
+
+        <SearchView
+            android:id="@+id/searchViewFriends"
+            android:layout_width="360dp"
+            android:layout_centerInParent="true"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:iconifiedByDefault="false"
+            android:queryHint="Search"
+            android:layout_below="@id/FriendsNum"
+            />
+
+<!--    </androidx.constraintlayout.widget.ConstraintLayout>-->
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/friendCardRecyclerView"
+        android:layout_below="@id/searchViewFriends"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingBottom="120dp"
+        />
+    </RelativeLayout>
+
+
+
+</FrameLayout>

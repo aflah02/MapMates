@@ -1,0 +1,262 @@
+Index: app/src/main/res/values/colors.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"utf-8\"?>\n<resources>\n    <color name=\"purple_200\">#FFBB86FC</color>\n    <color name=\"purple_500\">#FF6200EE</color>\n    <color name=\"purple_700\">#FF3700B3</color>\n    <color name=\"teal_200\">#FF03DAC5</color>\n    <color name=\"teal_700\">#FF018786</color>\n    <color name=\"black\">#FF000000</color>\n    <color name=\"white\">#FFFFFFFF</color>\n</resources>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/res/values/colors.xml b/app/src/main/res/values/colors.xml
+--- a/app/src/main/res/values/colors.xml	(revision fc374e89f17ad130d7c28a59bb3b2fd4fc25ed11)
++++ b/app/src/main/res/values/colors.xml	(date 1679929509546)
+@@ -7,4 +7,5 @@
+     <color name="teal_700">#FF018786</color>
+     <color name="black">#FF000000</color>
+     <color name="white">#FFFFFFFF</color>
++    <color name="purple_card">#9999FF</color>
+ </resources>
+\ No newline at end of file
+Index: app/src/main/java/com/example/mapmates/EntryActivity.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.mapmates\n\nimport android.content.Intent\nimport androidx.appcompat.app.AppCompatActivity\nimport android.os.Bundle\n\nclass EntryActivity : AppCompatActivity() {\n    override fun onCreate(savedInstanceState: Bundle?) {\n        super.onCreate(savedInstanceState)\n        val intent : Intent = if(userLoggedIn()){\n            Intent(applicationContext,MainActivity::class.java)\n        } else{\n            Intent(applicationContext,LoginActivity::class.java)\n        }\n        startActivity(intent)\n        overridePendingTransition(android.R.anim.fade_in,android.R.anim.fade_out)\n    }\n\n    private fun userLoggedIn() : Boolean {\n        //Check if a user is already logged in, if not redirect to login screen.\n//        return true\n        return false\n    }\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/mapmates/EntryActivity.kt b/app/src/main/java/com/example/mapmates/EntryActivity.kt
+--- a/app/src/main/java/com/example/mapmates/EntryActivity.kt	(revision fc374e89f17ad130d7c28a59bb3b2fd4fc25ed11)
++++ b/app/src/main/java/com/example/mapmates/EntryActivity.kt	(date 1679919521182)
+@@ -18,7 +18,7 @@
+ 
+     private fun userLoggedIn() : Boolean {
+         //Check if a user is already logged in, if not redirect to login screen.
+-//        return true
+-        return false
++        return true
++//        return false
+     }
+ }
+\ No newline at end of file
+Index: app/build.gradle
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>plugins {\n    id 'com.android.application'\n    id 'kotlin-android'\n}\n\nandroid {\n    compileSdk 33\n\n    defaultConfig {\n        applicationId \"com.example.mapmates\"\n        minSdk 22\n        targetSdk 33\n        versionCode 1\n        versionName \"1.0\"\n\n        testInstrumentationRunner \"androidx.test.runner.AndroidJUnitRunner\"\n    }\n\n    buildTypes {\n        release {\n            minifyEnabled false\n            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'\n        }\n    }\n    compileOptions {\n        sourceCompatibility JavaVersion.VERSION_1_8\n        targetCompatibility JavaVersion.VERSION_1_8\n    }\n    kotlinOptions {\n        jvmTarget = '1.8'\n    }\n    buildFeatures {\n        viewBinding true\n    }\n}\n\ndependencies {\n    implementation 'androidx.core:core-ktx:1.9.0'\n    implementation 'androidx.appcompat:appcompat:1.6.1'\n    implementation 'com.google.android.material:material:1.6.0'\n    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'\n    implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.3.1'\n    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.3.1'\n    implementation 'androidx.navigation:navigation-fragment-ktx:2.5.3'\n    implementation 'androidx.navigation:navigation-ui-ktx:2.5.3'\n    testImplementation 'junit:junit:4.+'\n    androidTestImplementation 'androidx.test.ext:junit:1.1.5'\n    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'\n    implementation 'org.osmdroid:osmdroid-android:6.1.13'\n    implementation 'com.google.android.gms:play-services-location:18.0.0'\n    implementation 'com.jakewharton.timber:timber:5.0.+'\n    implementation 'org.greenrobot:eventbus:3.2.0'\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/build.gradle b/app/build.gradle
+--- a/app/build.gradle	(revision fc374e89f17ad130d7c28a59bb3b2fd4fc25ed11)
++++ b/app/build.gradle	(date 1679919445820)
+@@ -50,4 +50,5 @@
+     implementation 'com.google.android.gms:play-services-location:18.0.0'
+     implementation 'com.jakewharton.timber:timber:5.0.+'
+     implementation 'org.greenrobot:eventbus:3.2.0'
++    implementation 'com.squareup.picasso:picasso:2.8'
+ }
+\ No newline at end of file
+Index: app/src/main/java/com/example/mapmates/ui/people/PeopleFragment.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.mapmates.ui.people\n\nimport android.os.Bundle\nimport android.view.LayoutInflater\nimport android.view.View\nimport android.view.ViewGroup\nimport android.widget.TextView\nimport androidx.fragment.app.Fragment\nimport androidx.lifecycle.Observer\nimport androidx.lifecycle.ViewModelProvider\nimport com.example.mapmates.databinding.FragmentPeopleBinding\n\nclass PeopleFragment : Fragment() {\n\n    private lateinit var peopleViewModel: PeopleViewModel\n    private var _binding: FragmentPeopleBinding? = null\n\n    // This property is only valid between onCreateView and\n    // onDestroyView.\n    private val binding get() = _binding!!\n\n    override fun onCreateView(\n        inflater: LayoutInflater,\n        container: ViewGroup?,\n        savedInstanceState: Bundle?\n    ): View? {\n        peopleViewModel =\n            ViewModelProvider(this).get(PeopleViewModel::class.java)\n\n        _binding = FragmentPeopleBinding.inflate(inflater, container, false)\n        val root: View = binding.root\n\n        val textView: TextView = binding.textPeople\n        peopleViewModel.text.observe(viewLifecycleOwner, Observer {\n            textView.text = it\n        })\n        return root\n    }\n\n    override fun onDestroyView() {\n        super.onDestroyView()\n        _binding = null\n    }\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/mapmates/ui/people/PeopleFragment.kt b/app/src/main/java/com/example/mapmates/ui/people/PeopleFragment.kt
+--- a/app/src/main/java/com/example/mapmates/ui/people/PeopleFragment.kt	(revision fc374e89f17ad130d7c28a59bb3b2fd4fc25ed11)
++++ b/app/src/main/java/com/example/mapmates/ui/people/PeopleFragment.kt	(date 1679919211795)
+@@ -1,6 +1,7 @@
+ package com.example.mapmates.ui.people
+ 
+ import android.os.Bundle
++import android.util.Log
+ import android.view.LayoutInflater
+ import android.view.View
+ import android.view.ViewGroup
+@@ -8,7 +9,14 @@
+ import androidx.fragment.app.Fragment
+ import androidx.lifecycle.Observer
+ import androidx.lifecycle.ViewModelProvider
++import androidx.viewpager.widget.ViewPager
+ import com.example.mapmates.databinding.FragmentPeopleBinding
++import com.example.mapmates.ui.people.groups.GroupsFragment
++
++import com.example.mapmates.R
++import com.example.mapmates.ui.people.friends.FriendsFragment
++import com.google.android.material.tabs.TabLayout
++
+ 
+ class PeopleFragment : Fragment() {
+ 
+@@ -30,13 +38,34 @@
+         _binding = FragmentPeopleBinding.inflate(inflater, container, false)
+         val root: View = binding.root
+ 
+-        val textView: TextView = binding.textPeople
+-        peopleViewModel.text.observe(viewLifecycleOwner, Observer {
+-            textView.text = it
+-        })
++        val viewPager: ViewPager = root.findViewById(R.id.peopleChildFragment)
++        val adapter = PeoplePageAdapter(childFragmentManager)
++        adapter.addFragment(GroupsFragment(), "Groups")
++        adapter.addFragment(FriendsFragment(), "Friends")
++        viewPager.adapter = adapter
++
++        val tabLayout: TabLayout = root.findViewById(R.id.peopleChildTabs)
++        tabLayout.setupWithViewPager(viewPager)
++
+         return root
+     }
+ 
++
++    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
++        super.onViewCreated(view, savedInstanceState)
++
++//         Create the child fragment and add it to the child_container
++//        val groupsFragment = GroupsFragment()
++//        val transaction = childFragmentManager.beginTransaction()
++//        transaction.replace(R.id.GroupFragmentLayout, groupsFragment)
++//        transaction.commit()
++//        val friendsFragment = FriendsFragment()
++//        val transaction2 = childFragmentManager.beginTransaction()
++//        transaction2.replace(R.id.FriendsFragmentLayout, friendsFragment)
++//        transaction2.commit()
++    }
++
++
+     override fun onDestroyView() {
+         super.onDestroyView()
+         _binding = null
+Index: .idea/misc.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<project version=\"4\">\n  <component name=\"DesignSurface\">\n    <option name=\"filePathToZoomLevelMap\">\n      <map>\n        <entry key=\"app/src/main/res/drawable/create_selector.xml\" value=\"0.17864583333333334\" />\n        <entry key=\"app/src/main/res/drawable/explore_selector.xml\" value=\"0.1125\" />\n        <entry key=\"app/src/main/res/drawable/home_selector.xml\" value=\"0.1125\" />\n        <entry key=\"app/src/main/res/drawable/people_selector.xml\" value=\"0.1125\" />\n        <entry key=\"app/src/main/res/drawable/upload_selector.xml\" value=\"0.1125\" />\n        <entry key=\"app/src/main/res/layout/activity_login.xml\" value=\"0.25\" />\n        <entry key=\"app/src/main/res/layout/activity_main.xml\" value=\"0.22\" />\n        <entry key=\"app/src/main/res/layout/activity_signup.xml\" value=\"0.22\" />\n        <entry key=\"app/src/main/res/layout/fragment_create.xml\" value=\"0.1625\" />\n        <entry key=\"app/src/main/res/layout/fragment_dashboard.xml\" value=\"0.1\" />\n        <entry key=\"app/src/main/res/layout/fragment_explore.xml\" value=\"0.1\" />\n        <entry key=\"app/src/main/res/layout/fragment_home.xml\" value=\"0.1\" />\n        <entry key=\"app/src/main/res/layout/fragment_maps.xml\" value=\"0.1\" />\n        <entry key=\"app/src/main/res/layout/fragment_notifications.xml\" value=\"0.1\" />\n        <entry key=\"app/src/main/res/layout/fragment_people.xml\" value=\"0.1\" />\n        <entry key=\"app/src/main/res/layout/fragment_profile.xml\" value=\"0.1\" />\n        <entry key=\"app/src/main/res/layout/fragment_upload.xml\" value=\"0.1\" />\n        <entry key=\"app/src/main/res/menu/bottom_nav_menu.xml\" value=\"0.25\" />\n      </map>\n    </option>\n  </component>\n  <component name=\"ProjectRootManager\" version=\"2\" languageLevel=\"JDK_11\" default=\"true\" project-jdk-name=\"Android Studio default JDK\" project-jdk-type=\"JavaSDK\">\n    <output url=\"file://$PROJECT_DIR$/build/classes\" />\n  </component>\n  <component name=\"ProjectType\">\n    <option name=\"id\" value=\"Android\" />\n  </component>\n</project>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/misc.xml b/.idea/misc.xml
+--- a/.idea/misc.xml	(revision fc374e89f17ad130d7c28a59bb3b2fd4fc25ed11)
++++ b/.idea/misc.xml	(date 1679919255199)
+@@ -30,4 +30,11 @@
+   <component name="ProjectType">
+     <option name="id" value="Android" />
+   </component>
++  <component name="VisualizationToolProject">
++    <option name="state">
++      <ProjectState>
++        <option name="scale" value="0.014700765483646485" />
++      </ProjectState>
++    </option>
++  </component>
+ </project>
+\ No newline at end of file
+Index: app/src/main/res/values/dimens.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><resources>\n    <!-- Default screen margins, per the Android Design guidelines. -->\n    <dimen name=\"activity_horizontal_margin\">16dp</dimen>\n    <dimen name=\"activity_vertical_margin\">16dp</dimen>\n    <dimen name=\"fab_margin\">16dp</dimen>\n</resources>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/res/values/dimens.xml b/app/src/main/res/values/dimens.xml
+--- a/app/src/main/res/values/dimens.xml	(revision fc374e89f17ad130d7c28a59bb3b2fd4fc25ed11)
++++ b/app/src/main/res/values/dimens.xml	(date 1679919255204)
+@@ -3,4 +3,5 @@
+     <dimen name="activity_horizontal_margin">16dp</dimen>
+     <dimen name="activity_vertical_margin">16dp</dimen>
+     <dimen name="fab_margin">16dp</dimen>
++    <dimen name="text_margin">16dp</dimen>
+ </resources>
+\ No newline at end of file
+Index: app/src/main/res/layout/fragment_people.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"utf-8\"?>\n<androidx.constraintlayout.widget.ConstraintLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    xmlns:app=\"http://schemas.android.com/apk/res-auto\"\n    xmlns:tools=\"http://schemas.android.com/tools\"\n    android:layout_width=\"match_parent\"\n    android:layout_height=\"match_parent\"\n    tools:context=\".ui.people.PeopleFragment\">\n\n    <TextView\n        android:id=\"@+id/text_people\"\n        android:layout_width=\"match_parent\"\n        android:layout_height=\"wrap_content\"\n        android:layout_marginStart=\"8dp\"\n        android:layout_marginTop=\"8dp\"\n        android:layout_marginEnd=\"8dp\"\n        android:textAlignment=\"center\"\n        android:textSize=\"20sp\"\n        app:layout_constraintBottom_toBottomOf=\"parent\"\n        app:layout_constraintEnd_toEndOf=\"parent\"\n        app:layout_constraintStart_toStartOf=\"parent\"\n        app:layout_constraintTop_toTopOf=\"parent\" />\n</androidx.constraintlayout.widget.ConstraintLayout>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/res/layout/fragment_people.xml b/app/src/main/res/layout/fragment_people.xml
+--- a/app/src/main/res/layout/fragment_people.xml	(revision fc374e89f17ad130d7c28a59bb3b2fd4fc25ed11)
++++ b/app/src/main/res/layout/fragment_people.xml	(date 1679919211799)
+@@ -6,17 +6,54 @@
+     android:layout_height="match_parent"
+     tools:context=".ui.people.PeopleFragment">
+ 
+-    <TextView
+-        android:id="@+id/text_people"
++<!--    <TextView-->
++<!--        android:id="@+id/text_people"-->
++<!--        android:layout_width="match_parent"-->
++<!--        android:layout_height="wrap_content"-->
++<!--        android:layout_marginStart="8dp"-->
++<!--        android:layout_marginTop="8dp"-->
++<!--        android:layout_marginEnd="8dp"-->
++<!--        android:textAlignment="center"-->
++<!--        android:textSize="20sp"-->
++<!--        app:layout_constraintBottom_toBottomOf="parent"-->
++<!--        app:layout_constraintEnd_toEndOf="parent"-->
++<!--        app:layout_constraintStart_toStartOf="parent"-->
++<!--        app:layout_constraintTop_toTopOf="parent" />-->
++
++
++    <com.google.android.material.tabs.TabLayout
++        android:id="@+id/peopleChildTabs"
+         android:layout_width="match_parent"
+-        android:layout_height="wrap_content"
+-        android:layout_marginStart="8dp"
+-        android:layout_marginTop="8dp"
+-        android:layout_marginEnd="8dp"
+-        android:textAlignment="center"
+-        android:textSize="20sp"
+-        app:layout_constraintBottom_toBottomOf="parent"
++        android:layout_height="60dp"
++        android:fitsSystemWindows="false"
+         app:layout_constraintEnd_toEndOf="parent"
+         app:layout_constraintStart_toStartOf="parent"
+-        app:layout_constraintTop_toTopOf="parent" />
++        app:layout_constraintTop_toTopOf="parent">
++
++        <com.google.android.material.tabs.TabItem
++            android:layout_width="wrap_content"
++            android:layout_height="wrap_content"
++            android:text="Groups" />
++
++        <com.google.android.material.tabs.TabItem
++            android:layout_width="wrap_content"
++            android:layout_height="wrap_content"
++            android:text="Friends" />
++    </com.google.android.material.tabs.TabLayout>
++
++
++    <androidx.viewpager.widget.ViewPager
++        android:id="@+id/peopleChildFragment"
++        android:layout_width="match_parent"
++        android:layout_height="wrap_content"
++        app:layout_constraintTop_toBottomOf="@+id/peopleChildTabs"
++        />
++
++<!--        <FrameLayout-->
++<!--        android:id="@+id/GroupFragmentLayout"-->
++<!--        android:layout_width="match_parent"-->
++<!--        android:layout_height="match_parent" >-->
++
++<!--    </FrameLayout>-->
++
+ </androidx.constraintlayout.widget.ConstraintLayout>
+\ No newline at end of file
+Index: app/src/main/res/values/strings.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><resources>\n    <string name=\"app_name\">MapMates</string>\n    <string name=\"title_activity_main\">MainActivity</string>\n    <string name=\"title_home\">Home</string>\n    <string name=\"title_explore\">Explore</string>\n    <string name=\"title_people\">People</string>\n    <string name=\"title_create\">Create</string>\n    <string name=\"title_profile\">Profile</string>\n    <string name=\"title_activity_signup\">SignupActivity</string>\n    <!-- Strings used for fragments for navigation -->\n    <string name=\"first_fragment_label\">First Fragment</string>\n    <string name=\"second_fragment_label\">Second Fragment</string>\n    <string name=\"next\">Next</string>\n    <string name=\"previous\">Previous</string>\n\n    <string name=\"hello_first_fragment\">Hello first fragment</string>\n    <string name=\"hello_second_fragment\">Hello second fragment. Arg: %1$s</string>\n\n</resources>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/res/values/strings.xml b/app/src/main/res/values/strings.xml
+--- a/app/src/main/res/values/strings.xml	(revision fc374e89f17ad130d7c28a59bb3b2fd4fc25ed11)
++++ b/app/src/main/res/values/strings.xml	(date 1679919255207)
+@@ -15,5 +15,7 @@
+ 
+     <string name="hello_first_fragment">Hello first fragment</string>
+     <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
++    <!-- TODO: Remove or change this placeholder text -->
++    <string name="hello_blank_fragment">Hello blank fragment</string>
+ 
+ </resources>
+\ No newline at end of file
