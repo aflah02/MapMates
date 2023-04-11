@@ -136,6 +136,10 @@ class HomeFragment : Fragment() {
             textView.text = it
         })
         return root
+
+
+
+
     }
 
     private fun initLoaction() {

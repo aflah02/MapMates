@@ -1,12 +1,17 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi.responses import Response
 from pymongo import MongoClient
 from bson.objectid import ObjectId
+
 import bcrypt
 import pydantic
 from pydantic import BaseModel
 from bson import ObjectId
 from gridfs import GridFS
 pydantic.json.ENCODERS_BY_TYPE[ObjectId]=str
+from PIL import Image
+import io
+import os
 
 app = FastAPI()
 
@@ -23,10 +28,9 @@ db = client["master_db"]
 users = db["users"]
 # Get the "groups" collection
 groups = db["groups"]
-# uploaded_images GridFS
-fs_uploaded_images = GridFS(db, collection="uploaded_images")
-# profile_pictures GridFS
-fs_profile_pictures = GridFS(db, collection="profile_pictures")
+profile_picture_collection = db["profile_pictures"]
+# marker images collection
+marker_image_collection = db["images"]
 
 # Check if username exists  
 @app.get("/existsUsername/{username}")
@@ -117,22 +121,6 @@ async def read_user(user_id: str):
     return users.find_one({"_id": ObjectId(user_id)})
 
 
-@app.post("/users")
-async def create_user(username: str, password: str, userfriends: list, groups: list, markers: list, profile_picture: UploadFile = File(...)):
-    hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-    max_id = users.find_one(sort=[("_id", -1)])["_id"]
-    profile_pic = fs_profile_pictures.put(profile_picture.file.read(), filename=profile_picture.filename)
-    user = {
-        "_id": str(int(max_id) + 2),
-        "username": username,
-        "password": hashed_password,
-        "userfriends": userfriends,
-        "groups": groups,
-        "markers": markers,
-        "profile_picture": profile_pic,
-    }
-    result = users.insert_one(user)
-    return {"_id": str(result.inserted_id)}
 
 
 @app.put("/users/{user_id}")
@@ -156,3 +144,54 @@ async def update_user(user_id: str, username: str, password: str, userfriends: l
 async def delete_user(user_id: str):
     users.delete_one({"_id": user_id})
     return {"message": "User deleted successfully"}
+
+# Get friends for a user
+@app.get("/users/{user_name}/friends")
+async def get_friends(user_name: str):
+    # Get the user's friends
+    friends = users.find_one({"username": user_name})["userfriends"]
+    friend_details = []
+    for friend in friends:
+        details = users.find_one({"username": friend})
+        friend_details.append({
+            "username": details["username"],
+            "email": details["username"] + "@gmail.com",
+        })
+    # Return the friends
+    return friend_details
+
+# Get profile picture
+@app.get("/users/{user_name}/profile_picture")
+async def get_profile_picture(user_name: str):
+    # Get the user's profile picture ID
+    profile_picture_id = users.find_one({"username": user_name})["profile_picture"]
+    
+    # Get the profile picture
+    profile_picture = profile_picture_collection.find_one({"_id": profile_picture_id})
+    # Return the profile picture
+    return Response(content=io.BytesIO(profile_picture['data']).getvalue(), media_type="image/jpeg")
+
+# Add new marker
+@app.post("/users/addmarker")
+async def add_marker(user_id: str, marker: dict):
+    # Get the user's markers
+    markers = users.find_one({"_id": user_id})["markers"]
+    # Add the new marker
+    markers.append(marker)
+    # Update the user's markers
+    update = {
+        "$set": {
+            "markers": markers,
+        }
+    }
+    users.update_one({"_id": user_id}, update)
+
+    return {"message": "Marker added successfully"}
+
+# Get markers for a user
+@app.get("/users/{user_name}/markers")
+async def get_markers(user_name: str):
+    # Get the user's markers
+    markers = users.find_one({"username": user_name})["markers"]
+    # Return the markers
+    return markers

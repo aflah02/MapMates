@@ -3,5 +3,6 @@ backend/config.py
 deploy/.space
 deploy/.spaceignore
 deploy/.venv
+deploy/*.env
 .idea/*
 .idea/*

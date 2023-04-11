@@ -6,10 +6,14 @@
     android:layout_height="match_parent"
     tools:context=".ui.home.HomeFragment">
 
-    <org.osmdroid.views.MapView
+    <com.mapbox.mapboxsdk.maps.MapView
+        android:id="@+id/map"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:id="@+id/map" />
+        app:mapbox_cameraTargetLat="40.7128"
+        app:mapbox_cameraTargetLng="-74.0060"
+        app:mapbox_cameraZoom="9.0"
+        app:mapbox_styleUrl="mapbox://styles/mapbox/streets-v11" />
 
     <TextView
         android:id="@+id/text_home"
