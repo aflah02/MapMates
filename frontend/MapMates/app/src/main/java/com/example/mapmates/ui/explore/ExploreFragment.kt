@@ -9,8 +9,6 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.example.mapmates.R
 import com.example.mapmates.databinding.FragmentExploreBinding
-import com.example.mapmates.databinding.FragmentHomeBinding
-import com.example.mapmates.ui.home.HomeViewModel
 import com.example.mapmates.utils.LocationPermissionHelper
 import com.mapbox.android.gestures.MoveGestureDetector
 import com.mapbox.maps.CameraOptions

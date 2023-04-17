@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageButton
 import android.widget.Toast
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.fragment.app.Fragment
@@ -12,6 +13,9 @@ import androidx.lifecycle.ViewModelProvider
 import com.example.mapmates.R
 import com.example.mapmates.databinding.FragmentHomeBinding
 import com.example.mapmates.utils.LocationPermissionHelper
+import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.mapbox.android.gestures.MoveGestureDetector
 import com.mapbox.maps.CameraOptions
 import com.mapbox.maps.MapView
@@ -20,6 +24,7 @@ import com.mapbox.maps.extension.style.expressions.dsl.generated.interpolate
 import com.mapbox.maps.extension.style.expressions.generated.Expression.Companion.linear
 import com.mapbox.maps.plugin.LocationPuck2D
 import com.mapbox.maps.plugin.animation.camera
+import com.mapbox.maps.plugin.compass.compass
 import com.mapbox.maps.plugin.gestures.OnMoveListener
 import com.mapbox.maps.plugin.gestures.gestures
 import com.mapbox.maps.plugin.locationcomponent.OnIndicatorBearingChangedListener
@@ -67,12 +72,27 @@ class HomeFragment : Fragment() {
         locationPermissionHelper.checkPermissions {
             onMapReady()
         }
+        val groupsFab : ExtendedFloatingActionButton = binding.groupsFab
+        groupsFab.setOnClickListener {
+            showBottomGroupDialog()
+        }
+        val locationFab : FloatingActionButton = binding.locationFab
+        locationFab.setOnClickListener{
+            // TODO: get current location and set camera to it
+//            val pt
+//            mapView.getMapboxMap().setCamera(CameraOptions.Builder().center(pt).build())
+//            mapView.gestures.focalPoint = mapView.getMapboxMap().pixelForCoordinate(pt)
+        }
+
         return root
     }
 
     private fun onMapReady() {
         mapView.scalebar.updateSettings {
-            isMetricUnits = true
+            enabled = false
+        }
+        mapView.compass.updateSettings {
+            enabled = false
         }
         mapView.getMapboxMap().setCamera(
             CameraOptions.Builder()
@@ -154,5 +174,15 @@ class HomeFragment : Fragment() {
     override fun onLowMemory() {
         super.onLowMemory()
         mapView.onLowMemory()
+    }
+
+    private fun showBottomGroupDialog() {
+        val groupSheetDialog = BottomSheetDialog(requireContext())
+        groupSheetDialog.setContentView(R.layout.group_sheet_dialog)
+        val closeButton : ImageButton = groupSheetDialog.findViewById(R.id.closeDialog)!!
+        closeButton.setOnClickListener {
+            groupSheetDialog.dismiss()
+        }
+        groupSheetDialog.show()
     }
 }
