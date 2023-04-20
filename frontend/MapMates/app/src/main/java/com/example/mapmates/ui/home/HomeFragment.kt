@@ -10,6 +10,8 @@ import android.widget.Toast
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.mapmates.R
 import com.example.mapmates.databinding.FragmentHomeBinding
 import com.example.mapmates.utils.LocationPermissionHelper
@@ -32,11 +34,13 @@ import com.mapbox.maps.plugin.locationcomponent.OnIndicatorPositionChangedListen
 import com.mapbox.maps.plugin.locationcomponent.location
 import com.mapbox.maps.plugin.scalebar.scalebar
 import java.lang.ref.WeakReference
-class HomeFragment : Fragment() {
+class HomeFragment : Fragment(), OnItemClickListener {
     private lateinit var mapView: MapView
     private lateinit var homeViewModel: HomeViewModel
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
+    private lateinit var groupsList: ArrayList<String>
+    private lateinit var groupsRecyclerView: RecyclerView
 
     private lateinit var locationPermissionHelper : LocationPermissionHelper
 
@@ -72,6 +76,14 @@ class HomeFragment : Fragment() {
         locationPermissionHelper.checkPermissions {
             onMapReady()
         }
+        // initialize groupsList with few strings
+        groupsList = ArrayList<String>()
+        groupsList.add("Group 1")
+        groupsList.add("Group 2")
+        groupsList.add("Group 3")
+        groupsList.add("Group 4")
+
+
         val groupsFab : ExtendedFloatingActionButton = binding.groupsFab
         groupsFab.setOnClickListener {
             showBottomGroupDialog()
@@ -179,10 +191,24 @@ class HomeFragment : Fragment() {
     private fun showBottomGroupDialog() {
         val groupSheetDialog = BottomSheetDialog(requireContext())
         groupSheetDialog.setContentView(R.layout.group_sheet_dialog)
+
+        // initialize adapter
+        groupsRecyclerView = groupSheetDialog.findViewById(R.id.recycler_view)!!
+        groupsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+        groupsRecyclerView.setHasFixedSize(true)
+        val adapter = GroupsAdapter(groupsList, this)
+        groupsRecyclerView.adapter = adapter
+
+
         val closeButton : ImageButton = groupSheetDialog.findViewById(R.id.closeDialog)!!
+
         closeButton.setOnClickListener {
             groupSheetDialog.dismiss()
         }
         groupSheetDialog.show()
+    }
+
+    override fun onItemClick(position: Int) {
+        binding.groupsFab.text = groupsList[position]
     }
 }
