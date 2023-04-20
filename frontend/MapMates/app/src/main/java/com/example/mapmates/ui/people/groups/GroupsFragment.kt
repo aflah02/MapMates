@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.mapmates.R
+import com.google.android.material.snackbar.Snackbar
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -19,6 +20,11 @@ private const val ARG_PARAM2 = "param2"
  * Use the [GroupsFragment.newInstance] factory method to
  * create an instance of this fragment.
  */
+
+interface OnItemClickListener {
+    fun onSettingsClick(position: Int)
+}
+
 class GroupsFragment : Fragment() {
     // TODO: Rename and change types of parameters
     private var param1: String? = null
@@ -50,6 +56,12 @@ class GroupsFragment : Fragment() {
 //        val groupList = getGroupList()
 //
 //        adapter.updateList(groupList)
+        val fab: View = view.findViewById(R.id.fab)
+        fab.setOnClickListener { view ->
+            Snackbar.make(view, "Here's a Snackbar", Snackbar.LENGTH_LONG)
+                .setAction("Action", null)
+                .show()
+        }
 
         return view
     }
@@ -57,13 +69,14 @@ class GroupsFragment : Fragment() {
     private fun setGroupRecycler(){
         groupRecyclerView.layoutManager = LinearLayoutManager(activity)
 
-        adapter = GroupsAdapter(emptyList())
+        adapter = GroupsAdapter(emptyList(), )
         groupRecyclerView.adapter = adapter
 
         val groupList = getGroupList()
 
         adapter.updateList(groupList)
     }
+
 
     private fun getGroupList(): List<GroupData> {
         val groupList = mutableListOf<GroupData>()
