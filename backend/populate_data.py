@@ -174,8 +174,12 @@ def build_users(client, user_friends, group_vs_users):
         # profile_picture = None
         # with open("assets/default_user_pic.jpg", "rb") as f:
         #     profile_picture = fs.put(f, filename=user_names[i])
-
-        im = Image.open("assets/default_user_pic.jpg")
+        if user_names[i] == "Kush":
+            im = Image.open("assets/Kush.jpg")
+        elif user_names[i] == "Abhik":
+            im = Image.open("assets/Abhik.jpg")
+        else:
+            im = Image.open("assets/default_user_pic.jpg")
         image_bytes = io.BytesIO()
         im.save(image_bytes, format='JPEG')
         image = {
@@ -207,6 +211,7 @@ def build_users(client, user_friends, group_vs_users):
             "groups": groups,
             "markers": markers,
             "profile_picture": pfp_id,
+            "pending_friend_requests": [],
         }
         users.insert_one(user)
 
