@@ -94,7 +94,7 @@ def get_markers_for_user(seed, group_vs_users):
                 'data': image_bytes.getvalue(),
             }
             image_id = db.images.insert_one(image).inserted_id
-
+            images = [image_id]
             markers.append({
                 "name": random_place,
                 "latitude": famous_places[random_place][0],
@@ -102,7 +102,7 @@ def get_markers_for_user(seed, group_vs_users):
                 "description": "This is a famous place in Delhi",
                 "groups_which_can_see": groups_which_can_see,
                 "friends_can_see": friends_can_see,
-                "image": image_id,
+                "images": images,
             })
     return markers
 
