@@ -1,5 +1,10 @@
 package com.example.mapmates.ui.home
 
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.Drawable
 import android.location.Location
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -7,6 +12,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.Toast
+import androidx.annotation.DrawableRes
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
@@ -19,13 +25,19 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.mapbox.android.gestures.MoveGestureDetector
+import com.mapbox.geojson.Point
 import com.mapbox.maps.CameraOptions
 import com.mapbox.maps.MapView
+import com.mapbox.maps.MapboxMap
 import com.mapbox.maps.Style
 import com.mapbox.maps.extension.style.expressions.dsl.generated.interpolate
 import com.mapbox.maps.extension.style.expressions.generated.Expression.Companion.linear
 import com.mapbox.maps.plugin.LocationPuck2D
 import com.mapbox.maps.plugin.animation.camera
+import com.mapbox.maps.plugin.annotation.annotations
+import com.mapbox.maps.plugin.annotation.generated.PointAnnotationManager
+import com.mapbox.maps.plugin.annotation.generated.PointAnnotationOptions
+import com.mapbox.maps.plugin.annotation.generated.createPointAnnotationManager
 import com.mapbox.maps.plugin.compass.compass
 import com.mapbox.maps.plugin.gestures.OnMoveListener
 import com.mapbox.maps.plugin.gestures.gestures
@@ -36,11 +48,13 @@ import com.mapbox.maps.plugin.scalebar.scalebar
 import java.lang.ref.WeakReference
 class HomeFragment : Fragment(), OnItemClickListener {
     private lateinit var mapView: MapView
+    private lateinit var pointAnnotationManager: PointAnnotationManager
     private lateinit var homeViewModel: HomeViewModel
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
     private lateinit var groupsList: ArrayList<String>
     private lateinit var groupsRecyclerView: RecyclerView
+    private var mapLoaded: Boolean = false
 
     private lateinit var locationPermissionHelper : LocationPermissionHelper
 
@@ -76,18 +90,23 @@ class HomeFragment : Fragment(), OnItemClickListener {
         locationPermissionHelper.checkPermissions {
             onMapReady()
         }
-        // initialize groupsList with few strings
         groupsList = ArrayList<String>()
+        // TODO: Dynamic groupsList
+        // initialize groupsList with GROUP Names
         groupsList.add("Group 1")
         groupsList.add("Group 2")
         groupsList.add("Group 3")
         groupsList.add("Group 4")
 
+        pointAnnotationManager = mapView.annotations.createPointAnnotationManager()
 
+        // Setting up change group fab
         val groupsFab : ExtendedFloatingActionButton = binding.groupsFab
         groupsFab.setOnClickListener {
             showBottomGroupDialog()
         }
+
+        // Setting up location fab
         val locationFab : FloatingActionButton = binding.locationFab
         locationFab.setOnClickListener{
             // TODO: get current location and set camera to it
@@ -116,6 +135,8 @@ class HomeFragment : Fragment(), OnItemClickListener {
         ) {
             initLocationComponent()
             setupGesturesListener()
+            mapLoaded = true
+            addAnnotationToMap()
         }
     }
     private fun setupGesturesListener() {
@@ -210,5 +231,47 @@ class HomeFragment : Fragment(), OnItemClickListener {
 
     override fun onItemClick(position: Int) {
         binding.groupsFab.text = groupsList[position]
+        pointAnnotationManager.deleteAll()
+    }
+
+    // Adding marker logics
+    private fun addAnnotationToMap() {
+// Create an instance of the Annotation API and get the PointAnnotationManager.
+        bitmapFromDrawableRes(
+            requireContext(),
+            R.drawable.ic_profile
+        )?.let {
+            // Set options for the resulting symbol layer.
+            val pointAnnotationOptions: PointAnnotationOptions = PointAnnotationOptions()
+                // Define a geographic coordinate.
+                .withPoint(Point.fromLngLat( 77.209, 28.613))
+                // Specify the bitmap you assigned to the point annotation
+                // The bitmap will be added to map style automatically.
+                .withIconImage(it)
+            // Add the resulting pointAnnotation to the map.
+            pointAnnotationManager.create(pointAnnotationOptions)
+        }
+    }
+    private fun bitmapFromDrawableRes(context: Context, @DrawableRes resourceId: Int) =
+        convertDrawableToBitmap(AppCompatResources.getDrawable(context, resourceId))
+    private fun convertDrawableToBitmap(sourceDrawable: Drawable?): Bitmap? {
+        if (sourceDrawable == null) {
+            return null
+        }
+        return if (sourceDrawable is BitmapDrawable) {
+            sourceDrawable.bitmap
+        } else {
+            // copying drawable object to not manipulate on the same reference
+            val constantState = sourceDrawable.constantState ?: return null
+            val drawable = constantState.newDrawable().mutate()
+            val bitmap: Bitmap = Bitmap.createBitmap(
+                drawable.intrinsicWidth, drawable.intrinsicHeight,
+                Bitmap.Config.ARGB_8888
+            )
+            val canvas = Canvas(bitmap)
+            drawable.setBounds(0, 0, canvas.width, canvas.height)
+            drawable.draw(canvas)
+            bitmap
+        }
     }
 }
