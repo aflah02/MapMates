@@ -4,3 +4,4 @@ bcrypt
 python-multipart
 pillow
 uvicorn
+pydantic

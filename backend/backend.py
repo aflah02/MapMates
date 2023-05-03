@@ -1,9 +1,10 @@
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.responses import Response
 from pymongo import MongoClient
 from bson.objectid import ObjectId
 import bcrypt
 import uvicorn
+from pydantic import BaseModel
 import pydantic
 from bson import ObjectId
 from config import *
@@ -13,6 +14,9 @@ import io
 
 app = FastAPI()
 
+class UserCredentials(BaseModel):
+    username: str
+    password: str
 # Create a MongoClient instance
 client = MongoClient(connection_string)
 # Get the "master_db" database
@@ -25,6 +29,47 @@ groups = db["groups"]
 profile_picture_collection = db["profile_pictures"]
 # marker images collection
 marker_image_collection = db["images"]
+
+# Check if username exists  
+@app.get("/existsUsername/{username}")
+async def username_exists(username: str):
+	if(users.find_one({"username": username})):
+		return {"result": True}
+	else:
+		return {"result": False}
+
+# Validate user login
+@app.post("/login")
+async def login_user(userCredentials: UserCredentials):
+    username = userCredentials.username
+    password = userCredentials.password
+    user = users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=400, detail="User does not exist")
+    if not bcrypt.checkpw(password.encode('utf-8'), user["password"]):
+        raise HTTPException(status_code=400, detail="Invalid username or password")
+	
+    return {"message": "Login successful", "id" : user["_id"]}
+
+# Register a new user (takes in just username and password)
+@app.post("/register")
+async def register(username: str, password: str):
+	# check if username already exists
+	if(users.find_one({"username": username})):
+		raise HTTPException(status_code=400, detail="Username already exists")
+
+	hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+	max_id = users.find_one(sort=[("_id", -1)])["_id"]
+	user = {
+        "_id": str(int(max_id) + 2),
+        "username": username,
+        "password": hashed_password,
+        "userfriends": [],
+        "groups": [],
+        "markers": [],
+    }
+	result = users.insert_one(user)
+	return {"_id": str(result.inserted_id)}
 
 # Define CRUD operations for the "users" collection
 @app.get("/users")
@@ -89,7 +134,6 @@ async def update_user(username: str, password: str, userfriends: list, groups: l
     users.update_one({"username": username}, update)
     return {"message": "User updated successfully"}
 
-
 # get user groups
 @app.get("/users/{user_name}/groups")
 async def get_user_groups(user_name: str):
@@ -130,12 +174,14 @@ async def send_friend_request(user_name: str, friend_name: str):
         if friend["_id"] in user["pending_friend_requests"]:
             return {"message": "Friend request already sent"}
         else:
+            ls_pending_friend_requests = friend["pending_friend_requests"]
+            ls_pending_friend_requests.append(user_name)
             update = {
                 "$set": {
-                    "pending_friend_requests": user["pending_friend_requests"].append(friend["_id"])
+                    "pending_friend_requests": ls_pending_friend_requests
                 }
             }
-            users.update_one({"username": user_name}, update)
+            users.update_one({"username": friend_name}, update)
             return {"message": "Friend request sent successfully"}
     else:
         return {"message": "Invalid username or friend_name"}
@@ -379,25 +425,93 @@ async def get_friends(user_name: str):
     # Return the friends
     return friend_details
 
-# Get all users whose username contains a given string
-@app.get("/users/{user_name}/user_search")
-async def search_users(user_name: str):
-    user_name = user_name.lower()
+# Get all users who are not friends with the given user
+@app.get("/users/{user_name}/search_users_not_friend")
+async def search_users_not_friend(user_name: str):
+    
     # Get all users
     all_users = users.find()
-    # Get all users whose username contains the given string
-    matching_users = []
+    # get friends
+    friends = users.find_one({"username": user_name})["userfriends"]
+    # user_name = user_name.lower()
+    # remove friends from all_users
+    users_not_friends = []
     for user in all_users:
-        if user_name in user["username"].lower():
-            matching_users.append(user["username"])
+        if user["username"] not in friends:
+            users_not_friends.append(user["username"])
+    print("Here")
+    print(users_not_friends)
+
+    # remove user from matching_users
+    if user_name in users_not_friends:
+        print("user_name in users_not_friends")
+        users_not_friends.remove(user_name)
+    else:
+        print("user_name not in users_not_friends")
+        print(users_not_friends, user_name)
     # for each matching user, return their username and email
+
+    users_sent_request_to = []
+    for user in users_not_friends:
+        # get all users who have sent a friend request to the user
+        print(user)
+        print(users.find_one({"username": user}))
+        if user_name in users.find_one({"username": user})["pending_friend_requests"]:
+            users_sent_request_to.append("Yes")
+        else:
+            users_sent_request_to.append("No")
+
     user_details = []
-    for user in matching_users:
+    ind = -1
+    for user in users_not_friends:
+        ind += 1
         details = users.find_one({"username": user})
         user_details.append({
             "username": details["username"],
             "email": details["username"] + "@gmail.com",
+            "sent_request": users_sent_request_to[ind]
         })
+
+    return user_details
+
+# get all users not friends
+@app.get("/users/{user_name}/{str_to_find}/search_users_not_friend_with_match")
+async def search_users_not_friend_with_match(user_name: str, str_to_find: str):
+    all_users = users.find()
+    friends = users.find_one({"username": user_name})["userfriends"]
+    users_not_friends = []
+    for user in all_users:
+        if user["username"] not in friends:
+            users_not_friends.append(user["username"])
+    # remove own username from users_not_friends
+    if user_name in users_not_friends:
+        users_not_friends.remove(user_name)
+    # filter users_not_friends by str_to_find
+    matching_users = []
+    for user in users_not_friends:
+        if str_to_find.lower() in user.lower():
+            print(str_to_find.lower(), user.lower())
+            matching_users.append(user)
+    users_sent_request_to = []
+    users_not_friends = matching_users
+    for user in users_not_friends:
+        # get all users who have sent a friend request to the user
+        if user_name in users.find_one({"username": user})["pending_friend_requests"]:
+            users_sent_request_to.append("Yes")
+        else:
+            users_sent_request_to.append("No")
+    matching_users = users_not_friends
+    user_details = []
+    ind = -1
+    for user in matching_users:
+        ind += 1
+        details = users.find_one({"username": user})
+        user_details.append({
+            "username": details["username"],
+            "email": details["username"] + "@gmail.com",
+            "sent_request": users_sent_request_to[ind]
+        })
+
     return user_details
 
 
