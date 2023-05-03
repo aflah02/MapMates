@@ -9,7 +9,11 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.mapmates.R
+import com.squareup.picasso.Callback
 import com.squareup.picasso.Picasso
+import okhttp3.*
+import timber.log.Timber
+import java.io.IOException
 
 class PendingRequestsAdapter(private var requests: MutableList<FriendData>) :
     RecyclerView.Adapter<PendingRequestsAdapter.PendingRequestViewHolder>() {
@@ -22,21 +26,49 @@ class PendingRequestsAdapter(private var requests: MutableList<FriendData>) :
     }
 
     override fun onBindViewHolder(holder: PendingRequestViewHolder, position: Int) {
-        val request = requests[position]
+        val currentItem = requests[position]
 //        val currentItem = searchResults[position]
-        holder.contact_name.text = request.name
-        Picasso.get().load(request.imageUrl).into(holder.profile_picture)
-        holder.contact_number.text = request.number
+        holder.contact_name.text = currentItem.name
+        Picasso.get().load(currentItem.imageUrl).into(holder.profile_picture)
+        holder.contact_number.text = currentItem.number
         holder.acceptButton.setOnClickListener {
             // Perform the accept operation
-            requests.remove(request)
-            notifyItemRemoved(position)
-            notifyItemRangeChanged(position, itemCount)
-            hideView(holder.itemView)
+//            requests.remove(currentItem)
+//            notifyItemRemoved(position)
+//            notifyItemRangeChanged(position, itemCount)
+//            hideView(holder.itemView)
+
+            val userName = "your_user_name" // replace with the user name of the logged-in user
+            val friendName = currentItem.name // get the name of the friend whose request is being accepted
+            val url = "https://your_api_url.com/users/$userName/$friendName/acceptfriendrequest"
+            val client = OkHttpClient()
+            val request = Request.Builder()
+                .url(url)
+                .post(RequestBody.create(null, ""))
+                .build()
+            client.newCall(request).enqueue(object : Callback {
+                override fun onFailure(call: Call, e: IOException) {
+                    // handle network errors
+                    Timber.tag("pendingf").e(e.message.toString())
+                }
+
+                override fun onResponse(call: Call, response: Response) {
+                    if (response.isSuccessful) {
+                        // remove the accepted request from the list
+                        requests.remove(currentItem)
+                        notifyItemRemoved(position)
+                        notifyItemRangeChanged(position, itemCount)
+                        hideView(holder.itemView)
+                    } else {
+                        // handle unsuccessful response
+                    }
+                }
+            })
+
         }
         holder.rejectButton.setOnClickListener {
             // Perform the reject operation
-            requests.remove(request)
+            requests.remove(currentItem)
             notifyItemRemoved(position)
             notifyItemRangeChanged(position, itemCount)
             hideView(holder.itemView)
@@ -62,15 +94,5 @@ class PendingRequestsAdapter(private var requests: MutableList<FriendData>) :
         val contact_number: TextView = itemView.findViewById(R.id.contact_number)
         val acceptButton: Button = itemView.findViewById(R.id.accept_button)
         val rejectButton: Button = itemView.findViewById(R.id.reject_button)
-
-//        fun bind(request: FriendRequest) {
-//            nameTextView.text = request.name
-//            numberTextView.text = request.number
-//            Glide.with(itemView.context)
-//                .load(request.imageUrl)
-//                .centerCrop()
-//                .placeholder(R.drawable.ic_user)
-//                .into(profileImageView)
-//        }
     }
 }

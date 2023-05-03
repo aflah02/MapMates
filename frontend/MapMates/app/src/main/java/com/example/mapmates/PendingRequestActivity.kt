@@ -8,6 +8,7 @@ import com.example.mapmates.ui.people.friends.FriendData
 import com.example.mapmates.ui.people.friends.PendingRequestsAdapter
 import okhttp3.*
 import org.json.JSONArray
+import org.json.JSONObject
 import timber.log.Timber
 import java.io.IOException
 import java.util.concurrent.CountDownLatch
@@ -26,20 +27,13 @@ class PendingRequestActivity : AppCompatActivity() {
         adapter = PendingRequestsAdapter(getPendingRequests() as MutableList<FriendData>)
         pendingRequestView.adapter = adapter
     }
-    private fun getPendingRequests2(): List<FriendData> {
-        val pendingList = mutableListOf<FriendData>()
-        pendingList.add(FriendData("John Doe", "https://picsum.photos/200","32094190412"))
-        pendingList.add(FriendData("Jane Smith", "https://picsum.photos/200","12889421894"))
-        pendingList.add(FriendData("Bob Johnson", "https://picsum.photos/200","84391249"))
-        // Query the database or API to get the pending friend requests for the user
-        // Return them as a list of FriendRequest objects
-        return pendingList
-    }
-
+//    pendingList.add(FriendData("John Doe", "https://picsum.photos/200","32094190412"))
+//    pendingList.add(FriendData("Jane Smith", "https://picsum.photos/200","12889421894"))
+//    pendingList.add(FriendData("Bob Johnson", "https://picsum.photos/200","84391249"))
 
     private fun getPendingRequests(): List<FriendData> {
         val friendsList = mutableListOf<FriendData>()
-        val jsonString = globalJsonCall("Aflah")
+        val jsonString = friendRequestJsonCall("Aflah")
         if(jsonString!=null){
             val jsonObjectArray = parseJson(jsonString)
             if (jsonObjectArray != null) {
@@ -51,19 +45,22 @@ class PendingRequestActivity : AppCompatActivity() {
         return friendsList
     }
     private fun parseJson(jsonString: String): ArrayList<Pair<String, String>>? {
-        val jsArray = JSONArray(jsonString)
+
+        val jsonObject = JSONObject(jsonString)
         val friendsList = ArrayList<Pair<String, String>>()
-        for(i in 0 until jsArray.length()){
-            val jsObj = jsArray.getJSONObject(i)
-            val username = jsObj.getString("username")
-            val name = jsObj.getString("username")
-            friendsList.add(Pair(username,name))
+
+        if (jsonObject.has("friend_requests")) {
+            val friendRequests = jsonObject.getJSONArray("friend_requests")
+            for (i in 0 until friendRequests.length()) {
+                val name = friendRequests.getString(i)
+                friendsList.add(Pair(name,name))
+            }
         }
         return friendsList
     }
 
 
-    private fun globalJsonCall(text:String): String? {
+    private fun friendRequestJsonCall(text:String): String? {
         var responseString : String? = null
         val client = OkHttpClient()
         val request = Request.Builder()

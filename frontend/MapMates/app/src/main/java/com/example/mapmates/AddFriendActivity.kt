@@ -74,16 +74,13 @@ class AddFriendActivity : AppCompatActivity() {
     }
 
     private fun parseJson(jsonString: String): ArrayList<Pair<String, String>>? {
-
-        val jsonObject = JSONObject(jsonString)
+        val jsArray = JSONArray(jsonString)
         val friendsList = ArrayList<Pair<String, String>>()
-
-        if (jsonObject.has("friend_requests")) {
-            val friendRequests = jsonObject.getJSONArray("friend_requests")
-            for (i in 0 until friendRequests.length()) {
-                val name = friendRequests.getString(i)
-                friendsList.add(Pair(name,name))
-            }
+        for(i in 0 until jsArray.length()){
+            val jsObj = jsArray.getJSONObject(i)
+            val username = jsObj.getString("username")
+            val name = jsObj.getString("username")
+            friendsList.add(Pair(username,name))
         }
         return friendsList
     }
