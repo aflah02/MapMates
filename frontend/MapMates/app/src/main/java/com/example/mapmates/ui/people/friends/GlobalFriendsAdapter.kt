@@ -1,5 +1,6 @@
 package com.example.mapmates.ui.people.friends
 
+import android.app.Activity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -14,7 +15,7 @@ import timber.log.Timber
 import java.io.IOException
 
 
-class GlobalFriendsAdapter(var searchResults: List<RequestFriendData>): RecyclerView.Adapter<GlobalFriendsAdapter.GlobalFriendsViewHolder>() {
+class GlobalFriendsAdapter(var activity: Activity,var searchResults: List<RequestFriendData>): RecyclerView.Adapter<GlobalFriendsAdapter.GlobalFriendsViewHolder>() {
 
 
 
@@ -50,13 +51,9 @@ class GlobalFriendsAdapter(var searchResults: List<RequestFriendData>): Recycler
 
                 override fun onResponse(call: Call, response: Response) {
                     if (response.isSuccessful) {
-//                        activity.runOnUiThread {
-//                            // remove the accepted request from the list
-//                            requests.remove(currentItem)
-//                            notifyItemRemoved(position)
-//                            notifyItemRangeChanged(position, itemCount)
-//                            hideView(holder.itemView)
-//                        }
+                        activity.runOnUiThread {
+                            holder.requestStatus.setText("sent")
+                        }
 //                        holder.requestStatus.setText("sent")
 
                     } else {

@@ -48,7 +48,7 @@ class AddFriendActivity : AppCompatActivity() {
     }
     private fun setFriendsRecycler(){
         globalNames.layoutManager = LinearLayoutManager(this)
-        searchResultAdapter = GlobalFriendsAdapter(emptyList<RequestFriendData>())
+        searchResultAdapter = GlobalFriendsAdapter(this,emptyList<RequestFriendData>())
         globalNames.adapter = searchResultAdapter
         searchResults = getGlobalPeople()
         searchResultAdapter.updateList(searchResults)
