@@ -3,3 +3,4 @@ pymongo
 bcrypt
 python-multipart
 pillow
+uvicorn

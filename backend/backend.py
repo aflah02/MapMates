@@ -7,7 +7,6 @@ import uvicorn
 import pydantic
 from bson import ObjectId
 from config import *
-from gridfs import GridFS
 pydantic.json.ENCODERS_BY_TYPE[ObjectId]=str
 from PIL import Image
 import io
@@ -185,6 +184,24 @@ async def accept_friend_request(user_name: str, friend_name: str):
             return {"message": "No friend request sent"}
     else:
         return {"message": "Invalid username or friend_name"}
+    
+@app.post("/users/{user_name}/{friend_name}/declinefriendrequest")
+async def decline_friend_request(user_name: str, friend_name: str):
+    user = users.find_one({"username": user_name})
+    friend = users.find_one({"username": friend_name})
+    if user and friend:
+        if friend["_id"] in user["pending_friend_requests"]:
+            update = {
+                "$set": {
+                    "pending_friend_requests": user["pending_friend_requests"].remove(friend["_id"])
+                }
+            }
+            users.update_one({"username": user_name}, update)
+            return {"message": "Friend request declined"}
+        else:
+            return {"message": "No friend request sent"}
+    else:
+        return {"message": "Invalid username or friend_name"}
 
 @app.delete("/users/{user_name}")
 async def delete_user(user_name: str):
@@ -240,6 +257,19 @@ async def get_profile_picture(user_name: str):
     # Return the profile picture
     return Response(content=io.BytesIO(profile_picture['data']).getvalue(), media_type="image/jpeg")
 
+# Get marker image from marker_image_collection using image_id
+@app.get("/users/{image_id}/marker_image")
+async def get_marker_image(image_id: str):
+    marker_image = None
+    for image in marker_image_collection.find():
+        if str(image["_id"]) == image_id:
+            marker_image = image
+            break
+    if marker_image is None:
+        return {"message": "Image not found"}
+    # Return the marker image
+    return Response(content=io.BytesIO(marker_image['data']).getvalue(), media_type="image/jpeg")
+
 # Add new marker
 @app.post("/users/addmarker")
 async def add_marker(username: str, marker: dict):
@@ -265,6 +295,9 @@ async def get_markers(user_name: str):
     # Return the markers
     return markers
 
+
+
+
 # Get friends for a user
 @app.get("/users/{user_name}/friends")
 async def get_friends(user_name: str):
@@ -283,12 +316,13 @@ async def get_friends(user_name: str):
 # Get all users whose username contains a given string
 @app.get("/users/{user_name}/user_search")
 async def search_users(user_name: str):
+    user_name = user_name.lower()
     # Get all users
     all_users = users.find()
     # Get all users whose username contains the given string
     matching_users = []
     for user in all_users:
-        if user_name in user["username"]:
+        if user_name in user["username"].lower():
             matching_users.append(user["username"])
     # for each matching user, return their username and email
     user_details = []
@@ -310,14 +344,14 @@ async def read_groups():
 
 @app.get("/groups/{group_id}")
 async def read_group(group_id: str):
-    return groups.find_one({"_id": ObjectId(group_id)})
+    return groups.find_one({"_id": group_id})
 
 
 @app.post("/groups")
 async def create_group(users: list):
     max_id = groups.find_one(sort=[("_id", -1)])["_id"]
     group = {
-        "_id": str(int(max_id) + 2),
+        "_id": str(int(max_id) + 1),
         "users": users,
     }
     result = groups.insert_one(group)
@@ -326,7 +360,7 @@ async def create_group(users: list):
 # get group members
 @app.get("/groups/{group_id}/members")
 async def get_group_members(group_id: str):
-    group = groups.find_one({"_id": ObjectId(group_id)})
+    group = groups.find_one({"_id": group_id})
     return group["users"]
     
 
@@ -337,38 +371,49 @@ async def update_group(group_id: str, users: list):
             "users": users,
         }
     }
-    groups.update_one({"_id": ObjectId(group_id)}, update)
+    groups.update_one({"_id": group_id}, update)
     return {"message": "Group updated successfully"}
 
 # Add a new user to a group
 @app.put("/groups/{group_id}/add_user")
-async def add_user_to_group(group_id: str, user_id: str):
-    current_users = groups.find_one({"_id": ObjectId(group_id)})["users"]
-    current_users.append(user_id)
+async def add_user_to_group(group_id: str, user_name: str):
+    print(group_id, user_name)
+    current_users = groups.find_one({"_id": group_id})["users"]
+    current_users.append(user_name)
     update = {
         "$set": {
             "users": current_users,
         }
     }
-    groups.update_one({"_id": ObjectId(group_id)}, update)
+    groups.update_one({"_id": group_id}, update)
     return {"message": "User added to group successfully"}
 
 # Remove a user from a group
 @app.put("/groups/{group_id}/remove_user")
-async def remove_user_from_group(group_id: str, user_id: str):
-    create_users = groups.find_one({"_id": ObjectId(group_id)})["users"]
-    create_users.remove(user_id)
+async def remove_user_from_group(group_id: str, user_name: str):
+    create_users = groups.find_one({"_id": group_id})["users"]
+    create_users.remove(user_name)
     update = {
         "$set": {
             "users": create_users,
         }
     }
-    groups.update_one({"_id": ObjectId(group_id)}, update)
+    groups.update_one({"_id": group_id}, update)
     return {"message": "User removed from group successfully"}
 
 @app.delete("/groups/{group_id}")
 async def delete_group(group_id: str):
-    groups.delete_one({"_id": ObjectId(group_id)})
+    groups.delete_one({"_id": group_id})
+    # from the user's groups, remove the group
+    for user in users.find():
+        if group_id in user["groups"]:
+            user["groups"].remove(group_id)
+            update = {
+                "$set": {
+                    "groups": user["groups"],
+                }
+            }
+            users.update_one({"_id": user["_id"]}, update)
     return {"message": "Group deleted successfully"}
 
 
