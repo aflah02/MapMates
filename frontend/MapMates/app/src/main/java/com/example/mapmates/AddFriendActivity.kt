@@ -83,7 +83,7 @@ class AddFriendActivity : AppCompatActivity() {
             val name = jsObj.getString("username")
             val status = jsObj.getString("sent_request")
 
-            friendsList.add(RequestFriendData(username,"https://mapsapp-1-m9050519.deta.app/users/${username}/profile_picture",username+"email.com",status))
+            friendsList.add(RequestFriendData(username,"https://mapsapp-1-m9050519.deta.app/users/${username}/profile_picture",username+"@gmail.com",status))
         }
         return friendsList
     }

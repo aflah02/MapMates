@@ -31,8 +31,8 @@ class GlobalFriendsAdapter(var activity: Activity,var searchResults: List<Reques
         holder.contact_number.text = currentItem.number
         if(currentItem.status.equals("Yes")){
             holder.requestStatus.setText("sent")
+            holder.requestStatus.isClickable = false
         }
-//        holder.requestStatus.setText(currentItem.status)//change according currentItem.status in if conditions only in case of pending
         holder.requestStatus.setOnClickListener {
             // Call API to post friend request and change request to pending
             val userName = "Aflah" // replace with the user name of the logged-in user
@@ -53,8 +53,8 @@ class GlobalFriendsAdapter(var activity: Activity,var searchResults: List<Reques
                     if (response.isSuccessful) {
                         activity.runOnUiThread {
                             holder.requestStatus.setText("sent")
+                            holder.requestStatus.isClickable = false
                         }
-//                        holder.requestStatus.setText("sent")
 
                     } else {
                         // handle unsuccessful response

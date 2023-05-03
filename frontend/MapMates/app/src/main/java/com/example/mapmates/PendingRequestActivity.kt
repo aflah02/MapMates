@@ -38,22 +38,22 @@ class PendingRequestActivity : AppCompatActivity() {
             val jsonObjectArray = parseJson(jsonString)
             if (jsonObjectArray != null) {
                 for(item in jsonObjectArray){
-                    friendsList.add(FriendData(item.first,"https://mapsapp-1-m9050519.deta.app/users/${item.first}/profile_picture",(item.second+"@email.com")))
+                    friendsList.add(item)
                 }
             }
         }
         return friendsList
     }
-    private fun parseJson(jsonString: String): ArrayList<Pair<String, String>>? {
+    private fun parseJson(jsonString: String): ArrayList<FriendData>? {
 
         val jsonObject = JSONObject(jsonString)
-        val friendsList = ArrayList<Pair<String, String>>()
+        val friendsList = ArrayList<FriendData>()
 
         if (jsonObject.has("friend_requests")) {
             val friendRequests = jsonObject.getJSONArray("friend_requests")
             for (i in 0 until friendRequests.length()) {
                 val name = friendRequests.getString(i)
-                friendsList.add(Pair(name,name))
+                friendsList.add(FriendData(name,"https://mapsapp-1-m9050519.deta.app/users/${name}/profile_picture",name+"@gmail.com"))
             }
         }
         return friendsList
@@ -89,5 +89,3 @@ class PendingRequestActivity : AppCompatActivity() {
     }
 
 }
-
-//https://mapsapp-1-m9050519.deta.app/users/Aflah/getfriendrequests

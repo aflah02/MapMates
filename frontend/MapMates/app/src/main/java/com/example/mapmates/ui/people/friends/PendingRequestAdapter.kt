@@ -26,80 +26,48 @@ class PendingRequestsAdapter(private val activity: Activity,private var requests
 
     override fun onBindViewHolder(holder: PendingRequestViewHolder, position: Int) {
         val currentItem = requests[holder.adapterPosition]
-//        val currentItem = searchResults[position]
         holder.contact_name.text = currentItem.name
         Picasso.get().load(currentItem.imageUrl).into(holder.profile_picture)
         holder.contact_number.text = currentItem.number
+        val userName = "Aflah" // replace with the user name of the logged-in user
+        val friendName = currentItem.name // get the name of the friend whose request is being accepted
         holder.acceptButton.setOnClickListener {
-
-            val userName = "Aflah" // replace with the user name of the logged-in user
-            val friendName = currentItem.name // get the name of the friend whose request is being accepted
-            val url = "https://mapsapp-1-m9050519.deta.app/users/$userName/$friendName/acceptfriendrequest"
-            val client = OkHttpClient()
-            val request = Request.Builder()
-                .url(url)
-                .post(RequestBody.create(null, ""))
-                .build()
-            client.newCall(request).enqueue(object : Callback {
-                override fun onFailure(call: Call, e: IOException) {
-                    // handle network errors
-                    Timber.tag("pendingf").e(e.message.toString())
-                }
-
-                override fun onResponse(call: Call, response: Response) {
-                    if (response.isSuccessful) {
-                        activity.runOnUiThread {
-                            // remove the accepted request from the list
-                            requests.remove(currentItem)
-                            notifyItemRemoved(position)
-                            notifyItemRangeChanged(position, itemCount)
-                            hideView(holder.itemView)
-                        }
-
-                    } else {
-                        // handle unsuccessful response
-                    }
-                }
-            })
-
+            jsonCall("acceptfriendrequest",userName,friendName,holder)
         }
         holder.rejectButton.setOnClickListener {
-            // Perform the reject operation
-            requests.remove(currentItem)
-            notifyItemRemoved(position)
-            notifyItemRangeChanged(position, itemCount)
-            hideView(holder.itemView)
-            val userName = "Aflah" // replace with the user name of the logged-in user
-            val friendName = currentItem.name // get the name of the friend whose request is being accepted
-            val url = "https://mapsapp-1-m9050519.deta.app/users/$userName/$friendName/declinefriendrequest"
-            val client = OkHttpClient()
-            val request = Request.Builder()
-                .url(url)
-                .post(RequestBody.create(null, ""))
-                .build()
-            client.newCall(request).enqueue(object : Callback {
-                override fun onFailure(call: Call, e: IOException) {
-                    // handle network errors
-                    Timber.tag("pendingf").e(e.message.toString())
-                }
-
-                override fun onResponse(call: Call, response: Response) {
-                    if (response.isSuccessful) {
-                        activity.runOnUiThread {
-                            // remove the accepted request from the list
-                            requests.remove(currentItem)
-                            notifyItemRemoved(position)
-                            notifyItemRangeChanged(position, itemCount)
-                            hideView(holder.itemView)
-                        }
-                    } else {
-                        // handle unsuccessful response
-                    }
-                }
-            })
-
-
+            jsonCall("declinefriendrequest",userName, friendName, holder)
         }
+    }
+    private fun jsonCall(requestString: String, userName:String, friendName:String, holder: PendingRequestViewHolder,){
+        val currentItem = requests[holder.adapterPosition]
+
+        val url = "https://mapsapp-1-m9050519.deta.app/users/$userName/$friendName/${requestString}"
+        val client = OkHttpClient()
+        val request = Request.Builder()
+            .url(url)
+            .post(RequestBody.create(null, ""))
+            .build()
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                // handle network errors
+                Timber.tag("pendingf").e(e.message.toString())
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                if (response.isSuccessful) {
+                    activity.runOnUiThread {
+                        // remove the accepted request from the list
+                        requests.remove(currentItem)
+                        notifyItemRemoved(holder.adapterPosition)
+                        notifyItemRangeChanged(holder.adapterPosition, itemCount)
+                        hideView(holder.itemView)
+                    }
+
+                } else {
+                    // handle unsuccessful response
+                }
+            }
+        })
     }
 
     override fun getItemCount(): Int = requests.size
