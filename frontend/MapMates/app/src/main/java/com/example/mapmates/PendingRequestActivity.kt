@@ -24,7 +24,7 @@ class PendingRequestActivity : AppCompatActivity() {
 
         pendingRequestView = findViewById(R.id.pendingRequestRecyclerView)
         pendingRequestView.layoutManager = LinearLayoutManager(this)
-        adapter = PendingRequestsAdapter(getPendingRequests() as MutableList<FriendData>)
+        adapter = PendingRequestsAdapter(this,getPendingRequests() as MutableList<FriendData>)
         pendingRequestView.adapter = adapter
     }
 //    pendingList.add(FriendData("John Doe", "https://picsum.photos/200","32094190412"))
