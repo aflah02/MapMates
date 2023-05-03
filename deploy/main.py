@@ -8,7 +8,6 @@ from bson import ObjectId
 pydantic.json.ENCODERS_BY_TYPE[ObjectId]=str
 from PIL import Image
 import io
-
 app = FastAPI()
 
 # Create a MongoClient instance
@@ -151,7 +150,7 @@ async def check_friend_request(user_name: str, friend_name: str):
     user = users.find_one({"username": user_name})
     friend = users.find_one({"username": friend_name})
     if user and friend:
-        if friend["_id"] in user["pending_friend_requests"]:
+        if str(friend["username"]) in user["pending_friend_requests"]:
             return {"message": "Friend request sent"}
         else:
             return {"message": "No friend request sent"}
@@ -163,16 +162,22 @@ async def accept_friend_request(user_name: str, friend_name: str):
     user = users.find_one({"username": user_name})
     friend = users.find_one({"username": friend_name})
     if user and friend:
-        if friend["_id"] in user["pending_friend_requests"]:
+        if friend["username"] in user["pending_friend_requests"]:
+            ls = user["pending_friend_requests"]
+            ls.remove(friend["username"])
+            ls_friends = user["userfriends"]
+            ls_friends.append(friend["username"])
+            ls_friend_friends = friend["userfriends"]
+            ls_friend_friends.append(user["username"])
             update = {
                 "$set": {
-                    "pending_friend_requests": user["pending_friend_requests"].remove(friend["_id"]),
-                    "userfriends": user["userfriends"].append(friend["_id"])
+                    "pending_friend_requests": ls,
+                    "userfriends": ls_friends
                 }
             }
             update_friend = {
                 "$set": {
-                    "userfriends": friend["userfriends"].append(user["_id"])
+                    "userfriends": ls_friend_friends
                 }
             }
             users.update_one({"username": user_name}, update)
@@ -188,10 +193,12 @@ async def decline_friend_request(user_name: str, friend_name: str):
     user = users.find_one({"username": user_name})
     friend = users.find_one({"username": friend_name})
     if user and friend:
-        if friend["_id"] in user["pending_friend_requests"]:
+        if friend["username"] in user["pending_friend_requests"]:
+            ls = user["pending_friend_requests"]
+            ls.remove(friend["username"])
             update = {
                 "$set": {
-                    "pending_friend_requests": user["pending_friend_requests"].remove(friend["_id"])
+                    "pending_friend_requests": ls
                 }
             }
             users.update_one({"username": user_name}, update)
@@ -207,22 +214,26 @@ async def delete_user(user_name: str):
     return {"message": "User deleted successfully"}
 
 # add friend
-@app.post("/users/addfriend")
+@app.post("/users/{user_name}/{friend_name}/addfriend")
 async def add_friend(user_name: str, friend_name: str):
     user = users.find_one({"username": user_name})
     friend = users.find_one({"username": friend_name})
     if user and friend:
-        if friend["_id"] in user["userfriends"]:
+        if str(friend["username"]) in user["userfriends"]:
             return {"message": "Friend already added"}
         else:
+            ls_friends = user["userfriends"]
+            ls_friends.append(friend["username"])
+            ls_friend_friends = friend["userfriends"]
+            ls_friend_friends.append(user["username"])
             update = {
                 "$set": {
-                    "userfriends": user["userfriends"].append(friend["user_name"])
+                    "userfriends": ls_friends
                 }
             }
             update_friend = {
                 "$set": {
-                    "userfriends": friend["userfriends"].append(user["user_name"])
+                    "userfriends": ls_friend_friends
                 }
             }
             users.update_one({"username": user_name}, update)
@@ -230,6 +241,36 @@ async def add_friend(user_name: str, friend_name: str):
             return {"message": "Friend added successfully"}
     else:
         return {"message": "Invalid username or friend_name"}
+    
+# remove friend
+@app.post("/users/{user_name}/{friend_name}/removefriend")
+async def remove_friend(user_name: str, friend_name: str):
+    user = users.find_one({"username": user_name})
+    friend = users.find_one({"username": friend_name})
+    if user and friend:
+        if str(friend["username"]) not in user["userfriends"]:
+            return {"message": "Friend not added"}
+        else:
+            ls_friends = user["userfriends"]
+            ls_friends.remove(friend["username"])
+            ls_friend_friends = friend["userfriends"]
+            ls_friend_friends.remove(user["username"])
+            update = {
+                "$set": {
+                    "userfriends": ls_friends
+                }
+            }
+            update_friend = {
+                "$set": {
+                    "userfriends": ls_friend_friends
+                }
+            }
+            users.update_one({"username": user_name}, update)
+            users.update_one({"username": friend_name}, update_friend)
+            return {"message": "Friend removed successfully"}
+    else:
+        return {"message": "Invalid username or friend_name"}
+
 
 # Validate a user's credentials
 @app.post("/users/validate")
@@ -269,21 +310,44 @@ async def get_marker_image(image_id: str):
     return Response(content=io.BytesIO(marker_image['data']).getvalue(), media_type="image/jpeg")
 
 # Add new marker
-@app.post("/users/addmarker")
-async def add_marker(username: str, marker: dict):
-    # Get the user's markers
-    markers = users.find_one({"username": username})["markers"]
-    # Add the new marker
-    markers.append(marker)
-    # Update the user's markers
+@app.post("/users/{user_name}/add_marker")
+async def add_marker(username: str, name: str, description: str, latitude: float, longitude: float, 
+                     image_id: list, group_which_can_see: list, friends_can_see: bool,
+                     image_uploaders: list, notes: list, notes_uploaders: list):
+    marker = {
+        "name": name,
+        "description": description,
+        "latitude": latitude,
+        "longitude": longitude,
+        "image_id": image_id,
+        "group_which_can_see": group_which_can_see,
+        "friends_can_see": friends_can_see,
+        "image_uploaders": image_uploaders,
+        "notes": notes,
+        "notes_uploaders": notes_uploaders
+    }
+
+    # Add the marker to the user's markers
     update = {
         "$set": {
-            "markers": markers,
+            "markers": users.find_one({"username": username})["markers"].append(marker)
         }
     }
     users.update_one({"username": username}, update)
-
     return {"message": "Marker added successfully"}
+
+# Upload a marker image
+@app.post("/users/{user_name}/upload_marker_image")
+async def upload_marker_image(user_name: str, image: UploadFile = File(...)):
+    im = Image.open(image.file)
+    image_bytes = io.BytesIO()
+    im.save(image_bytes, format="JPEG")
+    image = {
+        "data": image_bytes.getvalue()
+    }
+    image_id = marker_image_collection.insert_one(image).inserted_id
+    return {"message": "Image uploaded successfully", "image_id": str(image_id)}
+    
 
 # Get markers for a user
 @app.get("/users/{user_name}/markers")
@@ -292,6 +356,8 @@ async def get_markers(user_name: str):
     markers = users.find_one({"username": user_name})["markers"]
     # Return the markers
     return markers
+
+
 
 
 

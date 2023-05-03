@@ -26,7 +26,7 @@ def get_markers_for_user(seed, group_vs_users):
         for place in famous_places.keys():
             if place in file:
                 mapping_famous_places_to_files[place] = file
-
+    user_names = ["Aflah", "Aadit", "Mohit", "Kush", "Ritwick", "Neemesh", "Sohum", "Kushagra", "Nishaant", "Abhik"] 
     db = client["master_db"]
     image_collection = db["images"]
     random.seed(seed)
@@ -37,7 +37,7 @@ def get_markers_for_user(seed, group_vs_users):
         if user_or_group == "user":
             groups_which_can_see = []
             friends_can_see = False
-
+            uploading_user = random.choice(user_names)
             im = Image.open(os.path.join("assets", mapping_famous_places_to_files[random_place]))
             image_bytes = io.BytesIO()
             im.save(image_bytes, format='JPEG')
@@ -45,25 +45,31 @@ def get_markers_for_user(seed, group_vs_users):
                 'data': image_bytes.getvalue(),
             }
             image_id = db.images.insert_one(image).inserted_id
-
+            images = [image_id]
+            image_uploaders = [uploading_user]
+            note = "This is a famous place in Delhi"
+            notes = [note]
+            notes_uploaders = [uploading_user]
             markers.append({
                 "name": random_place,
                 "latitude": famous_places[random_place][0],
                 "longitude": famous_places[random_place][1],
                 "description": "This is a famous place in Delhi",
-                "groups_which_can_see": groups_which_can_see,
+                "group_which_can_see": groups_which_can_see,
                 "friends_can_see": friends_can_see,
-                "image": image_id,
+                "image": images,
+                "image_uploaders": image_uploaders,
+                "notes": notes,
+                "notes_uploaders": notes_uploaders,
             })
         elif user_or_group == "group":
             groups_which_user_is_in = []
+            random_user = random.choice(user_names)
             for group in group_vs_users.keys():
-                if str(seed) in group_vs_users[group]:
+                if random_user in group_vs_users[group]:
                     groups_which_user_is_in.append(group)
-            groups_which_can_see = []
-            for group in groups_which_user_is_in:
-                if random.randint(0, 1) == 1:
-                    groups_which_can_see.append(group)
+            # choose one group
+            random_group = random.choice(groups_which_user_is_in)
             friends_can_see = False
 
             im = Image.open(os.path.join("assets", mapping_famous_places_to_files[random_place]))
@@ -73,36 +79,49 @@ def get_markers_for_user(seed, group_vs_users):
                 'data': image_bytes.getvalue(),
             }
             image_id = db.images.insert_one(image).inserted_id
-
+            images = [image_id]
+            image_uploaders = [random_user]
+            notes = ["This is a famous place in Delhi"]
+            notes_uploaders = [random_user]
+            # group members 
             markers.append({
                 "name": random_place,
                 "latitude": famous_places[random_place][0],
                 "longitude": famous_places[random_place][1],
                 "description": "This is a famous place in Delhi",
-                "groups_which_can_see": groups_which_can_see,
+                "group_which_can_see": [random_group],
                 "friends_can_see": friends_can_see,
-                "image": image_id,
+                "image": images,
+                "image_uploaders": image_uploaders,
+                "notes": notes,
+                "notes_uploaders": notes_uploaders,
             })
         elif user_or_group == "friend":
             groups_which_can_see = []
             friends_can_see = True
-
+            uploader = random.choice(user_names)
             im = Image.open(os.path.join("assets", mapping_famous_places_to_files[random_place]))
             image_bytes = io.BytesIO()
             im.save(image_bytes, format='JPEG')
             image = {
                 'data': image_bytes.getvalue(),
             }
+            notes = ["This is a famous place in Delhi"]
+            notes_uploaders = [uploader]
             image_id = db.images.insert_one(image).inserted_id
             images = [image_id]
+            image_uploaders = [uploader]
             markers.append({
                 "name": random_place,
                 "latitude": famous_places[random_place][0],
                 "longitude": famous_places[random_place][1],
                 "description": "This is a famous place in Delhi",
-                "groups_which_can_see": groups_which_can_see,
+                "group_which_can_see": groups_which_can_see,
                 "friends_can_see": friends_can_see,
                 "images": images,
+                "image_uploaders": image_uploaders,
+                "notes": notes,
+                "notes_uploaders": notes_uploaders,
             })
     return markers
 
@@ -114,11 +133,14 @@ def build_user_friends_and_group_vs_users():
     }
 
     user_names = ["Aflah", "Aadit", "Mohit", "Kush", "Ritwick", "Neemesh", "Sohum", "Kushagra", "Nishaant", "Abhik"]
-
+    c = -1
     for i in user_names:
+        c += 1
         if i not in user_friends:
             user_friends[i] = []
+        random.seed(c)
         random_friends = random.sample(range(0, 10), 1)
+        print(i, random_friends)
         random_friend_names = [user_names[i] for i in random_friends]
         if i in random_friend_names:
             random_friend_names.remove(i)
@@ -134,7 +156,7 @@ def build_user_friends_and_group_vs_users():
     group_vs_users = {
     }
 
-    for i in range(5):
+    for i in range(15):
         group_vs_users[str(i)] = []
         # choose random users
         random.seed(i)
@@ -189,12 +211,30 @@ def build_users(client, user_friends, group_vs_users):
 
         # Generate random friends for the user
         userfriends = user_friends[user_names[i]]
+
+        # Non friends
+        non_friends = []
+        for user in user_names:
+            if user not in userfriends and user != user_names[i]:
+                non_friends.append(user)
+
+        # Choose friend request senders
+        random.seed(i)
+        random_friend_request_senders = random.sample(range(0, len(non_friends)), 2)
+        random_friend_request_sender_names = [non_friends[i] for i in random_friend_request_senders]
+
+        print("User: ", user_names[i])
+        print("Friends: ", userfriends)
+        print("Non friends: ", non_friends)
+        print("Friend request senders: ", random_friend_request_sender_names)
         
         groups = []
         
         for group in group_vs_users:
-            if str(i) in group_vs_users[group]:
+            if user_names[i] in group_vs_users[group]:
                 groups.append(group)
+
+        print("Groups: ", groups)
 
         # Hash the password using bcrypt
         password = user_names[i]
@@ -203,6 +243,12 @@ def build_users(client, user_friends, group_vs_users):
         random.seed(i)
         
         markers = get_markers_for_user(i, group_vs_users)
+
+        num_markers = 0
+        # give _id to all markers
+        for marker in markers:
+            marker["_id"] = str(num_markers)
+            num_markers += 1
         
         user = {
             "username": user_names[i],
@@ -211,7 +257,7 @@ def build_users(client, user_friends, group_vs_users):
             "groups": groups,
             "markers": markers,
             "profile_picture": pfp_id,
-            "pending_friend_requests": [],
+            "pending_friend_requests": random_friend_request_sender_names,
         }
         users.insert_one(user)
 
