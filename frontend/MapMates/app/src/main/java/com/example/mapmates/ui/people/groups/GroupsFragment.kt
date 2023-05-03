@@ -1,14 +1,26 @@
 package com.example.mapmates.ui.people.groups
 
 import android.os.Bundle
-import androidx.fragment.app.Fragment
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.mapmates.R
+import com.example.mapmates.ui.people.friends.FriendData
 import com.google.android.material.snackbar.Snackbar
+import okhttp3.*
+import org.json.JSONArray
+import org.json.JSONObject
+import timber.log.Timber
+import java.io.BufferedReader
+import java.io.IOException
+import java.io.InputStreamReader
+import java.net.URL
+import java.util.concurrent.CountDownLatch
+
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -69,7 +81,7 @@ class GroupsFragment : Fragment() {
     private fun setGroupRecycler(){
         groupRecyclerView.layoutManager = LinearLayoutManager(activity)
 
-        adapter = GroupsAdapter(emptyList(), )
+        adapter = GroupsAdapter(emptyList())
         groupRecyclerView.adapter = adapter
 
         val groupList = getGroupList()
@@ -80,19 +92,66 @@ class GroupsFragment : Fragment() {
 
     private fun getGroupList(): List<GroupData> {
         val groupList = mutableListOf<GroupData>()
-        groupList.add(GroupData("Group 1", "https://picsum.photos/200"))
-        groupList.add(GroupData("Group 2", "https://picsum.photos/200"))
-        groupList.add(GroupData("Group 3", "https://picsum.photos/200"))
-        groupList.add(GroupData("Group 4", "https://picsum.photos/200"))
-        groupList.add(GroupData("Group 5", "https://picsum.photos/200"))
-        groupList.add(GroupData("Group 6", "https://picsum.photos/200"))
-        groupList.add(GroupData("Group 7", "https://picsum.photos/200"))
 
+        val jsonString = getGroupDetails("Aflah")
+        if(jsonString!=null){
+            val jsonObjectArray = parseJson(jsonString)
+            if (jsonObjectArray != null) {
+                for(item in jsonObjectArray){
+                    Log.d("Groups",item)
+                    groupList.add(GroupData(item,"https://picsum.photos/200"))
+                }
+            }
+        }
 
         return groupList
 
     }
 
+
+    private fun parseJson(jsonString: String): ArrayList<String>? {
+
+        val jsonObject = JSONObject(jsonString)
+        val groupList = ArrayList<String>()
+
+        if (jsonObject.has("groups")) {
+            val friendRequests = jsonObject.getJSONArray("groups")
+            for (i in 0 until friendRequests.length()) {
+                val name = friendRequests.getString(i)
+                groupList.add(name)
+            }
+        }
+
+        return groupList
+    }
+
+    fun getGroupDetails(username: String): String? {
+        var responseString : String? = null
+        val client = OkHttpClient()
+        val request = Request.Builder()
+            .url("https://mapsapp-1-m9050519.deta.app/users/$username/groups")
+            .build()
+        val latch = CountDownLatch(1)
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                Timber.tag("groups").e(e.message.toString())
+                latch.countDown()
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                responseString = response.body?.string()
+                if (!response.isSuccessful) {
+                    latch.countDown()
+                    return
+                }
+                Timber.tag("Groups").i(responseString.toString())
+                latch.countDown()
+            }
+        }
+        )
+        latch.await()
+        return responseString
+    }
     companion object {
         /**
          * Use this factory method to create a new instance of
