@@ -3,10 +3,13 @@ package com.example.mapmates.ui.home
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.graphics.Color
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.location.Location
 import android.os.Bundle
+import android.print.PrintAttributes.Resolution
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -21,6 +24,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.mapmates.R
 import com.example.mapmates.databinding.FragmentHomeBinding
 import com.example.mapmates.utils.LocationPermissionHelper
+import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -52,8 +56,9 @@ class HomeFragment : Fragment(), OnItemClickListener {
     private lateinit var homeViewModel: HomeViewModel
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
-    private lateinit var groupsList: ArrayList<String>
+    private lateinit var groupsList: ArrayList<GroupModel>
     private lateinit var groupsRecyclerView: RecyclerView
+    private lateinit var groupSheetDialog: BottomSheetDialog
     private var mapLoaded: Boolean = false
 
     private lateinit var locationPermissionHelper : LocationPermissionHelper
@@ -90,20 +95,22 @@ class HomeFragment : Fragment(), OnItemClickListener {
         locationPermissionHelper.checkPermissions {
             onMapReady()
         }
-        groupsList = ArrayList<String>()
+        groupsList = ArrayList<GroupModel>()
         // TODO: Dynamic groupsList
         // initialize groupsList with GROUP Names
-        groupsList.add("Group 1")
-        groupsList.add("Group 2")
-        groupsList.add("Group 3")
-        groupsList.add("Group 4")
+        groupsList.add(GroupModel("Friends", "420", R.drawable.ic_profile))
+        groupsList.add(GroupModel("Group 1", "3", R.drawable.ic_map))
+        groupsList.add(GroupModel("Group 2", "15", R.drawable.ic_home))
+        groupsList.add(GroupModel("Group 3", "30", R.drawable.ic_profile))
+        groupsList.add(GroupModel("Group 4", "69", R.drawable.ic_map))
 
         pointAnnotationManager = mapView.annotations.createPointAnnotationManager()
 
+        createBottomGroupDialog()
         // Setting up change group fab
         val groupsFab : ExtendedFloatingActionButton = binding.groupsFab
         groupsFab.setOnClickListener {
-            showBottomGroupDialog()
+            groupSheetDialog.show()
         }
 
         // Setting up location fab
@@ -209,9 +216,11 @@ class HomeFragment : Fragment(), OnItemClickListener {
         mapView.onLowMemory()
     }
 
-    private fun showBottomGroupDialog() {
-        val groupSheetDialog = BottomSheetDialog(requireContext())
+    private fun createBottomGroupDialog() {
+        groupSheetDialog = BottomSheetDialog(requireContext(), R.style.BottomSheetDialog)
         groupSheetDialog.setContentView(R.layout.group_sheet_dialog)
+//        val behavior = BottomSheetBehavior.from(groupSheetDialog.findViewById(R.id.group_sheet_dialog_parent)!!)
+//        behavior.setPeekHeight(900, true)
 
         // initialize adapter
         groupsRecyclerView = groupSheetDialog.findViewById(R.id.recycler_view)!!
@@ -226,11 +235,24 @@ class HomeFragment : Fragment(), OnItemClickListener {
         closeButton.setOnClickListener {
             groupSheetDialog.dismiss()
         }
-        groupSheetDialog.show()
     }
 
     override fun onItemClick(position: Int) {
-        binding.groupsFab.text = groupsList[position]
+        binding.groupsFab.text = groupsList[position].groupName
+        // iterate over viewholder in groupRecylcerView and set background to white
+        for (i in 0 until groupsRecyclerView.childCount) {
+            val holder = groupsRecyclerView.getChildViewHolder(groupsRecyclerView.getChildAt(i))
+            if(i == position) {
+                // select
+                holder.itemView.setBackgroundColor(Color.RED)
+                groupsList[i].isShowing = true
+            }
+            else {
+                // deselect
+                holder.itemView.setBackgroundColor(Color.WHITE)
+                groupsList[i].isShowing = false
+            }
+        }
         pointAnnotationManager.deleteAll()
     }
 
