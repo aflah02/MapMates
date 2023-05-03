@@ -8,4 +8,6 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="purple_card">#9999FF</color>
+    <color name="shade">#211e24</color>
+
 </resources>

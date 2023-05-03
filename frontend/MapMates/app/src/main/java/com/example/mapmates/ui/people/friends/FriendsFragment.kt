@@ -1,14 +1,19 @@
 package com.example.mapmates.ui.people.friends
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageButton
 import android.widget.SearchView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.mapmates.R
+import com.example.mapmates.*
+import com.google.android.material.snackbar.Snackbar
+
+
 import okhttp3.*
 import org.json.JSONArray
 import timber.log.Timber
@@ -33,6 +38,9 @@ class FriendsFragment : Fragment() {
     private lateinit var adapter: FriendsAdapter
     private lateinit var searchViewFriends: SearchView
     private lateinit var friendsList: List<FriendData>
+//    pendingRequestButton
+    private lateinit var pendingRequestButton: ImageButton
+
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -48,12 +56,26 @@ class FriendsFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_friends, container, false)
-
+        pendingRequestButton = view.findViewById(R.id.pendingRequestButton)
         friendsRecyclerView = view.findViewById(R.id.friendCardRecyclerView)
         setFriendsRecycler()
 
         searchViewFriends = view.findViewById(R.id.searchViewFriends)
         searchFriends()
+        val fab: View = view.findViewById(R.id.fab)
+        pendingRequestButton.setOnClickListener {
+            val intent = Intent(activity, PendingRequestActivity::class.java)
+            startActivity(intent)
+        }
+
+        fab.setOnClickListener { view ->
+//            Snackbar.make(view, "Here's a Snackbar", Snackbar.LENGTH_LONG)
+//                .setAction("Action", null)
+//                .show()
+            val intent = Intent(activity, AddFriendActivity::class.java)
+            startActivity(intent)
+
+        }
 
         return view
     }
@@ -95,18 +117,6 @@ class FriendsFragment : Fragment() {
 
     private fun getFriendsList(): List<FriendData> {
         val friendsList = mutableListOf<FriendData>()
-//        friendsList.add(FriendData("Kush","https://picsum.photos/200","I am a disco dancer"))
-//        friendsList.add(FriendData("Aadit","https://picsum.photos/200","I am a disco dancer too"))
-//        friendsList.add(FriendData("Mohit","https://picsum.photos/200","I am a disco dancer three"))
-//        friendsList.add(FriendData("Kush","https://picsum.photos/200","I am a disco dancer"))
-//        friendsList.add(FriendData("Aadit","https://picsum.photos/200","I am a disco dancer too"))
-//        friendsList.add(FriendData("Mohit","https://picsum.photos/200","I am a disco dancer three"))
-//        friendsList.add(FriendData("Kush","https://picsum.photos/200","I am a disco dancer"))
-//        friendsList.add(FriendData("Aadit","https://picsum.photos/200","I am a disco dancer too"))
-//        friendsList.add(FriendData("Ritwik","https://picsum.photos/200","I am a disco dancer three"))
-//        friendsList.add(FriendData("Kush","https://picsum.photos/200","I am a disco dancer"))
-//        friendsList.add(FriendData("Aadit","https://picsum.photos/200","I am a disco dancer too"))
-//        friendsList.add(FriendData("Ritwik","https://picsum.photos/200","I am a disco dancer three"))
 
         val jsonString = getFriendsDetails("Aflah")
         if(jsonString!=null){

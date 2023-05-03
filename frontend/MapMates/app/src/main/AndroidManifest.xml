@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.mapmates" >
+    package="com.example.mapmates">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
@@ -19,14 +19,23 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.MapMates.NoActionBar" >
+        android:theme="@style/Theme.MapMates.NoActionBar">
+        <activity
+            android:name=".PendingRequestActivity"
+            android:exported="false" />
+        <activity
+            android:name=".AddFriendActivity"
+            android:exported="false" />
+        <activity
+            android:name=".FriendActivityProfile"
+            android:exported="false" />
         <activity
             android:name=".SettingsActivity"
             android:exported="false" />
 
         <receiver
             android:name=".ui.home.LocationProviderChangedReceiver"
-            android:exported="false" >
+            android:exported="false">
             <intent-filter>
                 <action android:name="android.location.PROVIDERS_CHANGED" />
 
@@ -38,7 +47,7 @@
             android:name=".EntryActivity"
             android:exported="true"
             android:label="@string/app_name"
-            android:noHistory="true" >
+            android:noHistory="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 import com.example.mapmates.R
 import com.example.mapmates.SettingsActivity
@@ -30,6 +31,9 @@ class GroupsAdapter(var itemList: List<GroupData>) : RecyclerView.Adapter<Groups
             val context = holder.itemView.context
             val intent = Intent(context, SettingsActivity::class.java)
             context.startActivity(intent)
+        }
+        holder.itemView.setOnClickListener{
+            Toast.makeText(holder.itemView.context, "Clicked on group", Toast.LENGTH_SHORT).show()
         }
     }
 

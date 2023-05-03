@@ -20,7 +20,7 @@ import com.google.android.material.tabs.TabLayout
 
 class PeopleFragment : Fragment() {
 
-    private lateinit var peopleViewModel: PeopleViewModel
+//    private lateinit var peopleViewModel: PeopleViewModel
     private var _binding: FragmentPeopleBinding? = null
 
     // This property is only valid between onCreateView and
@@ -32,12 +32,10 @@ class PeopleFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        peopleViewModel =
-            ViewModelProvider(this).get(PeopleViewModel::class.java)
 
         _binding = FragmentPeopleBinding.inflate(inflater, container, false)
-        val root: View = binding.root
 
+        val root: View = binding.root
         val viewPager: ViewPager = root.findViewById(R.id.peopleChildFragment)
         val adapter = PeoplePageAdapter(childFragmentManager)
         adapter.addFragment(GroupsFragment(), "Groups")

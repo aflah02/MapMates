@@ -1,13 +1,19 @@
 package com.example.mapmates.ui.people.friends
 
+import android.content.Intent
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
+import com.example.mapmates.FriendActivityProfile
 import com.example.mapmates.R
+import com.example.mapmates.SettingsActivity
 
 import com.squareup.picasso.Picasso
 
@@ -23,6 +29,16 @@ class FriendsAdapter(var itemList: List<FriendData>) : RecyclerView.Adapter<Frie
         holder.contact_name.text = currentItem.name
         Picasso.get().load(currentItem.imageUrl).into(holder.profile_picture)
         holder.contact_number.text = currentItem.number
+//        holder.bind(currentItem)
+        holder.itemView.setOnClickListener{
+            Toast.makeText(holder.itemView.context, "Clicked on friend", Toast.LENGTH_SHORT).show()
+            val context = holder.itemView.context
+            val intent = Intent(context, FriendActivityProfile::class.java)
+            intent.putExtra("FRIEND_NAME", holder.contact_name.text);
+            intent.putExtra("FRIEND_PROFILE_PIC", currentItem.imageUrl);
+            intent.putExtra("FRIEND_CONTACT",holder.contact_number.text)
+            context.startActivity(intent)
+        }
     }
 
     override fun getItemCount(): Int {
@@ -38,6 +54,7 @@ class FriendsAdapter(var itemList: List<FriendData>) : RecyclerView.Adapter<Frie
         itemList = newList
         notifyDataSetChanged()
     }
+
 
     inner class FriendsViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val profile_picture:  ImageView = itemView.findViewById(R.id.profile_picture)

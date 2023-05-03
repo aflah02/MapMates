@@ -1,48 +1,93 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="10dp"
     tools:context=".ui.people.friends.FriendsFragment">
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+<!--    <RelativeLayout-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content">-->
 
-        <TextView
-            android:id="@+id/FriendsNum"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="24dp"
-            android:layout_marginTop="16dp"
-            android:text="My Friends"
-            android:textColor="@android:color/black"
-            android:textSize="24sp"
-           />
+    <TextView
+        android:id="@+id/FriendsNum"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="26dp"
+        android:layout_marginTop="16dp"
+        android:text="My Friends"
+        android:textColor="@android:color/black"
+        android:textSize="24sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
-        <SearchView
-            android:id="@+id/searchViewFriends"
-            android:layout_width="360dp"
-            android:layout_centerInParent="true"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:iconifiedByDefault="false"
-            android:queryHint="Search"
-            android:layout_below="@id/FriendsNum"
-            />
+    <SearchView
+        android:id="@+id/searchViewFriends"
+        android:layout_width="300dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/FriendsNum"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:layout_marginStart="45dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginEnd="66dp"
+        android:iconifiedByDefault="false"
+        android:queryHint="Search"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/FriendsNum" >
 
-<!--    </androidx.constraintlayout.widget.ConstraintLayout>-->
+    </SearchView>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true"
+        android:layout_gravity="left"
+        android:layout_marginEnd="28dp"
+        android:layout_marginBottom="140dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:src="@mipmap/ic_launcher_add_foreground"
+        android:textAlignment="center"
+        app:backgroundTint="@color/white"
+        app:fabCustomSize="50dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:ignore="RtlCompat" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/friendCardRecyclerView"
-        android:layout_below="@id/searchViewFriends"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_below="@id/searchViewFriends"
+        android:layout_marginTop="24dp"
         android:paddingBottom="120dp"
-        />
-    </RelativeLayout>
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/searchViewFriends" />
+
+    <ImageButton
+        android:id="@+id/pendingRequestButton"
+        android:layout_width="28dp"
+        android:layout_height="27dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="64dp"
+        android:background="#00000000"
+        app:tint="@color/shade"
+        android:scaleType="fitXY"
+        android:src="@drawable/friendrequest"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+
+    <!--    </RelativeLayout>-->
 
 
 
-</FrameLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

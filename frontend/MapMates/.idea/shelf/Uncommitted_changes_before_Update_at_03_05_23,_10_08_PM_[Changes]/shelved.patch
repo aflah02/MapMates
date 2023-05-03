@@ -1,0 +1,604 @@
+Index: app/src/main/java/com/example/mapmates/ui/people/friends/FriendsFragment.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.mapmates.ui.people.friends\n\nimport android.os.Bundle\nimport androidx.fragment.app.Fragment\nimport android.view.LayoutInflater\nimport android.view.View\nimport android.view.ViewGroup\nimport android.widget.SearchView\nimport androidx.recyclerview.widget.LinearLayoutManager\nimport androidx.recyclerview.widget.RecyclerView\nimport com.example.mapmates.R\nimport okhttp3.*\nimport org.json.JSONArray\nimport timber.log.Timber\nimport java.io.IOException\nimport java.util.concurrent.CountDownLatch\n\n// TODO: Rename parameter arguments, choose names that match\n// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER\nprivate const val ARG_PARAM1 = \"param1\"\nprivate const val ARG_PARAM2 = \"param2\"\n\n/**\n * A simple [Fragment] subclass.\n * Use the [GroupsFragment.newInstance] factory method to\n * create an instance of this fragment.\n */\nclass FriendsFragment : Fragment() {\n    // TODO: Rename and change types of parameters\n    private var param1: String? = null\n    private var param2: String? = null\n    private lateinit var friendsRecyclerView: RecyclerView\n    private lateinit var adapter: FriendsAdapter\n    private lateinit var searchViewFriends: SearchView\n    private lateinit var friendsList: List<FriendData>\n\n\n    override fun onCreate(savedInstanceState: Bundle?) {\n        super.onCreate(savedInstanceState)\n        arguments?.let {\n            param1 = it.getString(ARG_PARAM1)\n            param2 = it.getString(ARG_PARAM2)\n        }\n    }\n\n    override fun onCreateView(\n        inflater: LayoutInflater, container: ViewGroup?,\n        savedInstanceState: Bundle?\n    ): View? {\n        val view = inflater.inflate(R.layout.fragment_friends, container, false)\n\n        friendsRecyclerView = view.findViewById(R.id.friendCardRecyclerView)\n        setFriendsRecycler()\n\n        searchViewFriends = view.findViewById(R.id.searchViewFriends)\n        searchFriends()\n\n        return view\n    }\n    private fun setFriendsRecycler(){\n        friendsRecyclerView.layoutManager = LinearLayoutManager(activity)\n        adapter = FriendsAdapter(emptyList<FriendData>())\n        friendsRecyclerView.adapter = adapter\n        friendsList = getFriendsList()\n        adapter.updateList(friendsList)\n    }\n\n    private fun searchFriends(){\n        searchViewFriends.clearFocus()\n        searchViewFriends.setOnQueryTextListener(object : SearchView.OnQueryTextListener {\n            override fun onQueryTextSubmit(query: String?): Boolean {\n                return false\n            }\n\n            override fun onQueryTextChange(newText: String): Boolean {\n                filterList(newText)\n                return true\n            }\n        })\n    }\n\n    private fun filterList(text: String) {\n        val searchList= mutableListOf<FriendData>()\n        for(data in friendsList)\n            if(data.name.lowercase().contains(text.lowercase())){\n                searchList.add(data)\n            }\n//        if(searchList.isEmpty()){\n//            Toast.makeText(requireContext(),\"no data found\",Toast.LENGTH_SHORT).show()\n//        }\n        if(searchList.isNotEmpty()){\n            adapter.setFilteredList(searchList)\n        }\n    }\n\n    private fun getFriendsList(): List<FriendData> {\n        val friendsList = mutableListOf<FriendData>()\n//        friendsList.add(FriendData(\"Kush\",\"https://picsum.photos/200\",\"I am a disco dancer\"))\n//        friendsList.add(FriendData(\"Aadit\",\"https://picsum.photos/200\",\"I am a disco dancer too\"))\n//        friendsList.add(FriendData(\"Mohit\",\"https://picsum.photos/200\",\"I am a disco dancer three\"))\n//        friendsList.add(FriendData(\"Kush\",\"https://picsum.photos/200\",\"I am a disco dancer\"))\n//        friendsList.add(FriendData(\"Aadit\",\"https://picsum.photos/200\",\"I am a disco dancer too\"))\n//        friendsList.add(FriendData(\"Mohit\",\"https://picsum.photos/200\",\"I am a disco dancer three\"))\n//        friendsList.add(FriendData(\"Kush\",\"https://picsum.photos/200\",\"I am a disco dancer\"))\n//        friendsList.add(FriendData(\"Aadit\",\"https://picsum.photos/200\",\"I am a disco dancer too\"))\n//        friendsList.add(FriendData(\"Ritwik\",\"https://picsum.photos/200\",\"I am a disco dancer three\"))\n//        friendsList.add(FriendData(\"Kush\",\"https://picsum.photos/200\",\"I am a disco dancer\"))\n//        friendsList.add(FriendData(\"Aadit\",\"https://picsum.photos/200\",\"I am a disco dancer too\"))\n//        friendsList.add(FriendData(\"Ritwik\",\"https://picsum.photos/200\",\"I am a disco dancer three\"))\n\n        val jsonString = getFriendsDetails(\"Aflah\")\n        if(jsonString!=null){\n            val jsonObjectArray = parseJson(jsonString)\n            if (jsonObjectArray != null) {\n                for(item in jsonObjectArray){\n                    friendsList.add(FriendData(item.first,\"https://mapsapp-1-m9050519.deta.app/users/${item.first}/profile_picture\",item.second))\n                }\n            }\n        }\n\n        return friendsList\n\n    }\n\n    private fun parseJson(jsonString: String): ArrayList<Pair<String, String>>? {\n        val jsArray = JSONArray(jsonString)\n        val friendsList = ArrayList<Pair<String, String>>()\n        for(i in 0 until jsArray.length()){\n            val jsObj = jsArray.getJSONObject(i)\n            val username = jsObj.getString(\"username\")\n            val name = jsObj.getString(\"email\")\n            friendsList.add(Pair(username,name))\n        }\n        return friendsList\n    }\n    private fun getFriendsDetails(username: String): String? {\n        var responseString : String? = null\n        val client = OkHttpClient()\n        val request = Request.Builder()\n            .url(\"https://mapsapp-1-m9050519.deta.app/users/$username/friends\")\n            .build()\n        val latch = CountDownLatch(1)\n        client.newCall(request).enqueue(object : Callback {\n            override fun onFailure(call: Call, e: IOException) {\n                Timber.tag(\"friendsf\").e(e.message.toString())\n                latch.countDown()\n            }\n\n            override fun onResponse(call: Call, response: Response) {\n                responseString = response.body?.string()\n                if (!response.isSuccessful) {\n                    latch.countDown()\n                    return\n                }\n                Timber.tag(\"Friends\").i(responseString.toString())\n                latch.countDown()\n            }\n        }\n        )\n        latch.await()\n        return responseString\n    }\n\n\n    companion object {\n        /**\n         * Use this factory method to create a new instance of\n         * this fragment using the provided parameters.\n         *\n         * @param param1 Parameter 1.\n         * @param param2 Parameter 2.\n         * @return A new instance of fragment GroupsFragment.\n         */\n        // TODO: Rename and change types and number of parameters\n        @JvmStatic\n        fun newInstance(param1: String, param2: String) =\n            FriendsFragment().apply {\n                arguments = Bundle().apply {\n                    putString(ARG_PARAM1, param1)\n                    putString(ARG_PARAM2, param2)\n                }\n            }\n    }\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/mapmates/ui/people/friends/FriendsFragment.kt b/app/src/main/java/com/example/mapmates/ui/people/friends/FriendsFragment.kt
+--- a/app/src/main/java/com/example/mapmates/ui/people/friends/FriendsFragment.kt	(revision 1fe4054d3544d087157200983da404a84ff73170)
++++ b/app/src/main/java/com/example/mapmates/ui/people/friends/FriendsFragment.kt	(date 1683123001385)
+@@ -1,14 +1,19 @@
+ package com.example.mapmates.ui.people.friends
+ 
++import android.content.Intent
+ import android.os.Bundle
+ import androidx.fragment.app.Fragment
+ import android.view.LayoutInflater
+ import android.view.View
+ import android.view.ViewGroup
++import android.widget.ImageButton
+ import android.widget.SearchView
+ import androidx.recyclerview.widget.LinearLayoutManager
+ import androidx.recyclerview.widget.RecyclerView
+-import com.example.mapmates.R
++import com.example.mapmates.*
++import com.google.android.material.snackbar.Snackbar
++
++
+ import okhttp3.*
+ import org.json.JSONArray
+ import timber.log.Timber
+@@ -33,6 +38,9 @@
+     private lateinit var adapter: FriendsAdapter
+     private lateinit var searchViewFriends: SearchView
+     private lateinit var friendsList: List<FriendData>
++//    pendingRequestButton
++    private lateinit var pendingRequestButton: ImageButton
++
+ 
+ 
+     override fun onCreate(savedInstanceState: Bundle?) {
+@@ -48,12 +56,26 @@
+         savedInstanceState: Bundle?
+     ): View? {
+         val view = inflater.inflate(R.layout.fragment_friends, container, false)
+-
++        pendingRequestButton = view.findViewById(R.id.pendingRequestButton)
+         friendsRecyclerView = view.findViewById(R.id.friendCardRecyclerView)
+         setFriendsRecycler()
+ 
+         searchViewFriends = view.findViewById(R.id.searchViewFriends)
+         searchFriends()
++        val fab: View = view.findViewById(R.id.fab)
++        pendingRequestButton.setOnClickListener {
++            val intent = Intent(activity, PendingRequestActivity::class.java)
++            startActivity(intent)
++        }
++
++        fab.setOnClickListener { view ->
++//            Snackbar.make(view, "Here's a Snackbar", Snackbar.LENGTH_LONG)
++//                .setAction("Action", null)
++//                .show()
++            val intent = Intent(activity, AddFriendActivity::class.java)
++            startActivity(intent)
++
++        }
+ 
+         return view
+     }
+@@ -95,18 +117,6 @@
+ 
+     private fun getFriendsList(): List<FriendData> {
+         val friendsList = mutableListOf<FriendData>()
+-//        friendsList.add(FriendData("Kush","https://picsum.photos/200","I am a disco dancer"))
+-//        friendsList.add(FriendData("Aadit","https://picsum.photos/200","I am a disco dancer too"))
+-//        friendsList.add(FriendData("Mohit","https://picsum.photos/200","I am a disco dancer three"))
+-//        friendsList.add(FriendData("Kush","https://picsum.photos/200","I am a disco dancer"))
+-//        friendsList.add(FriendData("Aadit","https://picsum.photos/200","I am a disco dancer too"))
+-//        friendsList.add(FriendData("Mohit","https://picsum.photos/200","I am a disco dancer three"))
+-//        friendsList.add(FriendData("Kush","https://picsum.photos/200","I am a disco dancer"))
+-//        friendsList.add(FriendData("Aadit","https://picsum.photos/200","I am a disco dancer too"))
+-//        friendsList.add(FriendData("Ritwik","https://picsum.photos/200","I am a disco dancer three"))
+-//        friendsList.add(FriendData("Kush","https://picsum.photos/200","I am a disco dancer"))
+-//        friendsList.add(FriendData("Aadit","https://picsum.photos/200","I am a disco dancer too"))
+-//        friendsList.add(FriendData("Ritwik","https://picsum.photos/200","I am a disco dancer three"))
+ 
+         val jsonString = getFriendsDetails("Aflah")
+         if(jsonString!=null){
+Index: app/src/main/res/layout/fragment_friends.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"utf-8\"?>\n<FrameLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    xmlns:app=\"http://schemas.android.com/apk/res-auto\"\n    xmlns:tools=\"http://schemas.android.com/tools\"\n    android:layout_width=\"match_parent\"\n    android:layout_height=\"wrap_content\"\n    android:layout_marginBottom=\"10dp\"\n    tools:context=\".ui.people.friends.FriendsFragment\">\n    <RelativeLayout\n        android:layout_width=\"match_parent\"\n        android:layout_height=\"wrap_content\">\n\n        <TextView\n            android:id=\"@+id/FriendsNum\"\n            android:layout_width=\"wrap_content\"\n            android:layout_height=\"wrap_content\"\n            android:layout_marginStart=\"24dp\"\n            android:layout_marginTop=\"16dp\"\n            android:text=\"My Friends\"\n            android:textColor=\"@android:color/black\"\n            android:textSize=\"24sp\"\n           />\n\n        <SearchView\n            android:id=\"@+id/searchViewFriends\"\n            android:layout_width=\"360dp\"\n            android:layout_centerInParent=\"true\"\n            android:layout_height=\"wrap_content\"\n            android:layout_marginTop=\"12dp\"\n            android:iconifiedByDefault=\"false\"\n            android:queryHint=\"Search\"\n            android:layout_below=\"@id/FriendsNum\"\n            />\n\n<!--    </androidx.constraintlayout.widget.ConstraintLayout>-->\n\n    <androidx.recyclerview.widget.RecyclerView\n        android:id=\"@+id/friendCardRecyclerView\"\n        android:layout_below=\"@id/searchViewFriends\"\n        android:layout_width=\"match_parent\"\n        android:layout_height=\"wrap_content\"\n        android:paddingBottom=\"120dp\"\n        />\n    </RelativeLayout>\n\n\n\n</FrameLayout>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/res/layout/fragment_friends.xml b/app/src/main/res/layout/fragment_friends.xml
+--- a/app/src/main/res/layout/fragment_friends.xml	(revision 1fe4054d3544d087157200983da404a84ff73170)
++++ b/app/src/main/res/layout/fragment_friends.xml	(date 1683122944883)
+@@ -1,48 +1,93 @@
+ <?xml version="1.0" encoding="utf-8"?>
+-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
++
++<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+     xmlns:app="http://schemas.android.com/apk/res-auto"
+     xmlns:tools="http://schemas.android.com/tools"
+     android:layout_width="match_parent"
+     android:layout_height="wrap_content"
+     android:layout_marginBottom="10dp"
+     tools:context=".ui.people.friends.FriendsFragment">
+-    <RelativeLayout
+-        android:layout_width="match_parent"
+-        android:layout_height="wrap_content">
++<!--    <RelativeLayout-->
++<!--        android:layout_width="match_parent"-->
++<!--        android:layout_height="wrap_content">-->
+ 
+-        <TextView
+-            android:id="@+id/FriendsNum"
+-            android:layout_width="wrap_content"
+-            android:layout_height="wrap_content"
+-            android:layout_marginStart="24dp"
+-            android:layout_marginTop="16dp"
+-            android:text="My Friends"
+-            android:textColor="@android:color/black"
+-            android:textSize="24sp"
+-           />
++    <TextView
++        android:id="@+id/FriendsNum"
++        android:layout_width="wrap_content"
++        android:layout_height="wrap_content"
++        android:layout_marginStart="26dp"
++        android:layout_marginTop="16dp"
++        android:text="My Friends"
++        android:textColor="@android:color/black"
++        android:textSize="24sp"
++        app:layout_constraintStart_toStartOf="parent"
++        app:layout_constraintTop_toTopOf="parent" />
+ 
+-        <SearchView
+-            android:id="@+id/searchViewFriends"
+-            android:layout_width="360dp"
+-            android:layout_centerInParent="true"
+-            android:layout_height="wrap_content"
+-            android:layout_marginTop="12dp"
+-            android:iconifiedByDefault="false"
+-            android:queryHint="Search"
+-            android:layout_below="@id/FriendsNum"
+-            />
++    <SearchView
++        android:id="@+id/searchViewFriends"
++        android:layout_width="300dp"
++        android:layout_height="wrap_content"
++        android:layout_below="@id/FriendsNum"
++        android:layout_centerHorizontal="true"
++        android:layout_centerVertical="true"
++        android:layout_marginStart="45dp"
++        android:layout_marginTop="20dp"
++        android:layout_marginEnd="66dp"
++        android:iconifiedByDefault="false"
++        android:queryHint="Search"
++        app:layout_constraintEnd_toEndOf="parent"
++        app:layout_constraintStart_toStartOf="parent"
++        app:layout_constraintTop_toBottomOf="@+id/FriendsNum" >
+ 
+-<!--    </androidx.constraintlayout.widget.ConstraintLayout>-->
++    </SearchView>
++
++    <com.google.android.material.floatingactionbutton.FloatingActionButton
++        android:id="@+id/fab"
++        android:layout_width="50dp"
++        android:layout_height="50dp"
++        android:layout_alignParentEnd="true"
++        android:layout_alignParentBottom="true"
++        android:layout_gravity="left"
++        android:layout_marginEnd="28dp"
++        android:layout_marginBottom="140dp"
++        android:clickable="true"
++        android:focusable="true"
++        android:src="@mipmap/ic_launcher_add_foreground"
++        android:textAlignment="center"
++        app:backgroundTint="@color/white"
++        app:fabCustomSize="50dp"
++        app:layout_constraintBottom_toBottomOf="parent"
++        app:layout_constraintEnd_toEndOf="parent"
++        tools:ignore="RtlCompat" />
+ 
+     <androidx.recyclerview.widget.RecyclerView
+         android:id="@+id/friendCardRecyclerView"
+-        android:layout_below="@id/searchViewFriends"
+         android:layout_width="match_parent"
+         android:layout_height="wrap_content"
++        android:layout_below="@id/searchViewFriends"
++        android:layout_marginTop="24dp"
+         android:paddingBottom="120dp"
+-        />
+-    </RelativeLayout>
++        app:layout_constraintEnd_toEndOf="parent"
++        app:layout_constraintStart_toStartOf="parent"
++        app:layout_constraintTop_toBottomOf="@+id/searchViewFriends" />
++
++    <ImageButton
++        android:id="@+id/pendingRequestButton"
++        android:layout_width="28dp"
++        android:layout_height="27dp"
++        android:layout_marginTop="16dp"
++        android:layout_marginEnd="64dp"
++        android:background="#00000000"
++        app:tint="@color/shade"
++        android:scaleType="fitXY"
++        android:src="@drawable/friendrequest"
++        app:layout_constraintEnd_toEndOf="parent"
++        app:layout_constraintTop_toTopOf="parent" />
++
++
++    <!--    </RelativeLayout>-->
++
+ 
+ 
+ 
+-</FrameLayout>
+\ No newline at end of file
++</androidx.constraintlayout.widget.ConstraintLayout>
+\ No newline at end of file
+Index: app/src/main/java/com/example/mapmates/ui/people/PeopleFragment.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.mapmates.ui.people\n\nimport android.os.Bundle\nimport android.util.Log\nimport android.view.LayoutInflater\nimport android.view.View\nimport android.view.ViewGroup\nimport android.widget.TextView\nimport androidx.fragment.app.Fragment\nimport androidx.lifecycle.Observer\nimport androidx.lifecycle.ViewModelProvider\nimport androidx.viewpager.widget.ViewPager\nimport com.example.mapmates.databinding.FragmentPeopleBinding\nimport com.example.mapmates.ui.people.groups.GroupsFragment\n\nimport com.example.mapmates.R\nimport com.example.mapmates.ui.people.friends.FriendsFragment\nimport com.google.android.material.tabs.TabLayout\n\n\nclass PeopleFragment : Fragment() {\n\n    private lateinit var peopleViewModel: PeopleViewModel\n    private var _binding: FragmentPeopleBinding? = null\n\n    // This property is only valid between onCreateView and\n    // onDestroyView.\n    private val binding get() = _binding!!\n\n    override fun onCreateView(\n        inflater: LayoutInflater,\n        container: ViewGroup?,\n        savedInstanceState: Bundle?\n    ): View? {\n        peopleViewModel =\n            ViewModelProvider(this).get(PeopleViewModel::class.java)\n\n        _binding = FragmentPeopleBinding.inflate(inflater, container, false)\n        val root: View = binding.root\n\n        val viewPager: ViewPager = root.findViewById(R.id.peopleChildFragment)\n        val adapter = PeoplePageAdapter(childFragmentManager)\n        adapter.addFragment(GroupsFragment(), \"Groups\")\n        adapter.addFragment(FriendsFragment(), \"Friends\")\n        viewPager.adapter = adapter\n\n        val tabLayout: TabLayout = root.findViewById(R.id.peopleChildTabs)\n        tabLayout.setupWithViewPager(viewPager)\n\n        return root\n    }\n\n\n    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {\n        super.onViewCreated(view, savedInstanceState)\n\n//         Create the child fragment and add it to the child_container\n//        val groupsFragment = GroupsFragment()\n//        val transaction = childFragmentManager.beginTransaction()\n//        transaction.replace(R.id.GroupFragmentLayout, groupsFragment)\n//        transaction.commit()\n//        val friendsFragment = FriendsFragment()\n//        val transaction2 = childFragmentManager.beginTransaction()\n//        transaction2.replace(R.id.FriendsFragmentLayout, friendsFragment)\n//        transaction2.commit()\n    }\n\n\n    override fun onDestroyView() {\n        super.onDestroyView()\n        _binding = null\n    }\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/mapmates/ui/people/PeopleFragment.kt b/app/src/main/java/com/example/mapmates/ui/people/PeopleFragment.kt
+--- a/app/src/main/java/com/example/mapmates/ui/people/PeopleFragment.kt	(revision 1fe4054d3544d087157200983da404a84ff73170)
++++ b/app/src/main/java/com/example/mapmates/ui/people/PeopleFragment.kt	(date 1682621059260)
+@@ -20,7 +20,7 @@
+ 
+ class PeopleFragment : Fragment() {
+ 
+-    private lateinit var peopleViewModel: PeopleViewModel
++//    private lateinit var peopleViewModel: PeopleViewModel
+     private var _binding: FragmentPeopleBinding? = null
+ 
+     // This property is only valid between onCreateView and
+@@ -32,12 +32,10 @@
+         container: ViewGroup?,
+         savedInstanceState: Bundle?
+     ): View? {
+-        peopleViewModel =
+-            ViewModelProvider(this).get(PeopleViewModel::class.java)
+ 
+         _binding = FragmentPeopleBinding.inflate(inflater, container, false)
++
+         val root: View = binding.root
+-
+         val viewPager: ViewPager = root.findViewById(R.id.peopleChildFragment)
+         val adapter = PeoplePageAdapter(childFragmentManager)
+         adapter.addFragment(GroupsFragment(), "Groups")
+Index: app/src/main/java/com/example/mapmates/ui/people/friends/FriendsAdapter.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.mapmates.ui.people.friends\n\nimport android.view.LayoutInflater\nimport android.view.View\nimport android.view.ViewGroup\nimport android.widget.ImageButton\nimport android.widget.ImageView\nimport android.widget.TextView\nimport androidx.recyclerview.widget.RecyclerView\nimport com.example.mapmates.R\n\nimport com.squareup.picasso.Picasso\n\nclass FriendsAdapter(var itemList: List<FriendData>) : RecyclerView.Adapter<FriendsAdapter.FriendsViewHolder>() {\n\n    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): FriendsViewHolder {\n        val view = LayoutInflater.from(parent.context).inflate(R.layout.people_friends_row,parent,false)\n        return FriendsViewHolder(view)\n    }\n\n    override fun onBindViewHolder(holder: FriendsViewHolder, position: Int) {\n        val currentItem = itemList[position]\n        holder.contact_name.text = currentItem.name\n        Picasso.get().load(currentItem.imageUrl).into(holder.profile_picture)\n        holder.contact_number.text = currentItem.number\n    }\n\n    override fun getItemCount(): Int {\n        return itemList.size\n    }\n\n    fun setFilteredList(filteredList: List<FriendData>) {\n        itemList = filteredList\n        notifyDataSetChanged()\n    }\n\n    fun updateList(newList: List<FriendData>) {\n        itemList = newList\n        notifyDataSetChanged()\n    }\n\n    inner class FriendsViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {\n        val profile_picture:  ImageView = itemView.findViewById(R.id.profile_picture)\n        val contact_name: TextView = itemView.findViewById(R.id.contact_name)\n        val contact_number: TextView = itemView.findViewById(R.id.contact_number)\n    }\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/mapmates/ui/people/friends/FriendsAdapter.kt b/app/src/main/java/com/example/mapmates/ui/people/friends/FriendsAdapter.kt
+--- a/app/src/main/java/com/example/mapmates/ui/people/friends/FriendsAdapter.kt	(revision 1fe4054d3544d087157200983da404a84ff73170)
++++ b/app/src/main/java/com/example/mapmates/ui/people/friends/FriendsAdapter.kt	(date 1683045944063)
+@@ -1,13 +1,19 @@
+ package com.example.mapmates.ui.people.friends
+ 
++import android.content.Intent
++import android.util.Log
+ import android.view.LayoutInflater
+ import android.view.View
+ import android.view.ViewGroup
+ import android.widget.ImageButton
+ import android.widget.ImageView
+ import android.widget.TextView
++import android.widget.Toast
++import androidx.appcompat.app.AppCompatActivity
+ import androidx.recyclerview.widget.RecyclerView
++import com.example.mapmates.FriendActivityProfile
+ import com.example.mapmates.R
++import com.example.mapmates.SettingsActivity
+ 
+ import com.squareup.picasso.Picasso
+ 
+@@ -23,6 +29,16 @@
+         holder.contact_name.text = currentItem.name
+         Picasso.get().load(currentItem.imageUrl).into(holder.profile_picture)
+         holder.contact_number.text = currentItem.number
++//        holder.bind(currentItem)
++        holder.itemView.setOnClickListener{
++            Toast.makeText(holder.itemView.context, "Clicked on friend", Toast.LENGTH_SHORT).show()
++            val context = holder.itemView.context
++            val intent = Intent(context, FriendActivityProfile::class.java)
++            intent.putExtra("FRIEND_NAME", holder.contact_name.text);
++            intent.putExtra("FRIEND_PROFILE_PIC", currentItem.imageUrl);
++            intent.putExtra("FRIEND_CONTACT",holder.contact_number.text)
++            context.startActivity(intent)
++        }
+     }
+ 
+     override fun getItemCount(): Int {
+@@ -39,6 +55,7 @@
+         notifyDataSetChanged()
+     }
+ 
++
+     inner class FriendsViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+         val profile_picture:  ImageView = itemView.findViewById(R.id.profile_picture)
+         val contact_name: TextView = itemView.findViewById(R.id.contact_name)
+Index: app/src/main/java/com/example/mapmates/ui/people/groups/GroupsAdapter.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.mapmates.ui.people.groups\n\nimport android.content.Intent\nimport android.view.LayoutInflater\nimport android.view.View\nimport android.view.ViewGroup\nimport android.widget.ImageButton\nimport android.widget.ImageView\nimport android.widget.TextView\nimport androidx.recyclerview.widget.RecyclerView\nimport com.example.mapmates.R\nimport com.example.mapmates.SettingsActivity\n\nimport com.squareup.picasso.Picasso\n\nclass GroupsAdapter(var itemList: List<GroupData>) : RecyclerView.Adapter<GroupsAdapter.GroupViewHolder>() {\n\n    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): GroupViewHolder {\n        val view = LayoutInflater.from(parent.context).inflate(R.layout.people_groups_row,parent,false)\n        return GroupViewHolder(view)\n    }\n\n    override fun onBindViewHolder(holder: GroupViewHolder, position: Int) {\n        val currentItem = itemList[position]\n        holder.peopleGroupName.text = currentItem.title\n        Picasso.get().load(currentItem.imageUrl).into(holder.peopleGroupImage)\n\n        holder.peopleGroupSettings.setOnClickListener {\n            // Handle button click for this item\n            val context = holder.itemView.context\n            val intent = Intent(context, SettingsActivity::class.java)\n            context.startActivity(intent)\n        }\n    }\n\n    override fun getItemCount(): Int {\n        return itemList.size\n    }\n\n    fun updateList(newList: List<GroupData>) {\n        itemList = newList\n        notifyDataSetChanged()\n    }\n\n    inner class GroupViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {\n        val peopleGroupName: TextView = itemView.findViewById(R.id.peopleGroupName)\n        val peopleGroupImage: ImageView = itemView.findViewById(R.id.peopleGroupImage)\n        val peopleGroupSettings: ImageButton = itemView.findViewById(R.id.peopleGroupSettings)\n\n    }\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/mapmates/ui/people/groups/GroupsAdapter.kt b/app/src/main/java/com/example/mapmates/ui/people/groups/GroupsAdapter.kt
+--- a/app/src/main/java/com/example/mapmates/ui/people/groups/GroupsAdapter.kt	(revision 1fe4054d3544d087157200983da404a84ff73170)
++++ b/app/src/main/java/com/example/mapmates/ui/people/groups/GroupsAdapter.kt	(date 1682177352967)
+@@ -7,6 +7,7 @@
+ import android.widget.ImageButton
+ import android.widget.ImageView
+ import android.widget.TextView
++import android.widget.Toast
+ import androidx.recyclerview.widget.RecyclerView
+ import com.example.mapmates.R
+ import com.example.mapmates.SettingsActivity
+@@ -31,6 +32,9 @@
+             val intent = Intent(context, SettingsActivity::class.java)
+             context.startActivity(intent)
+         }
++        holder.itemView.setOnClickListener{
++            Toast.makeText(holder.itemView.context, "Clicked on group", Toast.LENGTH_SHORT).show()
++        }
+     }
+ 
+     override fun getItemCount(): Int {
+Index: app/src/main/java/com/example/mapmates/PendingRequestActivity.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/mapmates/PendingRequestActivity.kt b/app/src/main/java/com/example/mapmates/PendingRequestActivity.kt
+new file mode 100644
+--- /dev/null	(date 1683127237124)
++++ b/app/src/main/java/com/example/mapmates/PendingRequestActivity.kt	(date 1683127237124)
+@@ -0,0 +1,96 @@
++package com.example.mapmates
++
++import androidx.appcompat.app.AppCompatActivity
++import android.os.Bundle
++import androidx.recyclerview.widget.LinearLayoutManager
++import androidx.recyclerview.widget.RecyclerView
++import com.example.mapmates.ui.people.friends.FriendData
++import com.example.mapmates.ui.people.friends.PendingRequestsAdapter
++import okhttp3.*
++import org.json.JSONArray
++import timber.log.Timber
++import java.io.IOException
++import java.util.concurrent.CountDownLatch
++
++class PendingRequestActivity : AppCompatActivity() {
++
++    private lateinit var pendingRequestView: RecyclerView
++    private lateinit var adapter: PendingRequestsAdapter
++
++    override fun onCreate(savedInstanceState: Bundle?) {
++        super.onCreate(savedInstanceState)
++        setContentView(R.layout.activity_pending_request)
++
++        pendingRequestView = findViewById(R.id.pendingRequestRecyclerView)
++        pendingRequestView.layoutManager = LinearLayoutManager(this)
++        adapter = PendingRequestsAdapter(getPendingRequests() as MutableList<FriendData>)
++        pendingRequestView.adapter = adapter
++    }
++    private fun getPendingRequests2(): List<FriendData> {
++        val pendingList = mutableListOf<FriendData>()
++        pendingList.add(FriendData("John Doe", "https://picsum.photos/200","32094190412"))
++        pendingList.add(FriendData("Jane Smith", "https://picsum.photos/200","12889421894"))
++        pendingList.add(FriendData("Bob Johnson", "https://picsum.photos/200","84391249"))
++        // Query the database or API to get the pending friend requests for the user
++        // Return them as a list of FriendRequest objects
++        return pendingList
++    }
++
++
++    private fun getPendingRequests(): List<FriendData> {
++        val friendsList = mutableListOf<FriendData>()
++        val jsonString = globalJsonCall("Aflah")
++        if(jsonString!=null){
++            val jsonObjectArray = parseJson(jsonString)
++            if (jsonObjectArray != null) {
++                for(item in jsonObjectArray){
++                    friendsList.add(FriendData(item.first,"https://mapsapp-1-m9050519.deta.app/users/${item.first}/profile_picture",(item.second+"@email.com")))
++                }
++            }
++        }
++        return friendsList
++    }
++    private fun parseJson(jsonString: String): ArrayList<Pair<String, String>>? {
++        val jsArray = JSONArray(jsonString)
++        val friendsList = ArrayList<Pair<String, String>>()
++        for(i in 0 until jsArray.length()){
++            val jsObj = jsArray.getJSONObject(i)
++            val username = jsObj.getString("username")
++            val name = jsObj.getString("username")
++            friendsList.add(Pair(username,name))
++        }
++        return friendsList
++    }
++
++
++    private fun globalJsonCall(text:String): String? {
++        var responseString : String? = null
++        val client = OkHttpClient()
++        val request = Request.Builder()
++            .url("https://mapsapp-1-m9050519.deta.app/users/${text}/getfriendrequests")
++            .build()
++        val latch = CountDownLatch(1)
++        client.newCall(request).enqueue(object : Callback {
++            override fun onFailure(call: Call, e: IOException) {
++                Timber.tag("pendingf").e(e.message.toString())
++                latch.countDown()
++            }
++
++            override fun onResponse(call: Call, response: Response) {
++                responseString = response.body?.string()
++                if (!response.isSuccessful) {
++                    latch.countDown()
++                    return
++                }
++                Timber.tag("PendingReqs").i(responseString.toString())
++                latch.countDown()
++            }
++        }
++        )
++        latch.await()
++        return responseString
++    }
++
++}
++
++//https://mapsapp-1-m9050519.deta.app/users/Aflah/getfriendrequests
+\ No newline at end of file
+Index: app/src/main/res/layout/activity_pending_request.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/res/layout/activity_pending_request.xml b/app/src/main/res/layout/activity_pending_request.xml
+new file mode 100644
+--- /dev/null	(date 1683126126203)
++++ b/app/src/main/res/layout/activity_pending_request.xml	(date 1683126126203)
+@@ -0,0 +1,19 @@
++<?xml version="1.0" encoding="utf-8"?>
++<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
++    xmlns:app="http://schemas.android.com/apk/res-auto"
++    xmlns:tools="http://schemas.android.com/tools"
++    android:layout_width="match_parent"
++    android:layout_height="match_parent"
++    tools:context=".PendingRequestActivity">
++
++    <androidx.recyclerview.widget.RecyclerView
++        android:id="@+id/pendingRequestRecyclerView"
++        android:layout_width="match_parent"
++        android:layout_height="wrap_content"
++        android:layout_marginTop="32dp"
++        android:paddingBottom="120dp"
++        app:layout_constraintEnd_toEndOf="parent"
++        app:layout_constraintHorizontal_bias="0.0"
++        app:layout_constraintStart_toStartOf="parent"
++        app:layout_constraintTop_toTopOf="parent" />
++</androidx.constraintlayout.widget.ConstraintLayout>
+\ No newline at end of file
+Index: app/src/main/AndroidManifest.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"utf-8\"?>\n<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    package=\"com.example.mapmates\" >\n\n    <uses-permission android:name=\"android.permission.INTERNET\" />\n    <uses-permission android:name=\"android.permission.ACCESS_FINE_LOCATION\" />\n    <uses-permission android:name=\"android.permission.ACCESS_COARSE_LOCATION\" />\n    <uses-permission android:name=\"android.permission.ACCESS_NETWORK_STATE\" />\n    <uses-permission android:name=\"android.permission.ACCESS_WIFI_STATE\" />\n    <uses-permission android:name=\"android.permission.WRITE_EXTERNAL_STORAGE\" />\n    <uses-permission android:name=\"android.permission.READ_EXTERNAL_STORAGE\" /> <!-- TODO: replace access token -->\n    <meta-data\n        android:name=\"com.mapbox.token\"\n        android:value=\"YOUR_ACCESS_TOKEN\" />\n\n    <application\n        android:allowBackup=\"true\"\n        android:icon=\"@mipmap/ic_launcher\"\n        android:label=\"@string/app_name\"\n        android:roundIcon=\"@mipmap/ic_launcher_round\"\n        android:supportsRtl=\"true\"\n        android:theme=\"@style/Theme.MapMates.NoActionBar\" >\n        <activity\n            android:name=\".SettingsActivity\"\n            android:exported=\"false\" />\n\n        <receiver\n            android:name=\".ui.home.LocationProviderChangedReceiver\"\n            android:exported=\"false\" >\n            <intent-filter>\n                <action android:name=\"android.location.PROVIDERS_CHANGED\" />\n\n                <category android:name=\"android.intent.category.DEFAULT\" />\n            </intent-filter>\n        </receiver>\n\n        <activity\n            android:name=\".EntryActivity\"\n            android:exported=\"true\"\n            android:label=\"@string/app_name\"\n            android:noHistory=\"true\" >\n            <intent-filter>\n                <action android:name=\"android.intent.action.MAIN\" />\n\n                <category android:name=\"android.intent.category.LAUNCHER\" />\n            </intent-filter>\n        </activity>\n        <activity\n            android:name=\".SignupActivity\"\n            android:exported=\"false\"\n            android:label=\"@string/title_activity_signup\"\n            android:noHistory=\"true\" />\n        <activity\n            android:name=\".LoginActivity\"\n            android:exported=\"false\"\n            android:noHistory=\"true\" />\n        <activity\n            android:name=\".MainActivity\"\n            android:exported=\"false\" />\n    </application>\n\n</manifest>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/AndroidManifest.xml b/app/src/main/AndroidManifest.xml
+--- a/app/src/main/AndroidManifest.xml	(revision 1fe4054d3544d087157200983da404a84ff73170)
++++ b/app/src/main/AndroidManifest.xml	(date 1683122710158)
+@@ -1,6 +1,6 @@
+ <?xml version="1.0" encoding="utf-8"?>
+ <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+-    package="com.example.mapmates" >
++    package="com.example.mapmates">
+ 
+     <uses-permission android:name="android.permission.INTERNET" />
+     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+@@ -19,14 +19,23 @@
+         android:label="@string/app_name"
+         android:roundIcon="@mipmap/ic_launcher_round"
+         android:supportsRtl="true"
+-        android:theme="@style/Theme.MapMates.NoActionBar" >
++        android:theme="@style/Theme.MapMates.NoActionBar">
+         <activity
++            android:name=".PendingRequestActivity"
++            android:exported="false" />
++        <activity
++            android:name=".AddFriendActivity"
++            android:exported="false" />
++        <activity
++            android:name=".FriendActivityProfile"
++            android:exported="false" />
++        <activity
+             android:name=".SettingsActivity"
+             android:exported="false" />
+ 
+         <receiver
+             android:name=".ui.home.LocationProviderChangedReceiver"
+-            android:exported="false" >
++            android:exported="false">
+             <intent-filter>
+                 <action android:name="android.location.PROVIDERS_CHANGED" />
+ 
+@@ -38,7 +47,7 @@
+             android:name=".EntryActivity"
+             android:exported="true"
+             android:label="@string/app_name"
+-            android:noHistory="true" >
++            android:noHistory="true">
+             <intent-filter>
+                 <action android:name="android.intent.action.MAIN" />
+ 
+Index: app/src/main/res/values/colors.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"utf-8\"?>\n<resources>\n    <color name=\"purple_200\">#FFBB86FC</color>\n    <color name=\"purple_500\">#FF6200EE</color>\n    <color name=\"purple_700\">#FF3700B3</color>\n    <color name=\"teal_200\">#FF03DAC5</color>\n    <color name=\"teal_700\">#FF018786</color>\n    <color name=\"black\">#FF000000</color>\n    <color name=\"white\">#FFFFFFFF</color>\n    <color name=\"purple_card\">#9999FF</color>\n</resources>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/res/values/colors.xml b/app/src/main/res/values/colors.xml
+--- a/app/src/main/res/values/colors.xml	(revision 1fe4054d3544d087157200983da404a84ff73170)
++++ b/app/src/main/res/values/colors.xml	(date 1682858305671)
+@@ -8,4 +8,6 @@
+     <color name="black">#FF000000</color>
+     <color name="white">#FFFFFFFF</color>
+     <color name="purple_card">#9999FF</color>
++    <color name="shade">#211e24</color>
++
+ </resources>
+\ No newline at end of file
+Index: app/src/main/res/layout/fragment_groups.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"utf-8\"?>\n<FrameLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    xmlns:tools=\"http://schemas.android.com/tools\"\n    android:layout_width=\"match_parent\"\n    android:layout_height=\"wrap_content\"\n    xmlns:app=\"http://schemas.android.com/apk/res-auto\"\n    tools:context=\".ui.people.groups.GroupsFragment\">\n\n    <androidx.recyclerview.widget.RecyclerView\n        android:id=\"@+id/groupCardRecyclerView\"\n        android:layout_width=\"match_parent\"\n        android:layout_height=\"wrap_content\"\n        android:paddingBottom=\"120dp\" />\n\n    <com.google.android.material.floatingactionbutton.FloatingActionButton\n        android:id=\"@+id/fab\"\n        android:layout_width=\"50dp\"\n        android:layout_height=\"50dp\"\n        android:layout_marginEnd=\"10dp\"\n        android:layout_marginBottom=\"70dp\"\n        android:clickable=\"true\"\n        android:focusable=\"true\"\n        android:layout_gravity=\"left\"\n        android:src=\"@mipmap/ic_launcher_add_foreground\"\n        android:textAlignment=\"center\"\n        app:backgroundTint=\"@color/white\"\n        app:fabCustomSize=\"50dp\"\n        app:layout_constraintBottom_toBottomOf=\"parent\"\n        app:layout_constraintEnd_toEndOf=\"parent\"\n        tools:ignore=\"RtlCompat\" />\n\n\n</FrameLayout>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/res/layout/fragment_groups.xml b/app/src/main/res/layout/fragment_groups.xml
+--- a/app/src/main/res/layout/fragment_groups.xml	(revision 1fe4054d3544d087157200983da404a84ff73170)
++++ b/app/src/main/res/layout/fragment_groups.xml	(date 1682171074169)
+@@ -1,26 +1,20 @@
+ <?xml version="1.0" encoding="utf-8"?>
+-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
++<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+     xmlns:tools="http://schemas.android.com/tools"
+     android:layout_width="match_parent"
+     android:layout_height="wrap_content"
+     xmlns:app="http://schemas.android.com/apk/res-auto"
+     tools:context=".ui.people.groups.GroupsFragment">
+ 
+-    <androidx.recyclerview.widget.RecyclerView
+-        android:id="@+id/groupCardRecyclerView"
+-        android:layout_width="match_parent"
+-        android:layout_height="wrap_content"
+-        android:paddingBottom="120dp" />
+-
+     <com.google.android.material.floatingactionbutton.FloatingActionButton
+         android:id="@+id/fab"
+         android:layout_width="50dp"
+         android:layout_height="50dp"
+-        android:layout_marginEnd="10dp"
+-        android:layout_marginBottom="70dp"
++        android:layout_gravity="left"
++        android:layout_marginEnd="30dp"
++        android:layout_marginBottom="150dp"
+         android:clickable="true"
+         android:focusable="true"
+-        android:layout_gravity="left"
+         android:src="@mipmap/ic_launcher_add_foreground"
+         android:textAlignment="center"
+         app:backgroundTint="@color/white"
+@@ -29,5 +23,13 @@
+         app:layout_constraintEnd_toEndOf="parent"
+         tools:ignore="RtlCompat" />
+ 
++    <androidx.recyclerview.widget.RecyclerView
++        android:id="@+id/groupCardRecyclerView"
++        android:layout_width="match_parent"
++        android:layout_height="wrap_content"
++        android:paddingBottom="120dp" />
++
+ 
+-</FrameLayout>
+\ No newline at end of file
++
++
++</androidx.constraintlayout.widget.ConstraintLayout>
