@@ -8,6 +8,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.mapmates.ui.people.friends.FriendData
 import com.example.mapmates.ui.people.friends.FriendsAdapter
 import com.example.mapmates.ui.people.friends.GlobalFriendsAdapter
+import com.example.mapmates.ui.people.friends.RequestFriendData
 import okhttp3.*
 import org.json.JSONArray
 import org.json.JSONObject
@@ -19,7 +20,7 @@ class AddFriendActivity : AppCompatActivity() {
     private lateinit var globalNames: RecyclerView
     private lateinit var searchViewFriends: SearchView
     private lateinit var searchResultAdapter: GlobalFriendsAdapter
-    private lateinit var searchResults: List<FriendData>
+    private lateinit var searchResults: List<RequestFriendData>
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add_friend)
@@ -47,7 +48,7 @@ class AddFriendActivity : AppCompatActivity() {
     }
     private fun setFriendsRecycler(){
         globalNames.layoutManager = LinearLayoutManager(this)
-        searchResultAdapter = GlobalFriendsAdapter(emptyList<FriendData>())
+        searchResultAdapter = GlobalFriendsAdapter(emptyList<RequestFriendData>())
         globalNames.adapter = searchResultAdapter
         searchResults = getGlobalPeople()
         searchResultAdapter.updateList(searchResults)
@@ -59,38 +60,40 @@ class AddFriendActivity : AppCompatActivity() {
 
     }
 
-    private fun getGlobalPeople(): List<FriendData> {
-        val friendsList = mutableListOf<FriendData>()
-        val jsonString = globalJsonCall()
+    private fun getGlobalPeople(): List<RequestFriendData> {
+        val friendsList = mutableListOf<RequestFriendData>()
+        val jsonString = globalJsonCall("Aflah")
         if(jsonString!=null){
             val jsonObjectArray = parseJson(jsonString)
             if (jsonObjectArray != null) {
                 for(item in jsonObjectArray){
-                    friendsList.add(FriendData(item.first,"https://mapsapp-1-m9050519.deta.app/users/${item.first}/profile_picture",(item.second+"@email.com")))
+                    friendsList.add(item)
                 }
             }
         }
         return friendsList
     }
 
-    private fun parseJson(jsonString: String): ArrayList<Pair<String, String>>? {
+    private fun parseJson(jsonString: String): ArrayList<RequestFriendData>? {
         val jsArray = JSONArray(jsonString)
-        val friendsList = ArrayList<Pair<String, String>>()
+        val friendsList = ArrayList<RequestFriendData>()
         for(i in 0 until jsArray.length()){
             val jsObj = jsArray.getJSONObject(i)
             val username = jsObj.getString("username")
             val name = jsObj.getString("username")
-            friendsList.add(Pair(username,name))
+            val status = jsObj.getString("sent_request")
+
+            friendsList.add(RequestFriendData(username,"https://mapsapp-1-m9050519.deta.app/users/${username}/profile_picture",username+"email.com",status))
         }
         return friendsList
     }
 
 
-    private fun globalJsonCall(): String? {
+    private fun globalJsonCall(myname:String): String? {
         var responseString : String? = null
         val client = OkHttpClient()
         val request = Request.Builder()
-            .url("https://mapsapp-1-m9050519.deta.app/users")
+            .url("https://mapsapp-1-m9050519.deta.app/users/${myname}/search_users_not_friend")
             .build()
         val latch = CountDownLatch(1)
         client.newCall(request).enqueue(object : Callback {
@@ -113,14 +116,14 @@ class AddFriendActivity : AppCompatActivity() {
         latch.await()
         return responseString
     }
-    private fun getFilteredPeople(text: String): List<FriendData> {
-        val friendsList = mutableListOf<FriendData>()
-        val jsonString = filteredJsonCall(text)
+    private fun getFilteredPeople(text: String): List<RequestFriendData> {
+        val friendsList = mutableListOf<RequestFriendData>()
+        val jsonString = filteredJsonCall("Aflah",text)
         if(jsonString!=null){
             val jsonObjectArray = parseJson(jsonString)
             if (jsonObjectArray != null) {
                 for(item in jsonObjectArray){
-                    friendsList.add(FriendData(item.first,"https://mapsapp-1-m9050519.deta.app/users/${item.first}/profile_picture",(item.second+"@email.com")))
+                    friendsList.add(item)
                 }
             }
         }
@@ -131,23 +134,25 @@ class AddFriendActivity : AppCompatActivity() {
 
 
 
-    private fun parseFilteredJson(jsonString: String): ArrayList<Pair<String, String>>? {
+    private fun parseFilteredJson(jsonString: String): ArrayList<RequestFriendData>? {
+
         val jsArray = JSONArray(jsonString)
-        val friendsList = ArrayList<Pair<String, String>>()
+        val friendsList = ArrayList<RequestFriendData>()
         for(i in 0 until jsArray.length()){
             val jsObj = jsArray.getJSONObject(i)
             val username = jsObj.getString("username")
             val name = jsObj.getString("email")
-            friendsList.add(Pair(username,name))
+            val status = jsObj.getString("sent_request")
+            friendsList.add(RequestFriendData(username,"https://mapsapp-1-m9050519.deta.app/users/${username}/profile_picture",name,status))
         }
         return friendsList
     }
 
-    private fun filteredJsonCall(username: String): String? {
+    private fun filteredJsonCall(myname:String,username: String): String? {
         var responseString : String? = null
         val client = OkHttpClient()
         val request = Request.Builder()
-            .url("https://mapsapp-1-m9050519.deta.app/users/$username/user_search")
+            .url("https://mapsapp-1-m9050519.deta.app/users/${myname}/$username/search_users_not_friend_with_match")
             .build()
         val latch = CountDownLatch(1)
         client.newCall(request).enqueue(object : Callback {
