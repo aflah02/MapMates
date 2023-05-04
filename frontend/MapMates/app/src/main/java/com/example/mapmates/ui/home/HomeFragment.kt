@@ -69,6 +69,7 @@ class HomeFragment : Fragment(), OnGroupItemClickListener {
     private lateinit var groupsList: ArrayList<GroupModel>
     private lateinit var markersList: ArrayList<MarkerModel>
     private lateinit var markerIdList: ArrayList<Long>
+    private lateinit var markerNotesRecyclerView: RecyclerView
     private lateinit var groupsRecyclerView: RecyclerView
     private lateinit var groupSheetDialog: BottomSheetDialog
     private lateinit var markerSheetDialog: BottomSheetDialog
@@ -117,7 +118,6 @@ class HomeFragment : Fragment(), OnGroupItemClickListener {
         createBottomMarkerDialog()
 
         pointAnnotationManager.addClickListener {clickedAnnotaton ->
-            Toast.makeText(requireContext(), "Clicked on ${clickedAnnotaton.id}", Toast.LENGTH_SHORT).show()
             markerSheetDialog.show()
             updateMarkerPage(clickedAnnotaton.id)
             true
@@ -169,6 +169,9 @@ class HomeFragment : Fragment(), OnGroupItemClickListener {
         val prevImage: FloatingActionButton = markerSheetDialog.findViewById(R.id.floatingActionButtonPrev)!!
         val nextImage: FloatingActionButton = markerSheetDialog.findViewById(R.id.floatingActionButtonNext)!!
         val imageBy: TextView = markerSheetDialog.findViewById(R.id.imageBy)!!
+        markerNotesRecyclerView = markerSheetDialog.findViewById(R.id.mrecycler_view)!!
+        markerNotesRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+        markerNotesRecyclerView.setHasFixedSize(true)
 
         prevImage.setOnClickListener {
             // get id
@@ -256,7 +259,20 @@ class HomeFragment : Fragment(), OnGroupItemClickListener {
         }
         currentMarker = idx
         if(idx == -1) return
+        // Setup Notes and names
+        val adapter = MarkerNotesAdapter(markersList[idx].notes, markersList[idx].noteUploaders)
+        markerNotesRecyclerView.adapter = adapter
         val markerName: TextView = markerSheetDialog.findViewById(R.id.markerHeading)!!
+        // Setup Visitors
+        val allVisitors = ArrayList<String> ()
+        allVisitors.addAll(markersList[idx].imageUploaders)
+        allVisitors.addAll(markersList[idx].noteUploaders)
+
+        val uniqueVisitors = allVisitors.distinct()
+        val visitorsTextView = markerSheetDialog.findViewById<TextView>(R.id.visitorsTextView)!!
+        visitorsTextView.text = uniqueVisitors.joinToString(", ")
+
+        // Setup Images
         val viewFlipper: ViewFlipper = markerSheetDialog.findViewById(R.id.viewFlipper)!!
         viewFlipper.removeAllViews()
         markerName.text = markersList[idx].name
@@ -309,8 +325,6 @@ class HomeFragment : Fragment(), OnGroupItemClickListener {
                 markersList = JsonParserHelper().parseMarkersDataJson(responseString!!, groupId)
                 // Run on UI thread
                 requireActivity().runOnUiThread {
-                    Toast.makeText(requireContext(), "https://mapsapp-1-m9050519.deta.app/groups/$groupId/markers", Toast.LENGTH_LONG).show()
-                    Toast.makeText(requireContext(), markersList.toString(), Toast.LENGTH_SHORT).show()
                     for (marker in markersList) {
                         markerIdList.add(addAnnotationToMap(marker.latitude, marker.longitude))
                     }
