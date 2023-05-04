@@ -5,6 +5,8 @@ from bson.objectid import ObjectId
 import bcrypt
 from pydantic import BaseModel
 import pydantic
+import base64
+from urllib.parse import unquote
 from bson import ObjectId
 pydantic.json.ENCODERS_BY_TYPE[ObjectId]=str
 from PIL import Image
@@ -15,7 +17,6 @@ app = FastAPI()
 class UserCredentials(BaseModel):
     username: str
     password: str
-
 # Create a MongoClient instance
 client = MongoClient("mongodb+srv://mapmates:mapmates123@mapmatescluster.qr7ojw0.mongodb.net/test")
 # Get the "master_db" database
@@ -150,16 +151,20 @@ async def add_group(username: str, group_id: str):
     if group_id in user_groups:
         return {"message": "User already in group"}
     else:
+        user_groups.append(group_id)
+
         update = {
             "$set": {
-                "groups": user_groups.append(group_id)
+                "groups": user_groups
             }
         }
         users.update_one({"username": username}, update)
 
+        ls_for_group = groups.find_one({"_id": group_id})["users"]
+        ls_for_group.append(username)
         groups_update = {
             "$set": {
-                "users": groups.find_one({"_id": group_id})["users"].append(username)
+                "users": ls_for_group
             }
         }
         groups.update_one({"_id": group_id}, groups_update)
@@ -356,11 +361,38 @@ async def get_marker_image(image_id: str):
     # Return the marker image
     return Response(content=io.BytesIO(marker_image['data']).getvalue(), media_type="image/jpeg")
 
+# get all markers for a group
+@app.get("/groups/{group_id}/markers")
+async def get_markers(group_id: str):
+    try:
+        group_members = groups.find_one({"_id": group_id})["users"]
+        print(group_members)
+        markers = []
+        for user in group_members:
+            user_markers = users.find_one({"username": user})["markers"]
+            print(user_markers)
+            for marker in user_markers:
+                if group_id in marker["group_which_can_see"]:
+                    markers.append({
+                        "username": user,
+                        "marker": marker
+                    })
+        return {"markers": markers}
+    except:
+        return {"message": "Invalid group_id"}
+
 # Add new marker
 @app.post("/users/{user_name}/add_marker")
 async def add_marker(username: str, name: str, description: str, latitude: float, longitude: float, 
                      image_id: list, group_which_can_see: list, friends_can_see: bool,
                      image_uploaders: list, notes: list, notes_uploaders: list):
+    ls_markers = users.find_one({"username": username})["markers"]
+    max_marker_id = 0
+    for marker in ls_markers:
+        if int(marker["_id"]) > max_marker_id:
+            max_marker_id = int(marker["_id"])
+    marker_id = max_marker_id + 1
+
     marker = {
         "name": name,
         "description": description,
@@ -371,17 +403,90 @@ async def add_marker(username: str, name: str, description: str, latitude: float
         "friends_can_see": friends_can_see,
         "image_uploaders": image_uploaders,
         "notes": notes,
-        "notes_uploaders": notes_uploaders
+        "notes_uploaders": notes_uploaders,
+        "_id": marker_id
     }
 
     # Add the marker to the user's markers
+    ls_markers = users.find_one({"username": username})["markers"]
+    ls_markers.append(marker)
     update = {
         "$set": {
-            "markers": users.find_one({"username": username})["markers"].append(marker)
+            "markers": ls_markers
         }
     }
     users.update_one({"username": username}, update)
     return {"message": "Marker added successfully"}
+
+class imagePayload(BaseModel):
+    image: str
+
+# add images to marker
+@app.post("/users/{user_name}/{marker_id}/add_images_to_marker")
+async def add_image_to_marker(user_name: str, marker_id: str, imageIDs: list):
+    # Get the marker
+    marker = None
+    for m in users.find_one({"username": user_name})["markers"]:
+        if str(m["_id"]) == marker_id:
+            marker = m
+            break
+    if marker is None:
+        return {"message": "Marker not found"}
+    print(marker)
+    # Add the image to the marker
+    ls_image_id = marker["image"]
+    ls_image_uploaders = marker["image_uploaders"]
+    print("Before:")
+    print(ls_image_id)
+    print(ls_image_uploaders)
+    for image_id in imageIDs:
+        ls_image_id.append(ObjectId(image_id))
+        ls_image_uploaders.append(user_name)
+    print(ls_image_id)
+    print(ls_image_uploaders)
+    marker["image"] = ls_image_id
+    marker["image_uploaders"] = ls_image_uploaders
+    # Update the marker
+    ls_markers = users.find_one({"username": user_name})["markers"]
+    for i in range(len(ls_markers)):
+        if str(ls_markers[i]["_id"]) == marker_id:
+            ls_markers[i] = marker
+            break
+    update = {
+        "$set": {
+            "markers": ls_markers
+        }
+    }
+    users.update_one({"username": user_name}, update)
+    return {"message": "Images added successfully"}
+    
+# delete image from marker
+@app.post("/users/{user_name}/{marker_id}/{image_id}/delete_image_from_marker")
+async def delete_image_from_marker(user_name: str, marker_id: str, image_id: str):
+    # remove image from marker
+    marker = None
+    for m in users.find_one({"username": user_name})["markers"]:
+        if str(m["_id"]) == marker_id:
+            marker = m
+            break
+    if marker is None:
+        return {"message": "Marker not found"}
+    ls_image_id = marker["image"]
+    image_id_index = ls_image_id.index(image_id)
+    ls_image_id.remove(image_id)
+    image_uploaders = marker["image_uploaders"]
+    image_uploaders.pop(image_id_index)
+    update = {
+        "$set": {
+            "image": ls_image_id,
+            "image_uploaders": image_uploaders
+        }
+    }
+    users.update_one({"username": user_name}, update)
+    # delete image from marker_image_collection
+    marker_image_collection.delete_one({"_id": ObjectId(image_id)})
+    return {"message": "Image deleted successfully"}
+
 
 # Upload a marker image
 @app.post("/users/{user_name}/upload_marker_image")
@@ -396,6 +501,17 @@ async def upload_marker_image(user_name: str, image: UploadFile = File(...)):
     return {"message": "Image uploaded successfully", "image_id": str(image_id)}
     
 
+# upload marker image as base64 url encoded string
+@app.post("/users/{user_name}/upload_marker_image_url_encoded_base64")
+async def upload_marker_image_base64(user_name: str, payload: imagePayload):
+    imgstring = unquote(payload.image)
+    imgdata = base64.b64decode(imgstring)
+    image = {
+        "data": imgdata
+    }
+    image_id = marker_image_collection.insert_one(image).inserted_id
+    return {"message": "Image uploaded successfully", "image_id": str(image_id)}
+
 # Get markers for a user
 @app.get("/users/{user_name}/markers")
 async def get_markers(user_name: str):
@@ -403,10 +519,6 @@ async def get_markers(user_name: str):
     markers = users.find_one({"username": user_name})["markers"]
     # Return the markers
     return markers
-
-
-
-
 
 
 # Get friends for a user
@@ -527,10 +639,11 @@ async def read_group(group_id: str):
 
 
 @app.post("/groups")
-async def create_group(users: list):
+async def create_group(group_name: str, users: list):
     max_id = groups.find_one(sort=[("_id", -1)])["_id"]
     group = {
         "_id": str(int(max_id) + 1),
+        "group_name": group_name,
         "users": users,
     }
     result = groups.insert_one(group)
@@ -580,6 +693,22 @@ async def remove_user_from_group(group_id: str, user_name: str):
     groups.update_one({"_id": group_id}, update)
     return {"message": "User removed from group successfully"}
 
+# get all groups for a user
+@app.get("/users/{user_name}/all_group_details")
+async def get_all_group_details(user_name: str):
+    # Get the user's groups
+    u_groups = users.find_one({"username": user_name})["groups"]
+    group_details = []
+    for group in u_groups:
+        details = groups.find_one({"_id": group})
+        group_details.append({
+            "_id": details["_id"],
+            "group_name": details["group_name"],
+            "users": details["users"],
+        })
+    # Return the groups
+    return group_details
+
 @app.delete("/groups/{group_id}")
 async def delete_group(group_id: str):
     groups.delete_one({"_id": group_id})
@@ -594,3 +723,8 @@ async def delete_group(group_id: str):
             }
             users.update_one({"_id": user["_id"]}, update)
     return {"message": "Group deleted successfully"}
+
+
+
+
+

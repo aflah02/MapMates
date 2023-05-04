@@ -9,7 +9,7 @@ from config import *
 from PIL import Image
 import io
 
-def get_markers_for_user(seed, group_vs_users):
+def get_markers_for_user(seed, group_vs_users, user):
     famous_places = {
         'qutub_minar': ['28.5245', '77.1855'],
         'iiit_delhi': ['28.5459', '77.2732'],
@@ -26,7 +26,7 @@ def get_markers_for_user(seed, group_vs_users):
         for place in famous_places.keys():
             if place in file:
                 mapping_famous_places_to_files[place] = file
-    user_names = ["Aflah", "Aadit", "Mohit", "Kush", "Ritwick", "Neemesh", "Sohum", "Kushagra", "Nishaant", "Abhik"] 
+    # user_names = ["Aflah", "Aadit", "Mohit", "Kush", "Ritwick", "Neemesh", "Sohum", "Kushagra", "Nishaant", "Abhik"] 
     db = client["master_db"]
     image_collection = db["images"]
     random.seed(seed)
@@ -37,7 +37,7 @@ def get_markers_for_user(seed, group_vs_users):
         if user_or_group == "user":
             groups_which_can_see = []
             friends_can_see = False
-            uploading_user = random.choice(user_names)
+            uploading_user = user
             im = Image.open(os.path.join("assets", mapping_famous_places_to_files[random_place]))
             image_bytes = io.BytesIO()
             im.save(image_bytes, format='JPEG')
@@ -64,12 +64,14 @@ def get_markers_for_user(seed, group_vs_users):
             })
         elif user_or_group == "group":
             groups_which_user_is_in = []
-            random_user = random.choice(user_names)
+            random_user = user
             for group in group_vs_users.keys():
                 if random_user in group_vs_users[group]:
                     groups_which_user_is_in.append(group)
+            print("User ", random_user, " is in groups ", groups_which_user_is_in)
             # choose one group
             random_group = random.choice(groups_which_user_is_in)
+            print("Random group chosen is ", random_group)
             friends_can_see = False
 
             im = Image.open(os.path.join("assets", mapping_famous_places_to_files[random_place]))
@@ -99,7 +101,7 @@ def get_markers_for_user(seed, group_vs_users):
         elif user_or_group == "friend":
             groups_which_can_see = []
             friends_can_see = True
-            uploader = random.choice(user_names)
+            uploader = user
             im = Image.open(os.path.join("assets", mapping_famous_places_to_files[random_place]))
             image_bytes = io.BytesIO()
             im.save(image_bytes, format='JPEG')
@@ -242,7 +244,7 @@ def build_users(client, user_friends, group_vs_users):
 
         random.seed(i)
         
-        markers = get_markers_for_user(i, group_vs_users)
+        markers = get_markers_for_user(i, group_vs_users, user_names[i])
 
         num_markers = 0
         # give _id to all markers
@@ -277,6 +279,7 @@ def build_groups(client, group_vs_users):
         random.seed(i)
         group = {
             "_id": str(group),
+            "group_name": "Group " + str(group),
             "users": group_vs_users[group],
         }
         groups.insert_one(group)

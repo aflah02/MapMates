@@ -11,8 +11,11 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import android.content.ContentResolver
+import android.content.Context
+import android.provider.MediaStore
+import android.util.Base64
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.*
 import java.io.IOException
 import android.widget.Button
@@ -20,17 +23,17 @@ import android.widget.EditText
 import android.widget.ImageSwitcher
 import android.widget.ImageView
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.core.net.toFile
 import androidx.fragment.app.Fragment
 import com.example.mapmates.R
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.MultipartBody
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 import timber.log.Timber
 import java.io.File
+import java.io.InputStream
+import java.net.URLEncoder
+import java.util.concurrent.CountDownLatch
 
 class CreateFragment : Fragment() {
 
@@ -77,16 +80,22 @@ class CreateFragment : Fragment() {
         }
 
         submitButton.setOnClickListener {
-            val name = nameEditText.text.toString()
-            val description = descriptionEditText.text.toString()
-            val notes = notesEditText.text.toString()
             val imageURIs = selectedImageUris
 
             // Upload the images
-            uploadImages(imageURIs!!)
+            val context = requireActivity().applicationContext
+            val imageIDs = ArrayList<String>()
+            for (uri in imageURIs!!){
+                val encodedImage = getImageAsURLEncodedBinaryString(context.contentResolver, uri)
+                val imageID = uploadImage(encodedImage!!)
+                imageIDs.add(imageID!!)
+            }
+            Log.i("Image IDs", imageIDs.toString())
+            uploadMarker(imageIDs)
+            Log.i("Upload", "Marker uploaded")
 
-            Log.d("CreateFragment", "Uploaded")
         }
+
 
         nextButton.setOnClickListener {
             if (position < selectedImageUris!!.size - 1){
@@ -110,60 +119,170 @@ class CreateFragment : Fragment() {
 
         return view
     }
+    private fun updateMarker(imageIDs: ArrayList<String>){
+        val latitude = 0.0
+        val longitude = 0.0
+        val name = nameEditText.text.toString()
+        val description = descriptionEditText.text.toString()
+        val notes = notesEditText.text.toString()
+        val friendCanSee = false
+        val groups_which_can_see = ArrayList<String>()
+        groups_which_can_see.add("2")
+        val userName = "Aflah"
+        val image_uploaders = ArrayList<String>()
+        for (i in 0 until imageIDs.size){
+            image_uploaders.add(userName)
+        }
+        val note_uploaders = ArrayList<String>()
+        note_uploaders.add(userName)
+//        https://mapsapp-1-m9050519.deta.app/users/{user_name}/add_marker?username=Aflah&name=A&description=A&latitude=0&longitude=0&friends_can_see=true
+        val url = "https://mapsapp-1-m9050519.deta.app/users/Aflah/add_marker?username=$userName&name=$name&description=$description&latitude=$latitude&longitude=$longitude&friends_can_see=$friendCanSee"
+        val mediaType = "application/json; charset=utf-8".toMediaType()
+        val requestJSON = JSONObject()
+        requestJSON.put("image_id", imageIDs)
+        requestJSON.put("notes", notes)
+        requestJSON.put("groups_which_can_see", groups_which_can_see)
+        requestJSON.put("image_uploaders", image_uploaders)
+        requestJSON.put("note_uploaders", note_uploaders)
 
+        val requestBody = requestJSON.toString().toRequestBody(mediaType)
+        val request = Request.Builder()
+            .addHeader("accept","application/json")
+            .addHeader("Content-Type","application/json")
+            .url(url)
+            .post(requestBody)
+            .build()
+        val client = OkHttpClient()
 
-//    fun uploadImages(uris: ArrayList<Uri>) {
-//        runBlocking {
-//            // Create a coroutine scope to run the uploads in parallel
-//            val scope = launch(Dispatchers.IO) {
-//                // Create an OkHttpClient instance
-//                val client = OkHttpClient()
-//
-//                // Iterate over each URI and upload the corresponding image
-//                for (uri in uris) {
-//                    val file = uri.path?.let { File(it) }
-//
-//                    // Create a multipart request with the image file
-//                    val requestBody =
-//                        file?.let { RequestBody.create("image/*".toMediaTypeOrNull(), it) }?.let {
-//                            MultipartBody.Builder()
-//                                .setType(MultipartBody.FORM)
-//                                .addFormDataPart(
-//                                    "image",
-//                                    file.name,
-//                                    it
-//                                )
-//                                .build()
-//                        }
-//
-//                    // Create the request object with the URL and request body
-//                    val request = requestBody?.let {
-//                        Request.Builder()
-//                            .url("https://mapsapp-1-m9050519.deta.app/users/Aflah/upload_marker_image")
-//                            .post(it)
-//                            .build()
-//                    }
-//
-//                    // Send the request asynchronously and handle the response
-//                    if (request != null) {
-//                        client.newCall(request).enqueue(object : Callback {
-//                            override fun onFailure(call: Call, e: IOException) {
-//                                // Handle errors
-//                            }
-//
-//                            override fun onResponse(call: Call, response: Response) {
-//                                // Handle successful response
-//                            }
-//                        })
-//                    }
-//                }
-//            }
-//            // Wait for all the uploads to complete
-//            scope.join()
-//            // Log the response
-//            Timber.d("Uploads completed")
-//        }
-//    }
+        val latch = CountDownLatch(1)
+
+        client.newCall(request).enqueue(object : Callback{
+            override fun onFailure(call: Call, e: IOException) {
+                Log.e("CreateFragment", "Failed to upload marker")
+                latch.countDown()
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                Log.i("CreateFragment", "Successfully uploaded marker")
+                latch.countDown()
+            }
+        })
+
+        latch.await()
+
+    }
+    private fun uploadMarker(imageIDs: ArrayList<String>){
+        val latitude = 0.0
+        val longitude = 0.0
+        val name = nameEditText.text.toString()
+        val description = descriptionEditText.text.toString()
+        val notes = notesEditText.text.toString()
+        val friendCanSee = false
+        val groups_which_can_see = ArrayList<String>()
+        groups_which_can_see.add("2")
+        val userName = "Aflah"
+        val image_uploaders = ArrayList<String>()
+        for (i in 0 until imageIDs.size){
+            image_uploaders.add(userName)
+        }
+        val note_uploaders = ArrayList<String>()
+        note_uploaders.add(userName)
+//        https://mapsapp-1-m9050519.deta.app/users/{user_name}/add_marker?username=Aflah&name=A&description=A&latitude=0&longitude=0&friends_can_see=true
+        val url = "https://mapsapp-1-m9050519.deta.app/users/Aflah/add_marker?username=$userName&name=$name&description=$description&latitude=$latitude&longitude=$longitude&friends_can_see=$friendCanSee"
+        val mediaType = "application/json; charset=utf-8".toMediaType()
+        val requestJSON = JSONObject()
+        requestJSON.put("image_id", imageIDs)
+        requestJSON.put("notes", notes)
+        requestJSON.put("groups_which_can_see", groups_which_can_see)
+        requestJSON.put("image_uploaders", image_uploaders)
+        requestJSON.put("note_uploaders", note_uploaders)
+
+        val requestBody = requestJSON.toString().toRequestBody(mediaType)
+        val request = Request.Builder()
+            .addHeader("accept","application/json")
+            .addHeader("Content-Type","application/json")
+            .url(url)
+            .post(requestBody)
+            .build()
+        val client = OkHttpClient()
+
+        val latch = CountDownLatch(1)
+
+        client.newCall(request).enqueue(object : Callback{
+            override fun onFailure(call: Call, e: IOException) {
+                Log.e("CreateFragment", "Failed to upload marker")
+                latch.countDown()
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                Log.i("CreateFragment", "Successfully uploaded marker")
+                latch.countDown()
+            }
+        })
+
+        latch.await()
+
+    }
+    private fun uploadImage(encodedImage: String): String? {
+        var imageID : String? = null
+        val url = "https://mapsapp-1-m9050519.deta.app/users/Aflah/upload_marker_image_url_encoded_base64"
+        val mediaType = "application/json; charset=utf-8".toMediaType()
+        val requestJSON = JSONObject()
+        requestJSON.put("image", encodedImage)
+
+        val requestBody = requestJSON.toString().toRequestBody(mediaType)
+        val request = Request.Builder()
+            .addHeader("accept","application/json")
+            .addHeader("Content-Type","application/json")
+            .url(url)
+            .post(requestBody)
+            .build()
+        val client = OkHttpClient()
+
+        val latch = CountDownLatch(1)
+
+        client.newCall(request).enqueue(object : Callback{
+            override fun onFailure(call: Call, e: IOException) {
+                Log.e("Login API",e.message.toString())
+                latch.countDown()
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                val responseData = response.body?.string()
+                val jsonResponse = responseData?.let { JSONObject(it) }
+                if (!response.isSuccessful) {
+                    latch.countDown()
+                    return
+                }
+                if (jsonResponse != null) {
+                    imageID = jsonResponse.get("image_id") as String
+                }
+                if (jsonResponse != null) {
+                    Timber.tag("Login").i(jsonResponse.toString(4))
+                }
+                latch.countDown()
+            }
+        }
+        )
+
+        latch.await()
+        return imageID
+    }
+
+    fun getImageAsURLEncodedBinaryString(contentResolver: ContentResolver, uri: Uri): String? {
+        try {
+            val inputStream: InputStream? = contentResolver.openInputStream(uri)
+            val bytes = inputStream?.readBytes()
+            val base64 = Base64.encodeToString(bytes, Base64.DEFAULT)
+            // URL encode the base64 string
+            val urlEncoded = URLEncoder.encode(base64, "UTF-8")
+            return urlEncoded
+
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
+        return null
+    }
 
 
     private fun pickImagesIntent(){
