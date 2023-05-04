@@ -383,11 +383,31 @@ async def get_markers(group_id: str):
     except:
         return {"message": "Invalid group_id"}
 
+class MarkerPayload(BaseModel):
+    name: str
+    description: str
+    latitude: float
+    longitude: float
+    image: list
+    group_which_can_see: list
+    friends_can_see: bool
+    image_uploaders: list
+    notes: list
+    notes_uploaders: list
 # Add new marker
-@app.post("/users/{user_name}/add_marker")
-async def add_marker(username: str, name: str, description: str, latitude: float, longitude: float, 
-                     image_id: list, group_which_can_see: list, friends_can_see: bool,
-                     image_uploaders: list, notes: list, notes_uploaders: list):
+@app.post("/users/{username}/add_marker")
+async def add_marker(username: str, payload: MarkerPayload):
+    name = payload.name
+    description = payload.description
+    latitude = payload.latitude
+    longitude = payload.longitude
+    image_id = payload.image
+    group_which_can_see = payload.group_which_can_see
+    friends_can_see = payload.friends_can_see
+    image_uploaders = payload.image_uploaders
+    notes = payload.notes
+    notes_uploaders = payload.notes_uploaders
+
     ls_markers = users.find_one({"username": username})["markers"]
     max_marker_id = 0
     for marker in ls_markers:
@@ -400,7 +420,7 @@ async def add_marker(username: str, name: str, description: str, latitude: float
         "description": description,
         "latitude": latitude,
         "longitude": longitude,
-        "image_id": image_id,
+        "image": image_id,
         "group_which_can_see": group_which_can_see,
         "friends_can_see": friends_can_see,
         "image_uploaders": image_uploaders,
@@ -423,10 +443,15 @@ async def add_marker(username: str, name: str, description: str, latitude: float
 class imagePayload(BaseModel):
     image: str
 
+class imageIDsPayload(BaseModel):
+    marker_id: str
+    imageIDs: list
 # add images to marker
-@app.post("/users/{user_name}/{marker_id}/add_images_to_marker")
-async def add_image_to_marker(user_name: str, marker_id: str, imageIDs: list):
+@app.post("/users/{user_name}/add_images_to_marker")
+async def add_image_to_marker(user_name: str, imageIDsPayload: imageIDsPayload):
     # Get the marker
+    imageIDs = imageIDsPayload.imageIDs
+    marker_id = imageIDsPayload.marker_id
     marker = None
     for m in users.find_one({"username": user_name})["markers"]:
         if str(m["_id"]) == marker_id:
