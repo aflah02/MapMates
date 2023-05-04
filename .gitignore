@@ -6,3 +6,4 @@ deploy/.venv
 deploy/*.env
 .idea/*
 .idea/*
+frontend/MapMates/.idea/deploymentTargetDropDown.xml

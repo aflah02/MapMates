@@ -8,6 +8,7 @@ import pydantic
 import base64
 from urllib.parse import unquote
 from bson import ObjectId
+from typing import List
 pydantic.json.ENCODERS_BY_TYPE[ObjectId]=str
 from PIL import Image
 import io
@@ -384,14 +385,14 @@ async def get_markers(group_id: str):
 class MarkerPayload(BaseModel):
     name: str
     description: str
-    latitude: float
-    longitude: float
-    image: list
-    group_which_can_see: list
-    friends_can_see: bool
-    image_uploaders: list
-    notes: list
-    notes_uploaders: list
+    latitude: str
+    longitude: str
+    image: str
+    group_which_can_see: str
+    friends_can_see: str
+    image_uploaders: str
+    notes: str
+    notes_uploaders: str
 # Add new marker
 @app.post("/users/{username}/add_marker")
 async def add_marker(username: str, payload: MarkerPayload):
@@ -405,14 +406,49 @@ async def add_marker(username: str, payload: MarkerPayload):
     image_uploaders = payload.image_uploaders
     notes = payload.notes
     notes_uploaders = payload.notes_uploaders
-
+    latitude = float(latitude)
+    longitude = float(longitude)
+    friends_can_see = False if friends_can_see.lower() == "false" else True
+    image_id  = list(image_id.split("<DELIMITER069>"))
+    # filter out empty strings
+    image_id = list(filter(None, image_id))
+    group_which_can_see = list(group_which_can_see.split("<DELIMITER069>"))
+    # filter out empty strings
+    group_which_can_see = list(filter(None, group_which_can_see))
+    image_uploaders = list(image_uploaders.split("<DELIMITER069>"))
+    # filter out empty strings
+    image_uploaders = list(filter(None, image_uploaders))
+    notes_uploaders = list(notes_uploaders.split("<DELIMITER069>"))
+    # filter out empty strings
+    notes_uploaders = list(filter(None, notes_uploaders))
+    notes = list(notes.split("<DELIMITER069>"))
+    # filter out empty strings
+    notes = list(filter(None, notes))
+    notes_len = len(notes)
+    notes_uploaders_len = len(notes_uploaders)
+    if notes_len < notes_uploaders_len:
+        for i in range(notes_uploaders_len - notes_len):
+            notes.append("")
+    elif notes_len > notes_uploaders_len:
+        for i in range(notes_len - notes_uploaders_len):
+            notes_uploaders.append("")
+    print(image_id)
+    print(group_which_can_see)
+    print(friends_can_see)
+    print(image_uploaders)
+    print(notes)
+    print(notes_uploaders)
+    print(name)
+    print(description)
+    print(latitude)
+    print(longitude)
     ls_markers = users.find_one({"username": username})["markers"]
     max_marker_id = 0
     for marker in ls_markers:
         if int(marker["_id"]) > max_marker_id:
             max_marker_id = int(marker["_id"])
     marker_id = max_marker_id + 1
-
+    print("Marker ID: " + str(marker_id))
     marker = {
         "name": name,
         "description": description,
@@ -426,16 +462,21 @@ async def add_marker(username: str, payload: MarkerPayload):
         "notes_uploaders": notes_uploaders,
         "_id": marker_id
     }
+    print("Marker: ", marker)
 
     # Add the marker to the user's markers
     ls_markers = users.find_one({"username": username})["markers"]
+    print("Retrieved markers: ", ls_markers)
     ls_markers.append(marker)
+    print("Updated markers: ", ls_markers)
     update = {
         "$set": {
             "markers": ls_markers
         }
     }
+    print("Update: ", update)
     users.update_one({"username": username}, update)
+    print("Marker added successfully")
     return {"message": "Marker added successfully"}
 
 class imagePayload(BaseModel):
@@ -443,13 +484,16 @@ class imagePayload(BaseModel):
 
 class imageIDsPayload(BaseModel):
     marker_id: str
-    imageIDs: list
+    imageIDs: str
 # add images to marker
 @app.post("/users/{user_name}/add_images_to_marker")
 async def add_image_to_marker(user_name: str, imageIDsPayload: imageIDsPayload):
     # Get the marker
     imageIDs = imageIDsPayload.imageIDs
     marker_id = imageIDsPayload.marker_id
+    imageIDs = list(imageIDs.split("<DELIMITER069>"))
+    # filter out empty strings
+    imageIDs = list(filter(None, imageIDs))
     marker = None
     for m in users.find_one({"username": user_name})["markers"]:
         if str(m["_id"]) == marker_id:
