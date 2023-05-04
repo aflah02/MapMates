@@ -92,6 +92,7 @@ class CreateFragment : Fragment() {
             }
             Log.i("Image IDs", imageIDs.toString())
             uploadMarker(imageIDs)
+//            updateMarker(imageIDs)
             Log.i("Upload", "Marker uploaded")
 
         }
@@ -120,30 +121,14 @@ class CreateFragment : Fragment() {
         return view
     }
     private fun updateMarker(imageIDs: ArrayList<String>){
-        val latitude = 0.0
-        val longitude = 0.0
-        val name = nameEditText.text.toString()
-        val description = descriptionEditText.text.toString()
-        val notes = notesEditText.text.toString()
-        val friendCanSee = false
-        val groups_which_can_see = ArrayList<String>()
-        groups_which_can_see.add("2")
         val userName = "Aflah"
-        val image_uploaders = ArrayList<String>()
-        for (i in 0 until imageIDs.size){
-            image_uploaders.add(userName)
-        }
-        val note_uploaders = ArrayList<String>()
-        note_uploaders.add(userName)
-//        https://mapsapp-1-m9050519.deta.app/users/{user_name}/add_marker?username=Aflah&name=A&description=A&latitude=0&longitude=0&friends_can_see=true
-        val url = "https://mapsapp-1-m9050519.deta.app/users/Aflah/add_marker?username=$userName&name=$name&description=$description&latitude=$latitude&longitude=$longitude&friends_can_see=$friendCanSee"
+        val markerID = "0"
+        val url = "http://127.0.0.1:8000/users/$userName/add_images_to_marker/"
         val mediaType = "application/json; charset=utf-8".toMediaType()
         val requestJSON = JSONObject()
-        requestJSON.put("image_id", imageIDs)
-        requestJSON.put("notes", notes)
-        requestJSON.put("groups_which_can_see", groups_which_can_see)
-        requestJSON.put("image_uploaders", image_uploaders)
-        requestJSON.put("note_uploaders", note_uploaders)
+        requestJSON.put("marker_id", markerID)
+        requestJSON.put("imageIDs", imageIDs)
+        Log.i("CreateFragment", requestJSON.toString())
 
         val requestBody = requestJSON.toString().toRequestBody(mediaType)
         val request = Request.Builder()
@@ -163,7 +148,7 @@ class CreateFragment : Fragment() {
             }
 
             override fun onResponse(call: Call, response: Response) {
-                Log.i("CreateFragment", "Successfully uploaded marker")
+                Log.i("CreateFragment", "Successfully updated marker")
                 latch.countDown()
             }
         })
@@ -187,15 +172,22 @@ class CreateFragment : Fragment() {
         }
         val note_uploaders = ArrayList<String>()
         note_uploaders.add(userName)
-//        https://mapsapp-1-m9050519.deta.app/users/{user_name}/add_marker?username=Aflah&name=A&description=A&latitude=0&longitude=0&friends_can_see=true
-        val url = "https://mapsapp-1-m9050519.deta.app/users/Aflah/add_marker?username=$userName&name=$name&description=$description&latitude=$latitude&longitude=$longitude&friends_can_see=$friendCanSee"
+        val notes_list = ArrayList<String>()
+        notes_list.add(notes)
+        val url = "https://mapsapp-1-m9050519.deta.app/users/$userName/add_marker/"
         val mediaType = "application/json; charset=utf-8".toMediaType()
         val requestJSON = JSONObject()
+        requestJSON.put("latitude", latitude)
+        requestJSON.put("longitude", longitude)
+        requestJSON.put("name", name)
+        requestJSON.put("description", description)
+        requestJSON.put("friendCanSee", friendCanSee)
         requestJSON.put("image_id", imageIDs)
-        requestJSON.put("notes", notes)
+        requestJSON.put("notes", notes_list)
         requestJSON.put("groups_which_can_see", groups_which_can_see)
         requestJSON.put("image_uploaders", image_uploaders)
         requestJSON.put("note_uploaders", note_uploaders)
+        Log.i("CreateFragment", requestJSON.toString())
 
         val requestBody = requestJSON.toString().toRequestBody(mediaType)
         val request = Request.Builder()
