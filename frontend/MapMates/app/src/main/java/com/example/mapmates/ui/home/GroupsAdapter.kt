@@ -10,7 +10,7 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.RecyclerView
 import com.example.mapmates.R
 
-class GroupsAdapter(private val groupsList: ArrayList<GroupModel>, private val listener: OnItemClickListener) : RecyclerView.Adapter<GroupsAdapter.GroupsViewHolder>() {
+class GroupsAdapter(private var groupsList: ArrayList<GroupModel>, private val listener: OnGroupItemClickListener) : RecyclerView.Adapter<GroupsAdapter.GroupsViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): GroupsViewHolder {
         val itemView = LayoutInflater.from(parent.context).inflate(R.layout.list_group_element, parent, false)
@@ -22,7 +22,7 @@ class GroupsAdapter(private val groupsList: ArrayList<GroupModel>, private val l
         holder.groupCount.text = groupsList[position].groupCount
         holder.groupImage.setImageResource(groupsList[position].groupImage)
         holder.itemView.setOnClickListener {
-            listener.onItemClick(position)
+            listener.onGroupItemClick(position)
         }
     }
 
