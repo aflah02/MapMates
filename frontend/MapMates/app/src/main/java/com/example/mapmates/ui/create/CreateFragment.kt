@@ -28,6 +28,7 @@ import androidx.core.net.toFile
 import androidx.fragment.app.Fragment
 import com.example.mapmates.R
 import okhttp3.RequestBody.Companion.toRequestBody
+import org.json.JSONArray
 import org.json.JSONObject
 import timber.log.Timber
 import java.io.File
@@ -91,8 +92,8 @@ class CreateFragment : Fragment() {
                 imageIDs.add(imageID!!)
             }
             Log.i("Image IDs", imageIDs.toString())
-            uploadMarker(imageIDs)
-//            updateMarker(imageIDs)
+//            uploadMarker(imageIDs)
+            updateMarker(imageIDs)
             Log.i("Upload", "Marker uploaded")
 
         }
@@ -123,11 +124,16 @@ class CreateFragment : Fragment() {
     private fun updateMarker(imageIDs: ArrayList<String>){
         val userName = "Aflah"
         val markerID = "0"
-        val url = "http://127.0.0.1:8000/users/$userName/add_images_to_marker/"
+        val url = "https://mapsapp-1-m9050519.deta.app/users/$userName/add_images_to_marker"
         val mediaType = "application/json; charset=utf-8".toMediaType()
         val requestJSON = JSONObject()
+        var imageIDSAsStr = ""
+        for (imageID in imageIDs){
+            imageIDSAsStr = imageIDSAsStr.plus(imageID)
+            imageIDSAsStr = imageIDSAsStr.plus("<DELIMITER069>")
+        }
         requestJSON.put("marker_id", markerID)
-        requestJSON.put("imageIDs", imageIDs)
+        requestJSON.put("imageIDs", imageIDSAsStr)
         Log.i("CreateFragment", requestJSON.toString())
 
         val requestBody = requestJSON.toString().toRequestBody(mediaType)
@@ -143,6 +149,7 @@ class CreateFragment : Fragment() {
 
         client.newCall(request).enqueue(object : Callback{
             override fun onFailure(call: Call, e: IOException) {
+                Log.i("ErrorError",  e.toString())
                 Log.e("CreateFragment", "Failed to upload marker")
                 latch.countDown()
             }
@@ -158,35 +165,78 @@ class CreateFragment : Fragment() {
     }
     private fun uploadMarker(imageIDs: ArrayList<String>){
         val latitude = 0.0
+        // convert to string
+        val latitudeAsString = latitude.toString()
         val longitude = 0.0
+        val longitudeAsString = longitude.toString()
         val name = nameEditText.text.toString()
         val description = descriptionEditText.text.toString()
         val notes = notesEditText.text.toString()
         val friendCanSee = false
+        // Convert to string
+        val friendCanSeeAsString = friendCanSee.toString()
         val groups_which_can_see = ArrayList<String>()
         groups_which_can_see.add("2")
+        // Convert to JSONArray
+        val imageIDsJSON = JSONArray(imageIDs)
+        var imageIDSAsStr = ""
+        for (imageID in imageIDs){
+            imageIDSAsStr = imageIDSAsStr.plus(imageID)
+            imageIDSAsStr = imageIDSAsStr.plus("<DELIMITER069>")
+        }
+        val groups_which_can_see_JSONArray = JSONArray(groups_which_can_see)
+        var groupsAsString = ""
+        for (group in groups_which_can_see){
+            groupsAsString = groupsAsString.plus(group)
+            groupsAsString = groupsAsString.plus("<DELIMITER069>")
+        }
         val userName = "Aflah"
         val image_uploaders = ArrayList<String>()
         for (i in 0 until imageIDs.size){
             image_uploaders.add(userName)
         }
+        val image_uploaders_JSONArray = JSONArray(image_uploaders)
+        var image_uploaders_as_str = ""
+        for (image_uploader in image_uploaders){
+            image_uploaders_as_str = image_uploaders_as_str.plus(image_uploader)
+            image_uploaders_as_str = image_uploaders_as_str.plus("<DELIMITER069>")
+        }
         val note_uploaders = ArrayList<String>()
         note_uploaders.add(userName)
+
+        val note_uploaders_JSONArray = JSONArray(note_uploaders)
+        var note_uploaders_as_str = ""
+        for (note_uploader in note_uploaders){
+            note_uploaders_as_str = note_uploaders_as_str.plus(note_uploader)
+            note_uploaders_as_str = note_uploaders_as_str.plus("<DELIMITER069>")
+        }
         val notes_list = ArrayList<String>()
         notes_list.add(notes)
-        val url = "https://mapsapp-1-m9050519.deta.app/users/$userName/add_marker/"
+        val notes_list_JSONArray = JSONArray(notes_list)
+        var notes_list_as_str = ""
+        for (note in notes_list){
+            notes_list_as_str = notes_list_as_str.plus(note)
+            notes_list_as_str = notes_list_as_str.plus("<DELIMITER069>")
+        }
+        val url = "https://mapsapp-1-m9050519.deta.app/users/$userName/add_marker"
         val mediaType = "application/json; charset=utf-8".toMediaType()
         val requestJSON = JSONObject()
-        requestJSON.put("latitude", latitude)
-        requestJSON.put("longitude", longitude)
+        requestJSON.put("latitude", latitudeAsString)
+        requestJSON.put("longitude", longitudeAsString)
         requestJSON.put("name", name)
         requestJSON.put("description", description)
-        requestJSON.put("friendCanSee", friendCanSee)
-        requestJSON.put("image_id", imageIDs)
-        requestJSON.put("notes", notes_list)
-        requestJSON.put("groups_which_can_see", groups_which_can_see)
-        requestJSON.put("image_uploaders", image_uploaders)
-        requestJSON.put("note_uploaders", note_uploaders)
+        requestJSON.put("friends_can_see", friendCanSeeAsString)
+        requestJSON.put("image", imageIDSAsStr)
+        requestJSON.put("notes", notes_list_as_str)
+        requestJSON.put("group_which_can_see", groupsAsString)
+        requestJSON.put("image_uploaders", image_uploaders_as_str)
+        requestJSON.put("notes_uploaders", note_uploaders_as_str)
+        Log.i("image_id tostring", imageIDSAsStr)
+        Log.i("notes tostring", notes_list_as_str)
+        Log.i("groups tostring", groupsAsString)
+        Log.i("image uploaders tostrin", image_uploaders_as_str)
+        Log.i("note uploaders tostring", note_uploaders_as_str)
+
         Log.i("CreateFragment", requestJSON.toString())
 
         val requestBody = requestJSON.toString().toRequestBody(mediaType)
@@ -207,6 +257,7 @@ class CreateFragment : Fragment() {
             }
 
             override fun onResponse(call: Call, response: Response) {
+                Log.i("Response", response.toString())
                 Log.i("CreateFragment", "Successfully uploaded marker")
                 latch.countDown()
             }
