@@ -30,10 +30,7 @@ import com.google.android.material.floatingactionbutton.ExtendedFloatingActionBu
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.mapbox.android.gestures.MoveGestureDetector
 import com.mapbox.geojson.Point
-import com.mapbox.maps.CameraOptions
-import com.mapbox.maps.MapView
-import com.mapbox.maps.MapboxMap
-import com.mapbox.maps.Style
+import com.mapbox.maps.*
 import com.mapbox.maps.extension.style.expressions.dsl.generated.interpolate
 import com.mapbox.maps.extension.style.expressions.generated.Expression.Companion.linear
 import com.mapbox.maps.plugin.LocationPuck2D
@@ -49,6 +46,7 @@ import com.mapbox.maps.plugin.locationcomponent.OnIndicatorBearingChangedListene
 import com.mapbox.maps.plugin.locationcomponent.OnIndicatorPositionChangedListener
 import com.mapbox.maps.plugin.locationcomponent.location
 import com.mapbox.maps.plugin.scalebar.scalebar
+import com.mapbox.maps.viewannotation.ViewAnnotationManager
 import java.lang.ref.WeakReference
 class HomeFragment : Fragment(), OnItemClickListener {
     private lateinit var mapView: MapView
@@ -59,6 +57,7 @@ class HomeFragment : Fragment(), OnItemClickListener {
     private lateinit var groupsList: ArrayList<GroupModel>
     private lateinit var groupsRecyclerView: RecyclerView
     private lateinit var groupSheetDialog: BottomSheetDialog
+    private lateinit var markerSheetDialog: BottomSheetDialog
     private var mapLoaded: Boolean = false
 
     private lateinit var locationPermissionHelper : LocationPermissionHelper
@@ -107,6 +106,14 @@ class HomeFragment : Fragment(), OnItemClickListener {
         pointAnnotationManager = mapView.annotations.createPointAnnotationManager()
 
         createBottomGroupDialog()
+        createBottomMarkerDialog()
+
+        pointAnnotationManager.addClickListener {clickedAnnotaton ->
+            Toast.makeText(requireContext(), "Clicked on ${clickedAnnotaton.id}", Toast.LENGTH_SHORT).show()
+            markerSheetDialog.show()
+            true
+        }
+
         // Setting up change group fab
         val groupsFab : ExtendedFloatingActionButton = binding.groupsFab
         groupsFab.setOnClickListener {
@@ -143,7 +150,7 @@ class HomeFragment : Fragment(), OnItemClickListener {
             initLocationComponent()
             setupGesturesListener()
             mapLoaded = true
-            addAnnotationToMap()
+            addAnnotationToMap(28.512, 78.234)
         }
     }
     private fun setupGesturesListener() {
@@ -217,7 +224,7 @@ class HomeFragment : Fragment(), OnItemClickListener {
     }
 
     private fun createBottomGroupDialog() {
-        groupSheetDialog = BottomSheetDialog(requireContext(), R.style.BottomSheetDialog)
+        groupSheetDialog = BottomSheetDialog(requireContext())
         groupSheetDialog.setContentView(R.layout.group_sheet_dialog)
 //        val behavior = BottomSheetBehavior.from(groupSheetDialog.findViewById(R.id.group_sheet_dialog_parent)!!)
 //        behavior.setPeekHeight(900, true)
@@ -234,6 +241,15 @@ class HomeFragment : Fragment(), OnItemClickListener {
 
         closeButton.setOnClickListener {
             groupSheetDialog.dismiss()
+        }
+    }
+    private fun createBottomMarkerDialog() {
+        markerSheetDialog = BottomSheetDialog(requireContext())
+        markerSheetDialog.setContentView(R.layout.marker_sheet_dialog)
+        val closeButton : ImageButton = markerSheetDialog.findViewById(R.id.closeDialog)!!
+
+        closeButton.setOnClickListener {
+            markerSheetDialog.dismiss()
         }
     }
 
@@ -253,11 +269,14 @@ class HomeFragment : Fragment(), OnItemClickListener {
                 groupsList[i].isShowing = false
             }
         }
+        // reset markers
         pointAnnotationManager.deleteAll()
+        addAnnotationToMap(28.613, 77.209)
+        groupSheetDialog.dismiss()
     }
 
     // Adding marker logics
-    private fun addAnnotationToMap() {
+    private fun addAnnotationToMap(latitude: Double, longitude: Double) {
 // Create an instance of the Annotation API and get the PointAnnotationManager.
         bitmapFromDrawableRes(
             requireContext(),
@@ -266,12 +285,12 @@ class HomeFragment : Fragment(), OnItemClickListener {
             // Set options for the resulting symbol layer.
             val pointAnnotationOptions: PointAnnotationOptions = PointAnnotationOptions()
                 // Define a geographic coordinate.
-                .withPoint(Point.fromLngLat( 77.209, 28.613))
+                .withPoint(Point.fromLngLat( longitude, latitude))
                 // Specify the bitmap you assigned to the point annotation
                 // The bitmap will be added to map style automatically.
                 .withIconImage(it)
             // Add the resulting pointAnnotation to the map.
-            pointAnnotationManager.create(pointAnnotationOptions)
+            val pointAnnotation = pointAnnotationManager.create(pointAnnotationOptions)
         }
     }
     private fun bitmapFromDrawableRes(context: Context, @DrawableRes resourceId: Int) =
