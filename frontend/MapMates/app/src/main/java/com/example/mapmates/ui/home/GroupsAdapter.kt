@@ -1,6 +1,7 @@
 package com.example.mapmates.ui.home
 
 import android.graphics.Color
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -22,7 +23,7 @@ class GroupsAdapter(private var groupsList: ArrayList<GroupModel>, private val l
         holder.groupCount.text = groupsList[position].groupCount
         holder.groupImage.setImageResource(groupsList[position].groupImage)
         holder.itemView.setOnClickListener {
-            listener.onGroupItemClick(position)
+            listener.onGroupItemClick(position);
         }
     }
 
