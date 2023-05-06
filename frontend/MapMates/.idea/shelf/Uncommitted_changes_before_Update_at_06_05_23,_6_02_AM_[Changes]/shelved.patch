@@ -1,0 +1,158 @@
+Index: app/src/main/AndroidManifest.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"utf-8\"?>\n<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    package=\"com.example.mapmates\">\n\n    <uses-permission android:name=\"android.permission.INTERNET\" />\n    <uses-permission android:name=\"android.permission.ACCESS_FINE_LOCATION\" />\n    <uses-permission android:name=\"android.permission.ACCESS_COARSE_LOCATION\" />\n    <uses-permission android:name=\"android.permission.ACCESS_NETWORK_STATE\" />\n    <uses-permission android:name=\"android.permission.ACCESS_WIFI_STATE\" />\n    <uses-permission android:name=\"android.permission.WRITE_EXTERNAL_STORAGE\" />\n    <uses-permission android:name=\"android.permission.READ_EXTERNAL_STORAGE\" /> <!-- TODO: replace access token -->\n    <meta-data\n        android:name=\"com.mapbox.token\"\n        android:value=\"YOUR_ACCESS_TOKEN\" />\n\n    <application\n        android:allowBackup=\"true\"\n        android:icon=\"@mipmap/ic_launcher\"\n        android:label=\"@string/app_name\"\n        android:roundIcon=\"@mipmap/ic_launcher_round\"\n        android:supportsRtl=\"true\"\n        android:theme=\"@style/Theme.MapMates.NoActionBar\">\n        <activity\n            android:name=\".PendingRequestActivity\"\n            android:exported=\"false\" />\n        <activity\n            android:name=\".AddFriendActivity\"\n            android:exported=\"false\" />\n        <activity\n            android:name=\".FriendActivityProfile\"\n            android:exported=\"false\" />\n        <activity\n            android:name=\".SettingsActivity\"\n            android:exported=\"false\" />\n\n        <receiver\n            android:name=\".ui.home.LocationProviderChangedReceiver\"\n            android:exported=\"false\">\n            <intent-filter>\n                <action android:name=\"android.location.PROVIDERS_CHANGED\" />\n\n                <category android:name=\"android.intent.category.DEFAULT\" />\n            </intent-filter>\n        </receiver>\n\n        <activity\n            android:name=\".EntryActivity\"\n            android:exported=\"true\"\n            android:label=\"@string/app_name\"\n            android:noHistory=\"true\">\n            <intent-filter>\n                <action android:name=\"android.intent.action.MAIN\" />\n\n                <category android:name=\"android.intent.category.LAUNCHER\" />\n            </intent-filter>\n        </activity>\n        <activity\n            android:name=\".SignupActivity\"\n            android:exported=\"false\"\n            android:label=\"@string/title_activity_signup\"\n            android:noHistory=\"true\" />\n        <activity\n            android:name=\".LoginActivity\"\n            android:exported=\"false\"\n            android:noHistory=\"true\" />\n        <activity\n            android:name=\".MainActivity\"\n            android:exported=\"false\" />\n    </application>\n\n</manifest>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/AndroidManifest.xml b/app/src/main/AndroidManifest.xml
+--- a/app/src/main/AndroidManifest.xml	(revision 41611f042cfeecfe98dcc493df26869cc96c9a5c)
++++ b/app/src/main/AndroidManifest.xml	(date 1683310911346)
+@@ -21,6 +21,12 @@
+         android:supportsRtl="true"
+         android:theme="@style/Theme.MapMates.NoActionBar">
+         <activity
++            android:name=".JoinGroupActivity"
++            android:exported="false" />
++        <activity
++            android:name=".CreateGroupActivity"
++            android:exported="false" />
++        <activity
+             android:name=".PendingRequestActivity"
+             android:exported="false" />
+         <activity
+Index: app/src/main/java/com/example/mapmates/ui/people/groups/GroupsFragment.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.mapmates.ui.people.groups\n\nimport android.os.Bundle\nimport android.util.Log\nimport android.view.LayoutInflater\nimport android.view.View\nimport android.view.ViewGroup\nimport androidx.fragment.app.Fragment\nimport androidx.recyclerview.widget.LinearLayoutManager\nimport androidx.recyclerview.widget.RecyclerView\nimport com.example.mapmates.R\nimport com.example.mapmates.ui.people.friends.FriendData\nimport com.google.android.material.snackbar.Snackbar\nimport okhttp3.*\nimport org.json.JSONArray\nimport org.json.JSONObject\nimport timber.log.Timber\nimport java.io.BufferedReader\nimport java.io.IOException\nimport java.io.InputStreamReader\nimport java.net.URL\nimport java.util.concurrent.CountDownLatch\n\n\n// TODO: Rename parameter arguments, choose names that match\n// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER\nprivate const val ARG_PARAM1 = \"param1\"\nprivate const val ARG_PARAM2 = \"param2\"\n\n/**\n * A simple [Fragment] subclass.\n * Use the [GroupsFragment.newInstance] factory method to\n * create an instance of this fragment.\n */\n\ninterface OnItemClickListener {\n    fun onSettingsClick(position: Int)\n}\n\nclass GroupsFragment : Fragment() {\n    // TODO: Rename and change types of parameters\n    private var param1: String? = null\n    private var param2: String? = null\n    private lateinit var groupRecyclerView: RecyclerView\n    private lateinit var adapter: GroupsAdapter\n\n    override fun onCreate(savedInstanceState: Bundle?) {\n        super.onCreate(savedInstanceState)\n        arguments?.let {\n            param1 = it.getString(ARG_PARAM1)\n            param2 = it.getString(ARG_PARAM2)\n        }\n    }\n\n    override fun onCreateView(\n        inflater: LayoutInflater, container: ViewGroup?,\n        savedInstanceState: Bundle?\n    ): View? {\n        val view = inflater.inflate(R.layout.fragment_groups, container, false)\n\n        groupRecyclerView = view.findViewById(R.id.groupCardRecyclerView)\n        setGroupRecycler()\n//        groupRecyclerView.layoutManager = LinearLayoutManager(activity)\n//\n//        adapter = GroupsAdapter(emptyList())\n//        groupRecyclerView.adapter = adapter\n//\n//        val groupList = getGroupList()\n//\n//        adapter.updateList(groupList)\n        val fab: View = view.findViewById(R.id.fab)\n        fab.setOnClickListener { view ->\n            Snackbar.make(view, \"Here's a Snackbar\", Snackbar.LENGTH_LONG)\n                .setAction(\"Action\", null)\n                .show()\n        }\n\n        return view\n    }\n\n    private fun setGroupRecycler(){\n        groupRecyclerView.layoutManager = LinearLayoutManager(activity)\n\n        adapter = GroupsAdapter(emptyList())\n        groupRecyclerView.adapter = adapter\n\n        val groupList = getGroupList()\n\n        adapter.updateList(groupList)\n    }\n\n\n    private fun getGroupList(): List<GroupData> {\n        val groupList = mutableListOf<GroupData>()\n\n        val jsonString = getGroupDetails(\"Aflah\")\n        if(jsonString!=null){\n            val jsonObjectArray = parseJson(jsonString)\n            if (jsonObjectArray != null) {\n                for(item in jsonObjectArray){\n                    Log.d(\"Groups\",item)\n                    groupList.add(GroupData(item,\"https://picsum.photos/200\"))\n                }\n            }\n        }\n\n        return groupList\n\n    }\n\n\n    private fun parseJson(jsonString: String): ArrayList<String>? {\n\n        val jsonObject = JSONObject(jsonString)\n        val groupList = ArrayList<String>()\n\n        if (jsonObject.has(\"groups\")) {\n            val friendRequests = jsonObject.getJSONArray(\"groups\")\n            for (i in 0 until friendRequests.length()) {\n                val name = friendRequests.getString(i)\n                groupList.add(name)\n            }\n        }\n\n        return groupList\n    }\n\n    fun getGroupDetails(username: String): String? {\n        var responseString : String? = null\n        val client = OkHttpClient()\n        val request = Request.Builder()\n            .url(\"https://mapsapp-1-m9050519.deta.app/users/$username/groups\")\n            .build()\n        val latch = CountDownLatch(1)\n        client.newCall(request).enqueue(object : Callback {\n            override fun onFailure(call: Call, e: IOException) {\n                Timber.tag(\"groups\").e(e.message.toString())\n                latch.countDown()\n            }\n\n            override fun onResponse(call: Call, response: Response) {\n                responseString = response.body?.string()\n                if (!response.isSuccessful) {\n                    latch.countDown()\n                    return\n                }\n                Timber.tag(\"Groups\").i(responseString.toString())\n                latch.countDown()\n            }\n        }\n        )\n        latch.await()\n        return responseString\n    }\n    companion object {\n        /**\n         * Use this factory method to create a new instance of\n         * this fragment using the provided parameters.\n         *\n         * @param param1 Parameter 1.\n         * @param param2 Parameter 2.\n         * @return A new instance of fragment GroupsFragment.\n         */\n        // TODO: Rename and change types and number of parameters\n        @JvmStatic\n        fun newInstance(param1: String, param2: String) =\n            GroupsFragment().apply {\n                arguments = Bundle().apply {\n                    putString(ARG_PARAM1, param1)\n                    putString(ARG_PARAM2, param2)\n                }\n            }\n    }\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/mapmates/ui/people/groups/GroupsFragment.kt b/app/src/main/java/com/example/mapmates/ui/people/groups/GroupsFragment.kt
+--- a/app/src/main/java/com/example/mapmates/ui/people/groups/GroupsFragment.kt	(revision 41611f042cfeecfe98dcc493df26869cc96c9a5c)
++++ b/app/src/main/java/com/example/mapmates/ui/people/groups/GroupsFragment.kt	(date 1683307558598)
+@@ -1,5 +1,6 @@
+ package com.example.mapmates.ui.people.groups
+ 
++import android.content.Intent
+ import android.os.Bundle
+ import android.util.Log
+ import android.view.LayoutInflater
+@@ -8,7 +9,9 @@
+ import androidx.fragment.app.Fragment
+ import androidx.recyclerview.widget.LinearLayoutManager
+ import androidx.recyclerview.widget.RecyclerView
++import com.example.mapmates.AddFriendActivity
+ import com.example.mapmates.R
++import com.example.mapmates.SettingsActivity
+ import com.example.mapmates.ui.people.friends.FriendData
+ import com.google.android.material.snackbar.Snackbar
+ import okhttp3.*
+@@ -21,35 +24,14 @@
+ import java.net.URL
+ import java.util.concurrent.CountDownLatch
+ 
+-
+-// TODO: Rename parameter arguments, choose names that match
+-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
+-private const val ARG_PARAM1 = "param1"
+-private const val ARG_PARAM2 = "param2"
+-
+-/**
+- * A simple [Fragment] subclass.
+- * Use the [GroupsFragment.newInstance] factory method to
+- * create an instance of this fragment.
+- */
+-
+-interface OnItemClickListener {
+-    fun onSettingsClick(position: Int)
+-}
+-
+ class GroupsFragment : Fragment() {
+-    // TODO: Rename and change types of parameters
+-    private var param1: String? = null
+-    private var param2: String? = null
++
+     private lateinit var groupRecyclerView: RecyclerView
+     private lateinit var adapter: GroupsAdapter
+ 
+     override fun onCreate(savedInstanceState: Bundle?) {
+         super.onCreate(savedInstanceState)
+-        arguments?.let {
+-            param1 = it.getString(ARG_PARAM1)
+-            param2 = it.getString(ARG_PARAM2)
+-        }
++
+     }
+ 
+     override fun onCreateView(
+@@ -60,19 +42,14 @@
+ 
+         groupRecyclerView = view.findViewById(R.id.groupCardRecyclerView)
+         setGroupRecycler()
+-//        groupRecyclerView.layoutManager = LinearLayoutManager(activity)
+-//
+-//        adapter = GroupsAdapter(emptyList())
+-//        groupRecyclerView.adapter = adapter
+-//
+-//        val groupList = getGroupList()
+-//
+-//        adapter.updateList(groupList)
++
+         val fab: View = view.findViewById(R.id.fab)
+         fab.setOnClickListener { view ->
+-            Snackbar.make(view, "Here's a Snackbar", Snackbar.LENGTH_LONG)
+-                .setAction("Action", null)
+-                .show()
++            val bottomSheetFragment = GroupOptionsBottomSheetFragment()
++            bottomSheetFragment.show(parentFragmentManager, "groupOptionsBottomSheet")
++//            val intent = Intent(activity, SettingsActivity::class.java)
++//            startActivity(intent)
++//            Open a floating menu here with the options Create group or Join a group
+         }
+ 
+         return view
+@@ -152,23 +129,4 @@
+         latch.await()
+         return responseString
+     }
+-    companion object {
+-        /**
+-         * Use this factory method to create a new instance of
+-         * this fragment using the provided parameters.
+-         *
+-         * @param param1 Parameter 1.
+-         * @param param2 Parameter 2.
+-         * @return A new instance of fragment GroupsFragment.
+-         */
+-        // TODO: Rename and change types and number of parameters
+-        @JvmStatic
+-        fun newInstance(param1: String, param2: String) =
+-            GroupsFragment().apply {
+-                arguments = Bundle().apply {
+-                    putString(ARG_PARAM1, param1)
+-                    putString(ARG_PARAM2, param2)
+-                }
+-            }
+-    }
+ }
+\ No newline at end of file
+Index: .idea/gradle.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<project version=\"4\">\n  <component name=\"GradleMigrationSettings\" migrationVersion=\"1\" />\n  <component name=\"GradleSettings\">\n    <option name=\"linkedExternalProjectsSettings\">\n      <GradleProjectSettings>\n        <option name=\"testRunner\" value=\"GRADLE\" />\n        <option name=\"distributionType\" value=\"DEFAULT_WRAPPED\" />\n        <option name=\"externalProjectPath\" value=\"$PROJECT_DIR$\" />\n        <option name=\"gradleJvm\" value=\"Embedded JDK\" />\n        <option name=\"modules\">\n          <set>\n            <option value=\"$PROJECT_DIR$\" />\n            <option value=\"$PROJECT_DIR$/app\" />\n          </set>\n        </option>\n      </GradleProjectSettings>\n    </option>\n  </component>\n</project>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/gradle.xml b/.idea/gradle.xml
+--- a/.idea/gradle.xml	(revision 41611f042cfeecfe98dcc493df26869cc96c9a5c)
++++ b/.idea/gradle.xml	(date 1683305626700)
+@@ -7,7 +7,7 @@
+         <option name="testRunner" value="GRADLE" />
+         <option name="distributionType" value="DEFAULT_WRAPPED" />
+         <option name="externalProjectPath" value="$PROJECT_DIR$" />
+-        <option name="gradleJvm" value="Embedded JDK" />
++        <option name="gradleJvm" value="11" />
+         <option name="modules">
+           <set>
+             <option value="$PROJECT_DIR$" />
