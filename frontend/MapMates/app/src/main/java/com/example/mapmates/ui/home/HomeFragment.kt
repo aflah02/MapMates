@@ -16,6 +16,7 @@ import android.widget.*
 import androidx.annotation.DrawableRes
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.content.ContentProviderCompat.requireContext
+import androidx.core.graphics.drawable.toBitmap
 import androidx.core.view.ViewCompat.NestedScrollType
 import androidx.core.widget.NestedScrollView
 import androidx.fragment.app.Fragment
@@ -41,6 +42,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.tabs.TabLayout
+import com.google.android.material.tabs.TabLayout.GONE
 import com.google.android.material.tabs.TabLayout.Tab
 import com.google.gson.JsonParser
 import com.mapbox.android.gestures.MoveGestureDetector
@@ -91,7 +93,11 @@ class HomeFragment : Fragment(), OnGroupItemClickListener {
     private var mapLoaded: Boolean = false
     private var currentMarker: Int = -1
     private lateinit var viewModel: HomeFragmentViewModel
+    private lateinit var picasso : Picasso
 
+    private lateinit var imageRecyclerView: RecyclerView
+    private lateinit var notesRecyclerView: RecyclerView
+    private lateinit var profileRecyclerView: RecyclerView
     private lateinit var locationPermissionHelper : LocationPermissionHelper
 
     private val onIndicatorPositionChangedListener = OnIndicatorPositionChangedListener {
@@ -123,6 +129,7 @@ class HomeFragment : Fragment(), OnGroupItemClickListener {
         locationPermissionHelper.checkPermissions {
             onMapReady()
         }
+        picasso = Picasso.get()
         groupsList = ArrayList<GroupModel>()
         markersList = ArrayList<MarkerModel>()
         markerIdList = ArrayList<Long>()
@@ -154,7 +161,6 @@ class HomeFragment : Fragment(), OnGroupItemClickListener {
 //            mapView.getMapboxMap().setCamera(CameraOptions.Builder().center(pt).build())
 //            mapView.gestures.focalPoint = mapView.getMapboxMap().pixelForCoordinate(pt)
         }
-
         return root
     }
 
@@ -213,6 +219,37 @@ class HomeFragment : Fragment(), OnGroupItemClickListener {
 //                if(viewFlipper.displayedChild in 0 until markersList[currentMarker].imageUploaders.size)
 //                    imageBy.text = markersList[currentMarker].imageUploaders[viewFlipper.displayedChild]
 //        }
+
+        imageRecyclerView = markerSheetDialog.findViewById(R.id.imageTab)!!
+        imageRecyclerView.layoutManager = GridLayoutManager(requireContext(), 3)
+        notesRecyclerView = markerSheetDialog.findViewById(R.id.notesTab)!!
+        notesRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+
+        profileRecyclerView = markerSheetDialog.findViewById(R.id.visitorsList)!!
+        profileRecyclerView.layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
+        imageRecyclerView.visibility = View.VISIBLE
+
+        val tabLayout: TabLayout = markerSheetDialog.findViewById(R.id.placeTabLayout)!!
+        tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
+            override fun onTabSelected(tab: TabLayout.Tab?) {
+                // get tab position
+                val position = tab?.position
+                if (position == 0) {
+                    imageRecyclerView.visibility = View.VISIBLE
+                    notesRecyclerView.visibility = View.GONE
+                } else {
+                    imageRecyclerView.visibility = View.GONE
+                    notesRecyclerView.visibility = View.VISIBLE
+                }
+            }
+
+            override fun onTabUnselected(tab: TabLayout.Tab?) {
+            }
+
+            override fun onTabReselected(tab: TabLayout.Tab?) {
+            }
+        });
+
 
         closeButton.setOnClickListener {
             markerSheetDialog.dismiss()
@@ -324,65 +361,89 @@ class HomeFragment : Fragment(), OnGroupItemClickListener {
         }
         currentMarker = idx
         if(idx == -1) return
+
+        val markerName: TextView = markerSheetDialog.findViewById(R.id.markerHeading)!!
+        markerName.text = markersList[idx].name
+        val username = "Aflah"
         // Setup Notes and names
 //        val adapter = MarkerNotesAdapter(markersList[idx].notes, markersList[idx].noteUploaders)
 //        markerNotesRecyclerView.adapter = adapter
-        val markerName: TextView = markerSheetDialog.findViewById(R.id.markerHeading)!!
-        val profileRecyclerView : RecyclerView = markerSheetDialog.findViewById(R.id.visitorsList)!!
         // Setup Visitors
         val allVisitors = ArrayList<String> ()
         allVisitors.addAll(markersList[idx].imageUploaders)
         allVisitors.addAll(markersList[idx].noteUploaders)
-        val uniqueVisitors = allVisitors.distinct()
-        val adapter = ProfileAdapter(uniqueVisitors)
+        val uniqueVisitors = allVisitors.distinct() as MutableList<String>
+        val stringToBitmap = mutableMapOf<String, Bitmap>()
+        val tempProfilePic = resources.getDrawable(R.drawable.ic_dashboard_black_24dp).toBitmap()
+        val profilePics : MutableList<Bitmap> = mutableListOf()
+        for (i in 0 until uniqueVisitors.size) {
+            profilePics.add(tempProfilePic)
+        }
+
+        val adapter = ProfileAdapter(uniqueVisitors,profilePics)
         profileRecyclerView.adapter = adapter
-        profileRecyclerView.layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
-        markerName.text = markersList[idx].name
+
         GlobalScope.launch {
-            val imageBitmaps = mutableListOf<Bitmap>()
-            for (imageAt in markersList[idx].images) {
-                val imageUrl = "https://mapsapp-1-m9050519.deta.app/users/$imageAt/marker_image"
-                val bitmap = Picasso.get().load(imageUrl).get()
-                imageBitmaps.add(bitmap)
+            //create string to bitmap dictionary, while loading user images
+            for (visitor in uniqueVisitors) {
+                val imageUrl = "https://mapsapp-1-m9050519.deta.app/users/$visitor/profile_picture"
+                val bitmap = picasso.load(imageUrl).get()
+                stringToBitmap[visitor] = bitmap
             }
             requireActivity().runOnUiThread {
-                val imageRecyclerView: RecyclerView =
-                    markerSheetDialog.findViewById(R.id.imageTab)!!
-                imageRecyclerView.layoutManager = GridLayoutManager(requireContext(), 3)
-                val imageRecyclerViewAdapter =
-                    MyImageRecyclerViewAdapter(imageBitmaps, imageBitmaps)
-                imageRecyclerView.adapter = imageRecyclerViewAdapter
+                // loop through elements of imageRecyclerView and notesRecyclerView
+                val imageRecyclerViewAdapter = imageRecyclerView.adapter as MyImageRecyclerViewAdapter
+                val profileRecyclerViewAdapter  = profileRecyclerView.adapter as ProfileAdapter
+                if (currentMarker == idx) {
+                    for (i in 0 until profileRecyclerViewAdapter.itemCount){
+                        profileRecyclerViewAdapter.profileImages[i] = stringToBitmap[profileRecyclerViewAdapter.userNames[i]]!!
+                    }
+                    // enumerate over adapter and update image
+                    for (i in 0 until imageRecyclerViewAdapter.itemCount) {
+                        imageRecyclerViewAdapter.uploader[i] = stringToBitmap[imageRecyclerViewAdapter.uploaderNames[i]]!!
+                    }
+                }
+                imageRecyclerViewAdapter.notifyDataSetChanged()
+                profileRecyclerViewAdapter.notifyDataSetChanged()
+            }
+        }
 
-                val notesRecyclerView: RecyclerView =
-                    markerSheetDialog.findViewById(R.id.notesTab)!!
-                notesRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+        val imageRecyclerViewAdapter =
+            MyImageRecyclerViewAdapter(mutableListOf(), mutableListOf(), mutableListOf())
+        imageRecyclerView.adapter = imageRecyclerViewAdapter
+        val notesRecyclerViewAdapter =
+            MyNotesRecyclerViewAdapter(listOf(), listOf())
+        notesRecyclerView.adapter = notesRecyclerViewAdapter
+
+        GlobalScope.launch {
+            val imageBitmaps = mutableListOf<Bitmap>()
+            val imageUploaderBitmaps = mutableListOf<Bitmap>()
+            val imageUploaderNames = mutableListOf<String>()
+            // iterate over images with index
+            for (ii in 0 until markersList[idx].images.size) {
+                val imageAt = markersList[idx].images[ii]
+                val imageUrl = "https://mapsapp-1-m9050519.deta.app/users/$imageAt/marker_image"
+                val bitmap = picasso.load(imageUrl).get()
+
+                imageBitmaps.add(bitmap)
+                if(stringToBitmap.containsKey(markersList[idx].imageUploaders[ii]))
+                    imageUploaderBitmaps.add(stringToBitmap[markersList[idx].imageUploaders[ii]]!!)
+                else
+                    imageUploaderBitmaps.add(bitmap)
+                imageUploaderNames.add(markersList[idx].imageUploaders[ii])
+
+                if(currentMarker != idx) return@launch
+            }
+
+            requireActivity().runOnUiThread {
+                if(currentMarker != idx) return@runOnUiThread
+                val imageRecyclerViewAdapter =
+                    MyImageRecyclerViewAdapter(imageBitmaps, imageUploaderBitmaps, imageUploaderNames)
+                imageRecyclerView.adapter = imageRecyclerViewAdapter
                 val notesRecyclerViewAdapter =
                     MyNotesRecyclerViewAdapter(markersList[idx].notes, imageBitmaps)
                 notesRecyclerView.adapter = notesRecyclerViewAdapter
 
-                val tabLayout: TabLayout = markerSheetDialog.findViewById(R.id.placeTabLayout)!!
-
-                tabLayout.getTabAt(0)?.select()
-
-                tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
-                    override fun onTabSelected(tab: TabLayout.Tab?) {
-                        // get tab position
-                        val position = tab?.position
-                        if (position == 0) {
-                            imageRecyclerView.visibility = View.VISIBLE
-                            notesRecyclerView.visibility = View.GONE
-                        } else {
-                            imageRecyclerView.visibility = View.GONE
-                            notesRecyclerView.visibility = View.VISIBLE
-                        }
-                    }
-
-                    override fun onTabUnselected(tab: TabLayout.Tab?) {
-                    }
-
-                    override fun onTabReselected(tab: TabLayout.Tab?) {
-                    }
-                });
             }
         }
 

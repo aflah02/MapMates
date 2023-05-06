@@ -17,8 +17,9 @@ import com.example.mapmates.ui.home.placeholder.PlaceholderContent.PlaceholderIt
  * TODO: Replace the implementation with code for your data type.
  */
 class MyImageRecyclerViewAdapter(
-    private val images: List<Bitmap>,
-    private val uploader: List<Bitmap>
+    val images: MutableList<Bitmap>,
+    val uploader: MutableList<Bitmap>,
+    val uploaderNames: MutableList<String>
 ) : RecyclerView.Adapter<MyImageRecyclerViewAdapter.ViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -32,7 +33,6 @@ class MyImageRecyclerViewAdapter(
         )
 
     }
-
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         holder.imageView.setImageBitmap(images[position])
         holder.uploaderView.setImageBitmap(uploader[position])
