@@ -72,8 +72,10 @@ class GroupOptionsBottomSheetFragment() : BottomSheetDialogFragment() {
             createGroup.visibility = View.GONE
             groupTitle.visibility = View.GONE
 //            TODO:Post An API to make a group here!!!
-            val inviteCode = createGroup(groupTitle.text.toString(), "Aflah")
+            val cgResponse = createGroup(groupTitle.text.toString(), "Aflah")
 //            TODO:Set the generated Code as the response here!!!
+            val parseJson = JSONObject(cgResponse)
+            val inviteCode = parseJson.getString("invite_code")
             generatedCode.text = inviteCode
         }
         copyButton.setOnClickListener{
