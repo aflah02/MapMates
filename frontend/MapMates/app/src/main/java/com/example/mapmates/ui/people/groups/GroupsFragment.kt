@@ -1,5 +1,6 @@
 package com.example.mapmates.ui.people.groups
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -8,7 +9,9 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.mapmates.AddFriendActivity
 import com.example.mapmates.R
+import com.example.mapmates.SettingsActivity
 import com.example.mapmates.ui.people.friends.FriendData
 import com.google.android.material.snackbar.Snackbar
 import okhttp3.*
@@ -21,35 +24,14 @@ import java.io.InputStreamReader
 import java.net.URL
 import java.util.concurrent.CountDownLatch
 
-
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
-
-/**
- * A simple [Fragment] subclass.
- * Use the [GroupsFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
-
-interface OnItemClickListener {
-    fun onSettingsClick(position: Int)
-}
-
 class GroupsFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
+
     private lateinit var groupRecyclerView: RecyclerView
     private lateinit var adapter: GroupsAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
-        }
+
     }
 
     override fun onCreateView(
@@ -60,19 +42,14 @@ class GroupsFragment : Fragment() {
 
         groupRecyclerView = view.findViewById(R.id.groupCardRecyclerView)
         setGroupRecycler()
-//        groupRecyclerView.layoutManager = LinearLayoutManager(activity)
-//
-//        adapter = GroupsAdapter(emptyList())
-//        groupRecyclerView.adapter = adapter
-//
-//        val groupList = getGroupList()
-//
-//        adapter.updateList(groupList)
+
         val fab: View = view.findViewById(R.id.fab)
         fab.setOnClickListener { view ->
-            Snackbar.make(view, "Here's a Snackbar", Snackbar.LENGTH_LONG)
-                .setAction("Action", null)
-                .show()
+            val bottomSheetFragment = GroupOptionsBottomSheetFragment()
+            bottomSheetFragment.show(parentFragmentManager, "groupOptionsBottomSheet")
+//            val intent = Intent(activity, SettingsActivity::class.java)
+//            startActivity(intent)
+//            Open a floating menu here with the options Create group or Join a group
         }
 
         return view
@@ -151,24 +128,5 @@ class GroupsFragment : Fragment() {
         )
         latch.await()
         return responseString
-    }
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment GroupsFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            GroupsFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
-                }
-            }
     }
 }

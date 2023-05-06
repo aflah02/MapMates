@@ -1,0 +1,158 @@
+Index: app/src/main/java/com/example/mapmates/ui/home/HomeFragment.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.mapmates.ui.home\r\n\r\nimport android.content.Context\r\nimport android.graphics.Bitmap\r\nimport android.graphics.Canvas\r\nimport android.graphics.Color\r\nimport android.graphics.drawable.BitmapDrawable\r\nimport android.graphics.drawable.Drawable\r\nimport android.location.Location\r\nimport android.os.Bundle\r\nimport android.print.PrintAttributes.Resolution\r\nimport android.util.Log\r\nimport android.view.LayoutInflater\r\nimport android.view.View\r\nimport android.view.ViewGroup\r\nimport android.widget.ImageButton\r\nimport android.widget.Toast\r\nimport androidx.annotation.DrawableRes\r\nimport androidx.appcompat.content.res.AppCompatResources\r\nimport androidx.fragment.app.Fragment\r\nimport androidx.lifecycle.ViewModelProvider\r\nimport androidx.recyclerview.widget.LinearLayoutManager\r\nimport androidx.recyclerview.widget.RecyclerView\r\nimport com.example.mapmates.R\r\nimport com.example.mapmates.databinding.FragmentHomeBinding\r\nimport com.example.mapmates.utils.LocationPermissionHelper\r\nimport com.google.android.material.bottomsheet.BottomSheetBehavior\r\nimport com.google.android.material.bottomsheet.BottomSheetDialog\r\nimport com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton\r\nimport com.google.android.material.floatingactionbutton.FloatingActionButton\r\nimport com.mapbox.android.gestures.MoveGestureDetector\r\nimport com.mapbox.geojson.Point\r\nimport com.mapbox.maps.CameraOptions\r\nimport com.mapbox.maps.MapView\r\nimport com.mapbox.maps.MapboxMap\r\nimport com.mapbox.maps.Style\r\nimport com.mapbox.maps.extension.style.expressions.dsl.generated.interpolate\r\nimport com.mapbox.maps.extension.style.expressions.generated.Expression.Companion.linear\r\nimport com.mapbox.maps.plugin.LocationPuck2D\r\nimport com.mapbox.maps.plugin.animation.camera\r\nimport com.mapbox.maps.plugin.annotation.annotations\r\nimport com.mapbox.maps.plugin.annotation.generated.PointAnnotationManager\r\nimport com.mapbox.maps.plugin.annotation.generated.PointAnnotationOptions\r\nimport com.mapbox.maps.plugin.annotation.generated.createPointAnnotationManager\r\nimport com.mapbox.maps.plugin.compass.compass\r\nimport com.mapbox.maps.plugin.gestures.OnMoveListener\r\nimport com.mapbox.maps.plugin.gestures.gestures\r\nimport com.mapbox.maps.plugin.locationcomponent.OnIndicatorBearingChangedListener\r\nimport com.mapbox.maps.plugin.locationcomponent.OnIndicatorPositionChangedListener\r\nimport com.mapbox.maps.plugin.locationcomponent.location\r\nimport com.mapbox.maps.plugin.scalebar.scalebar\r\nimport java.lang.ref.WeakReference\r\nclass HomeFragment : Fragment(), OnItemClickListener {\r\n    private lateinit var mapView: MapView\r\n    private lateinit var pointAnnotationManager: PointAnnotationManager\r\n    private lateinit var homeViewModel: HomeViewModel\r\n    private var _binding: FragmentHomeBinding? = null\r\n    private val binding get() = _binding!!\r\n    private lateinit var groupsList: ArrayList<GroupModel>\r\n    private lateinit var groupsRecyclerView: RecyclerView\r\n    private lateinit var groupSheetDialog: BottomSheetDialog\r\n    private var mapLoaded: Boolean = false\r\n\r\n    private lateinit var locationPermissionHelper : LocationPermissionHelper\r\n\r\n\r\n    private val onIndicatorPositionChangedListener = OnIndicatorPositionChangedListener {\r\n        mapView.getMapboxMap().setCamera(CameraOptions.Builder().center(it).build())\r\n        mapView.gestures.focalPoint = mapView.getMapboxMap().pixelForCoordinate(it)\r\n    }\r\n\r\n    private val onMoveListener = object : OnMoveListener {\r\n        override fun onMoveBegin(detector: MoveGestureDetector) {\r\n            onCameraTrackingDismissed()\r\n        }\r\n\r\n        override fun onMove(detector: MoveGestureDetector): Boolean {\r\n            return false\r\n        }\r\n\r\n        override fun onMoveEnd(detector: MoveGestureDetector) {}\r\n    }\r\n\r\n    override fun onCreateView(\r\n        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?\r\n    ): View {\r\n        homeViewModel =\r\n            ViewModelProvider(this).get(HomeViewModel::class.java)\r\n\r\n        _binding = FragmentHomeBinding.inflate(inflater, container, false)\r\n        val root: View = binding.root\r\n\r\n        mapView = binding.mapView\r\n        locationPermissionHelper = LocationPermissionHelper(WeakReference(requireActivity()))\r\n        locationPermissionHelper.checkPermissions {\r\n            onMapReady()\r\n        }\r\n        groupsList = ArrayList<GroupModel>()\r\n        // TODO: Dynamic groupsList\r\n        // initialize groupsList with GROUP Names\r\n        groupsList.add(GroupModel(\"Friends\", \"420\", R.drawable.ic_profile))\r\n        groupsList.add(GroupModel(\"Group 1\", \"3\", R.drawable.ic_map))\r\n        groupsList.add(GroupModel(\"Group 2\", \"15\", R.drawable.ic_home))\r\n        groupsList.add(GroupModel(\"Group 3\", \"30\", R.drawable.ic_profile))\r\n        groupsList.add(GroupModel(\"Group 4\", \"69\", R.drawable.ic_map))\r\n\r\n        pointAnnotationManager = mapView.annotations.createPointAnnotationManager()\r\n\r\n        createBottomGroupDialog()\r\n        // Setting up change group fab\r\n        val groupsFab : ExtendedFloatingActionButton = binding.groupsFab\r\n        groupsFab.setOnClickListener {\r\n            groupSheetDialog.show()\r\n        }\r\n\r\n        // Setting up location fab\r\n        val locationFab : FloatingActionButton = binding.locationFab\r\n        locationFab.setOnClickListener{\r\n            // TODO: get current location and set camera to it\r\n//            val pt\r\n//            mapView.getMapboxMap().setCamera(CameraOptions.Builder().center(pt).build())\r\n//            mapView.gestures.focalPoint = mapView.getMapboxMap().pixelForCoordinate(pt)\r\n        }\r\n\r\n        return root\r\n    }\r\n\r\n    private fun onMapReady() {\r\n        mapView.scalebar.updateSettings {\r\n            enabled = false\r\n        }\r\n        mapView.compass.updateSettings {\r\n            enabled = false\r\n        }\r\n        mapView.getMapboxMap().setCamera(\r\n            CameraOptions.Builder()\r\n                .zoom(14.0)\r\n                .build()\r\n        )\r\n        mapView.getMapboxMap().loadStyleUri(\r\n            Style.MAPBOX_STREETS\r\n        ) {\r\n            initLocationComponent()\r\n            setupGesturesListener()\r\n            mapLoaded = true\r\n            addAnnotationToMap()\r\n        }\r\n    }\r\n    private fun setupGesturesListener() {\r\n        mapView.gestures.addOnMoveListener(onMoveListener)\r\n    }\r\n\r\n    private fun initLocationComponent() {\r\n        val locationComponentPlugin = mapView.location\r\n        locationComponentPlugin.updateSettings {\r\n            this.enabled = true\r\n            this.locationPuck = LocationPuck2D(\r\n                bearingImage = context?.let {\r\n                    AppCompatResources.getDrawable(\r\n                        it,\r\n                        R.drawable.ic_launcher_foreground,\r\n                    )\r\n                },\r\n                scaleExpression = interpolate {\r\n                    linear()\r\n                    zoom()\r\n                    stop {\r\n                        literal(0.0)\r\n                        literal(0.6)\r\n                    }\r\n                    stop {\r\n                        literal(20.0)\r\n                        literal(1.0)\r\n                    }\r\n                }.toJson()\r\n            )\r\n        }\r\n        locationComponentPlugin.addOnIndicatorPositionChangedListener(onIndicatorPositionChangedListener)\r\n    }\r\n\r\n    private fun onCameraTrackingDismissed() {\r\n        mapView.location\r\n            .removeOnIndicatorPositionChangedListener(onIndicatorPositionChangedListener)\r\n        mapView.gestures.removeOnMoveListener(onMoveListener)\r\n    }\r\n\r\n\r\n    override fun onStart() {\r\n        super.onStart()\r\n        mapView.onStart()\r\n    }\r\n\r\n    override fun onStop() {\r\n        super.onStop()\r\n        mapView.onStop()\r\n    }\r\n\r\n\r\n    override fun onDestroyView() {\r\n        super.onDestroyView()\r\n        mapView.location\r\n            .removeOnIndicatorPositionChangedListener(onIndicatorPositionChangedListener)\r\n        mapView.gestures.removeOnMoveListener(onMoveListener)\r\n    }\r\n\r\n    override fun onRequestPermissionsResult(\r\n        requestCode: Int,\r\n        permissions: Array<String>,\r\n        grantResults: IntArray\r\n    ) {\r\n        super.onRequestPermissionsResult(requestCode, permissions, grantResults)\r\n        locationPermissionHelper.onRequestPermissionsResult(requestCode, permissions, grantResults)\r\n    }\r\n    override fun onLowMemory() {\r\n        super.onLowMemory()\r\n        mapView.onLowMemory()\r\n    }\r\n\r\n    private fun createBottomGroupDialog() {\r\n        groupSheetDialog = BottomSheetDialog(requireContext(), R.style.BottomSheetDialog)\r\n        groupSheetDialog.setContentView(R.layout.group_sheet_dialog)\r\n//        val behavior = BottomSheetBehavior.from(groupSheetDialog.findViewById(R.id.group_sheet_dialog_parent)!!)\r\n//        behavior.setPeekHeight(900, true)\r\n\r\n        // initialize adapter\r\n        groupsRecyclerView = groupSheetDialog.findViewById(R.id.recycler_view)!!\r\n        groupsRecyclerView.layoutManager = LinearLayoutManager(requireContext())\r\n        groupsRecyclerView.setHasFixedSize(true)\r\n        val adapter = GroupsAdapter(groupsList, this)\r\n        groupsRecyclerView.adapter = adapter\r\n\r\n\r\n        val closeButton : ImageButton = groupSheetDialog.findViewById(R.id.closeDialog)!!\r\n\r\n        closeButton.setOnClickListener {\r\n            groupSheetDialog.dismiss()\r\n        }\r\n    }\r\n\r\n    override fun onItemClick(position: Int) {\r\n        binding.groupsFab.text = groupsList[position].groupName\r\n        // iterate over viewholder in groupRecylcerView and set background to white\r\n        for (i in 0 until groupsRecyclerView.childCount) {\r\n            val holder = groupsRecyclerView.getChildViewHolder(groupsRecyclerView.getChildAt(i))\r\n            if(i == position) {\r\n                // select\r\n                holder.itemView.setBackgroundColor(Color.RED)\r\n                groupsList[i].isShowing = true\r\n            }\r\n            else {\r\n                // deselect\r\n                holder.itemView.setBackgroundColor(Color.WHITE)\r\n                groupsList[i].isShowing = false\r\n            }\r\n        }\r\n        pointAnnotationManager.deleteAll()\r\n    }\r\n\r\n    // Adding marker logics\r\n    private fun addAnnotationToMap() {\r\n// Create an instance of the Annotation API and get the PointAnnotationManager.\r\n        bitmapFromDrawableRes(\r\n            requireContext(),\r\n            R.drawable.ic_profile\r\n        )?.let {\r\n            // Set options for the resulting symbol layer.\r\n            val pointAnnotationOptions: PointAnnotationOptions = PointAnnotationOptions()\r\n                // Define a geographic coordinate.\r\n                .withPoint(Point.fromLngLat( 77.209, 28.613))\r\n                // Specify the bitmap you assigned to the point annotation\r\n                // The bitmap will be added to map style automatically.\r\n                .withIconImage(it)\r\n            // Add the resulting pointAnnotation to the map.\r\n            pointAnnotationManager.create(pointAnnotationOptions)\r\n        }\r\n    }\r\n    private fun bitmapFromDrawableRes(context: Context, @DrawableRes resourceId: Int) =\r\n        convertDrawableToBitmap(AppCompatResources.getDrawable(context, resourceId))\r\n    private fun convertDrawableToBitmap(sourceDrawable: Drawable?): Bitmap? {\r\n        if (sourceDrawable == null) {\r\n            return null\r\n        }\r\n        return if (sourceDrawable is BitmapDrawable) {\r\n            sourceDrawable.bitmap\r\n        } else {\r\n            // copying drawable object to not manipulate on the same reference\r\n            val constantState = sourceDrawable.constantState ?: return null\r\n            val drawable = constantState.newDrawable().mutate()\r\n            val bitmap: Bitmap = Bitmap.createBitmap(\r\n                drawable.intrinsicWidth, drawable.intrinsicHeight,\r\n                Bitmap.Config.ARGB_8888\r\n            )\r\n            val canvas = Canvas(bitmap)\r\n            drawable.setBounds(0, 0, canvas.width, canvas.height)\r\n            drawable.draw(canvas)\r\n            bitmap\r\n        }\r\n    }\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/mapmates/ui/home/HomeFragment.kt b/app/src/main/java/com/example/mapmates/ui/home/HomeFragment.kt
+--- a/app/src/main/java/com/example/mapmates/ui/home/HomeFragment.kt	(revision e3dcb0b340753af1f53298ea22b86d2a4b6c162e)
++++ b/app/src/main/java/com/example/mapmates/ui/home/HomeFragment.kt	(date 1683148900080)
+@@ -30,10 +30,7 @@
+ import com.google.android.material.floatingactionbutton.FloatingActionButton
+ import com.mapbox.android.gestures.MoveGestureDetector
+ import com.mapbox.geojson.Point
+-import com.mapbox.maps.CameraOptions
+-import com.mapbox.maps.MapView
+-import com.mapbox.maps.MapboxMap
+-import com.mapbox.maps.Style
++import com.mapbox.maps.*
+ import com.mapbox.maps.extension.style.expressions.dsl.generated.interpolate
+ import com.mapbox.maps.extension.style.expressions.generated.Expression.Companion.linear
+ import com.mapbox.maps.plugin.LocationPuck2D
+@@ -49,6 +46,7 @@
+ import com.mapbox.maps.plugin.locationcomponent.OnIndicatorPositionChangedListener
+ import com.mapbox.maps.plugin.locationcomponent.location
+ import com.mapbox.maps.plugin.scalebar.scalebar
++import com.mapbox.maps.viewannotation.ViewAnnotationManager
+ import java.lang.ref.WeakReference
+ class HomeFragment : Fragment(), OnItemClickListener {
+     private lateinit var mapView: MapView
+@@ -59,6 +57,7 @@
+     private lateinit var groupsList: ArrayList<GroupModel>
+     private lateinit var groupsRecyclerView: RecyclerView
+     private lateinit var groupSheetDialog: BottomSheetDialog
++    private lateinit var markerSheetDialog: BottomSheetDialog
+     private var mapLoaded: Boolean = false
+ 
+     private lateinit var locationPermissionHelper : LocationPermissionHelper
+@@ -107,6 +106,14 @@
+         pointAnnotationManager = mapView.annotations.createPointAnnotationManager()
+ 
+         createBottomGroupDialog()
++        createBottomMarkerDialog()
++
++        pointAnnotationManager.addClickListener {clickedAnnotaton ->
++            Toast.makeText(requireContext(), "Clicked on ${clickedAnnotaton.id}", Toast.LENGTH_SHORT).show()
++            markerSheetDialog.show()
++            true
++        }
++
+         // Setting up change group fab
+         val groupsFab : ExtendedFloatingActionButton = binding.groupsFab
+         groupsFab.setOnClickListener {
+@@ -143,7 +150,7 @@
+             initLocationComponent()
+             setupGesturesListener()
+             mapLoaded = true
+-            addAnnotationToMap()
++            addAnnotationToMap(28.512, 78.234)
+         }
+     }
+     private fun setupGesturesListener() {
+@@ -217,7 +224,7 @@
+     }
+ 
+     private fun createBottomGroupDialog() {
+-        groupSheetDialog = BottomSheetDialog(requireContext(), R.style.BottomSheetDialog)
++        groupSheetDialog = BottomSheetDialog(requireContext())
+         groupSheetDialog.setContentView(R.layout.group_sheet_dialog)
+ //        val behavior = BottomSheetBehavior.from(groupSheetDialog.findViewById(R.id.group_sheet_dialog_parent)!!)
+ //        behavior.setPeekHeight(900, true)
+@@ -236,6 +243,15 @@
+             groupSheetDialog.dismiss()
+         }
+     }
++    private fun createBottomMarkerDialog() {
++        markerSheetDialog = BottomSheetDialog(requireContext())
++        markerSheetDialog.setContentView(R.layout.marker_sheet_dialog)
++        val closeButton : ImageButton = markerSheetDialog.findViewById(R.id.closeDialog)!!
++
++        closeButton.setOnClickListener {
++            markerSheetDialog.dismiss()
++        }
++    }
+ 
+     override fun onItemClick(position: Int) {
+         binding.groupsFab.text = groupsList[position].groupName
+@@ -253,11 +269,14 @@
+                 groupsList[i].isShowing = false
+             }
+         }
++        // reset markers
+         pointAnnotationManager.deleteAll()
++        addAnnotationToMap(28.613, 77.209)
++        groupSheetDialog.dismiss()
+     }
+ 
+     // Adding marker logics
+-    private fun addAnnotationToMap() {
++    private fun addAnnotationToMap(latitude: Double, longitude: Double) {
+ // Create an instance of the Annotation API and get the PointAnnotationManager.
+         bitmapFromDrawableRes(
+             requireContext(),
+@@ -266,12 +285,12 @@
+             // Set options for the resulting symbol layer.
+             val pointAnnotationOptions: PointAnnotationOptions = PointAnnotationOptions()
+                 // Define a geographic coordinate.
+-                .withPoint(Point.fromLngLat( 77.209, 28.613))
++                .withPoint(Point.fromLngLat( longitude, latitude))
+                 // Specify the bitmap you assigned to the point annotation
+                 // The bitmap will be added to map style automatically.
+                 .withIconImage(it)
+             // Add the resulting pointAnnotation to the map.
+-            pointAnnotationManager.create(pointAnnotationOptions)
++            val pointAnnotation = pointAnnotationManager.create(pointAnnotationOptions)
+         }
+     }
+     private fun bitmapFromDrawableRes(context: Context, @DrawableRes resourceId: Int) =
+Index: app/src/main/res/layout/group_sheet_dialog.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<androidx.constraintlayout.widget.ConstraintLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\r\n    xmlns:tools=\"http://schemas.android.com/tools\"\r\n    android:layout_width=\"match_parent\"\r\n    android:layout_height=\"600dp\"\r\n    android:id=\"@+id/group_sheet_dialog_parent\"\r\n    android:background=\"#EEEEFF\"\r\n    app:layout_behavior=\"com.google.android.material.bottomsheet.BottomSheetBehavior\"\r\n    xmlns:app=\"http://schemas.android.com/apk/res-auto\">\r\n\r\n\r\n    <LinearLayout\r\n        android:layout_width=\"match_parent\"\r\n        android:layout_height=\"match_parent\"\r\n        android:gravity = \"center\"\r\n        android:orientation=\"vertical\">\r\n\r\n        <LinearLayout\r\n            android:layout_width=\"match_parent\"\r\n            android:layout_height=\"match_parent\"\r\n            android:gravity = \"center\"\r\n            android:layout_weight=\"0.9\"\r\n            android:orientation=\"horizontal\">\r\n\r\n            <TextView\r\n                android:id=\"@+id/textView\"\r\n                android:layout_width=\"match_parent\"\r\n                android:layout_height=\"wrap_content\"\r\n                android:layout_margin=\"10dp\"\r\n                android:layout_weight=\"0.9\"\r\n                android:text=\"Groups\"\r\n                android:textAlignment=\"center\"\r\n                android:textSize=\"30sp\" />\r\n\r\n            <ImageButton\r\n                android:id=\"@+id/closeDialog\"\r\n                android:layout_width=\"wrap_content\"\r\n                android:layout_height=\"match_parent\"\r\n                android:layout_margin=\"10dp\"\r\n                android:layout_weight=\"0.1\"\r\n                android:layout_marginHorizontal=\"50dp\"\r\n                android:background=\"@android:color/transparent\"\r\n                app:srcCompat=\"@android:drawable/ic_menu_close_clear_cancel\"\r\n                app:tint=\"@color/black\" />\r\n        </LinearLayout>\r\n\r\n        <androidx.recyclerview.widget.RecyclerView\r\n            android:id=\"@+id/recycler_view\"\r\n            android:layout_width=\"match_parent\"\r\n            android:layout_weight=\"0.1\"\r\n            android:layout_height=\"match_parent\" />\r\n\r\n    </LinearLayout>\r\n\r\n</androidx.constraintlayout.widget.ConstraintLayout>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/res/layout/group_sheet_dialog.xml b/app/src/main/res/layout/group_sheet_dialog.xml
+--- a/app/src/main/res/layout/group_sheet_dialog.xml	(revision e3dcb0b340753af1f53298ea22b86d2a4b6c162e)
++++ b/app/src/main/res/layout/group_sheet_dialog.xml	(date 1683144189162)
+@@ -1,5 +1,6 @@
+ <?xml version="1.0" encoding="utf-8"?>
+-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
++<androidx.constraintlayout.widget.ConstraintLayout
++    xmlns:android="http://schemas.android.com/apk/res/android"
+     xmlns:tools="http://schemas.android.com/tools"
+     android:layout_width="match_parent"
+     android:layout_height="600dp"
+Index: app/src/main/AndroidManifest.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\r\n    package=\"com.example.mapmates\" >\r\n\r\n    <uses-permission android:name=\"android.permission.INTERNET\" />\r\n    <uses-permission android:name=\"android.permission.ACCESS_FINE_LOCATION\" />\r\n    <uses-permission android:name=\"android.permission.ACCESS_COARSE_LOCATION\" />\r\n    <uses-permission android:name=\"android.permission.ACCESS_NETWORK_STATE\" />\r\n    <uses-permission android:name=\"android.permission.ACCESS_WIFI_STATE\" />\r\n    <uses-permission android:name=\"android.permission.WRITE_EXTERNAL_STORAGE\" />\r\n    <uses-permission android:name=\"android.permission.READ_EXTERNAL_STORAGE\" /> <!-- TODO: replace access token -->\r\n    <meta-data\r\n        android:name=\"com.mapbox.token\"\r\n        android:value=\"YOUR_ACCESS_TOKEN\" />\r\n\r\n    <application\r\n        android:allowBackup=\"true\"\r\n        android:icon=\"@mipmap/ic_launcher\"\r\n        android:label=\"@string/app_name\"\r\n        android:roundIcon=\"@mipmap/ic_launcher_round\"\r\n        android:supportsRtl=\"true\"\r\n        android:theme=\"@style/Theme.MapMates.NoActionBar\" >\r\n        <activity\r\n            android:name=\".SettingsActivity\"\r\n            android:exported=\"false\" />\r\n\r\n        <receiver\r\n            android:name=\".ui.home.LocationProviderChangedReceiver\"\r\n            android:exported=\"false\" >\r\n            <intent-filter>\r\n                <action android:name=\"android.location.PROVIDERS_CHANGED\" />\r\n\r\n                <category android:name=\"android.intent.category.DEFAULT\" />\r\n            </intent-filter>\r\n        </receiver>\r\n\r\n        <activity\r\n            android:name=\".EntryActivity\"\r\n            android:exported=\"true\"\r\n            android:label=\"@string/app_name\"\r\n            android:noHistory=\"true\" >\r\n            <intent-filter>\r\n                <action android:name=\"android.intent.action.MAIN\" />\r\n\r\n                <category android:name=\"android.intent.category.LAUNCHER\" />\r\n            </intent-filter>\r\n        </activity>\r\n        <activity\r\n            android:name=\".SignupActivity\"\r\n            android:exported=\"false\"\r\n            android:label=\"@string/title_activity_signup\"\r\n            android:noHistory=\"true\" />\r\n        <activity\r\n            android:name=\".LoginActivity\"\r\n            android:exported=\"false\"\r\n            android:noHistory=\"true\" />\r\n        <activity\r\n            android:name=\".MainActivity\"\r\n            android:exported=\"false\" />\r\n    </application>\r\n\r\n</manifest>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/AndroidManifest.xml b/app/src/main/AndroidManifest.xml
+--- a/app/src/main/AndroidManifest.xml	(revision e3dcb0b340753af1f53298ea22b86d2a4b6c162e)
++++ b/app/src/main/AndroidManifest.xml	(date 1683143321085)
+@@ -57,6 +57,10 @@
+         <activity
+             android:name=".MainActivity"
+             android:exported="false" />
++
++        <meta-data
++            android:name="preloaded_fonts"
++            android:resource="@array/preloaded_fonts" />
+     </application>
+ 
+ </manifest>
+\ No newline at end of file

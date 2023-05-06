@@ -21,6 +21,12 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MapMates.NoActionBar">
         <activity
+            android:name=".JoinGroupActivity"
+            android:exported="false" />
+        <activity
+            android:name=".CreateGroupActivity"
+            android:exported="false" />
+        <activity
             android:name=".PendingRequestActivity"
             android:exported="false" />
         <activity

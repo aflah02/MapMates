@@ -16,16 +16,23 @@ import android.widget.*
 import androidx.annotation.DrawableRes
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.content.ContentProviderCompat.requireContext
+import androidx.core.view.ViewCompat.NestedScrollType
+import androidx.core.widget.NestedScrollView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.viewpager.widget.PagerAdapter
 import androidx.viewpager.widget.ViewPager
 import com.example.mapmates.R
 import com.example.mapmates.databinding.FragmentHomeBinding
+import com.example.mapmates.ui.home.placeholder.PlaceholderContent
 import com.example.mapmates.ui.people.PeoplePageAdapter
+import com.example.mapmates.ui.people.friends.FriendsFragment
+import com.example.mapmates.ui.people.groups.GroupsFragment
 import com.example.mapmates.utils.JsonParserHelper
 import com.example.mapmates.utils.LocationPermissionHelper
 import com.example.mapmates.utils.ProfileAdapter
@@ -33,6 +40,8 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.android.material.tabs.TabLayout
+import com.google.android.material.tabs.TabLayout.Tab
 import com.google.gson.JsonParser
 import com.mapbox.android.gestures.MoveGestureDetector
 import com.mapbox.geojson.Point
@@ -124,6 +133,7 @@ class HomeFragment : Fragment(), OnGroupItemClickListener {
         getGroupDetails("Aflah")
         createBottomMarkerDialog()
 
+
         pointAnnotationManager.addClickListener {clickedAnnotaton ->
             markerSheetDialog.show()
             updateMarkerPage(clickedAnnotaton.id)
@@ -169,6 +179,17 @@ class HomeFragment : Fragment(), OnGroupItemClickListener {
     private fun createBottomMarkerDialog() {
         markerSheetDialog = BottomSheetDialog(requireContext())
         markerSheetDialog.setContentView(R.layout.temp_marker_sheet)
+        markerSheetDialog.behavior.setBottomSheetCallback(object :
+            BottomSheetBehavior.BottomSheetCallback() {
+            override fun onStateChanged(bottomSheet: View, newState: Int) {
+               if(newState == BottomSheetBehavior.STATE_DRAGGING)
+                   markerSheetDialog.behavior.state = BottomSheetBehavior.STATE_EXPANDED
+            }
+
+            override fun onSlide(bottomSheet: View, slideOffset: Float) {
+            }
+            });
+//        val scroller :NestedScrollView =markerSheetDialog.findViewById(R.id.test)
         val closeButton : ImageButton = markerSheetDialog.findViewById(R.id.closeDialog)!!
 //        val viewFlipper: ViewFlipper = markerSheetDialog.findViewById(R.id.viewFlipper)!!
 //        val prevImage: FloatingActionButton = markerSheetDialog.findViewById(R.id.floatingActionButtonPrev)!!
@@ -315,15 +336,57 @@ class HomeFragment : Fragment(), OnGroupItemClickListener {
         allVisitors.addAll(markersList[idx].noteUploaders)
         val uniqueVisitors = allVisitors.distinct()
         val adapter = ProfileAdapter(uniqueVisitors)
-        Log.i("visitors", uniqueVisitors.toString())
         profileRecyclerView.adapter = adapter
         profileRecyclerView.layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
         markerName.text = markersList[idx].name
+        GlobalScope.launch {
+            val imageBitmaps = mutableListOf<Bitmap>()
+            for (imageAt in markersList[idx].images) {
+                val imageUrl = "https://mapsapp-1-m9050519.deta.app/users/$imageAt/marker_image"
+                val bitmap = Picasso.get().load(imageUrl).get()
+                imageBitmaps.add(bitmap)
+            }
+            requireActivity().runOnUiThread {
+                val imageRecyclerView: RecyclerView =
+                    markerSheetDialog.findViewById(R.id.imageTab)!!
+                imageRecyclerView.layoutManager = GridLayoutManager(requireContext(), 3)
+                val imageRecyclerViewAdapter =
+                    MyImageRecyclerViewAdapter(imageBitmaps, imageBitmaps)
+                imageRecyclerView.adapter = imageRecyclerViewAdapter
 
-        val viewPager: ViewPager = markerSheetDialog.findViewById(R.id.peopleChildFragment)!!
-        val adapter2 = PeoplePageAdapter(childFragmentManager)
-//        adapter2.addFragment()
-        //Add fragments for image and notes
+                val notesRecyclerView: RecyclerView =
+                    markerSheetDialog.findViewById(R.id.notesTab)!!
+                notesRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+                val notesRecyclerViewAdapter =
+                    MyNotesRecyclerViewAdapter(markersList[idx].notes, imageBitmaps)
+                notesRecyclerView.adapter = notesRecyclerViewAdapter
+
+                val tabLayout: TabLayout = markerSheetDialog.findViewById(R.id.placeTabLayout)!!
+
+                tabLayout.getTabAt(0)?.select()
+
+                tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
+                    override fun onTabSelected(tab: TabLayout.Tab?) {
+                        // get tab position
+                        val position = tab?.position
+                        if (position == 0) {
+                            imageRecyclerView.visibility = View.VISIBLE
+                            notesRecyclerView.visibility = View.GONE
+                        } else {
+                            imageRecyclerView.visibility = View.GONE
+                            notesRecyclerView.visibility = View.VISIBLE
+                        }
+                    }
+
+                    override fun onTabUnselected(tab: TabLayout.Tab?) {
+                    }
+
+                    override fun onTabReselected(tab: TabLayout.Tab?) {
+                    }
+                });
+            }
+            //Add fragments for image and notes
+        }
 
     }
 
@@ -340,45 +403,7 @@ class HomeFragment : Fragment(), OnGroupItemClickListener {
 //        val adapter = MarkerNotesAdapter(markersList[idx].notes, markersList[idx].noteUploaders)
 //        markerNotesRecyclerView.adapter = adapter
 //        val markerName: TextView = markerSheetDialog.findViewById(R.id.markerHeading)!!
-//        // Setup Visitors
-//        val allVisitors = ArrayList<String> ()
-//        allVisitors.addAll(markersList[idx].imageUploaders)
-//        allVisitors.addAll(markersList[idx].noteUploaders)
-//
-//        val uniqueVisitors = allVisitors.distinct()
-//        val visitorsTextView = markerSheetDialog.findViewById<TextView>(R.id.visitorsTextView)!!
-//        visitorsTextView.text = uniqueVisitors.joinToString(", ")
-//
-//        // Setup Images
-//        val viewFlipper: ViewFlipper = markerSheetDialog.findViewById(R.id.viewFlipper)!!
-//        viewFlipper.removeAllViews()
-//        markerName.text = markersList[idx].name
-//        GlobalScope.launch{
-//            val imageBitmaps = mutableListOf<Bitmap>()
-//
-//            for (imageAt in markersList[idx].images) {
-//                val imageUrl = "https://mapsapp-1-m9050519.deta.app/users/$imageAt/marker_image"
-//                val bitmap = Picasso.get().load(imageUrl).get()
-//                imageBitmaps.add(bitmap)
-//            }
-//
-//            // Update the ViewFlipper in the UI thread
-//            requireActivity().runOnUiThread {
-//                if(currentMarker == idx){
-//                    for (bitmap in imageBitmaps) {
-//                        val imageView = ImageView(context)
-//                        imageView.setImageBitmap(bitmap)
-//                        val layoutParams = FrameLayout.LayoutParams(
-//                            FrameLayout.LayoutParams.MATCH_PARENT,
-//                            FrameLayout.LayoutParams.WRAP_CONTENT
-//                        )
-//                        imageView.layoutParams = layoutParams
-//                        viewFlipper.addView(imageView)
-//                    }
-//                }
-//            }
-//        }
-//    }
+
     private fun getAndUpdateMarkerDetails(groupId: String) {
         if(groupId == "friends") {
             return
