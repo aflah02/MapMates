@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="600dp"
+    android:id="@+id/group_sheet_dialog_parent"
+    app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center|top"
+            android:orientation="vertical"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dp"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/markerHeading"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="10dp"
+                    android:layout_weight="0.9"
+                    android:paddingStart="30dp"
+                    android:text="New Delhi"
+                    android:textAlignment="center"
+                    android:textAllCaps="true"
+                    android:textColor="@color/cardview_dark_background"
+                    android:textSize="30sp" />
+
+                <ImageButton
+                    android:id="@+id/closeDialog"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_margin="10dp"
+                    android:layout_marginHorizontal="50dp"
+                    android:layout_weight="0.1"
+                    android:background="@android:color/transparent"
+                    app:srcCompat="@android:drawable/ic_menu_close_clear_cancel"
+                    app:tint="@color/black" />
+
+            </LinearLayout>
+
+            <View
+                android:id="@+id/divider2"
+                android:layout_width="match_parent"
+                android:layout_height="5dp"
+                android:layout_marginHorizontal="50dp"
+                android:layout_marginBottom="20dp"
+                android:background="@color/purple_200" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/visitorsList"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                </androidx.recyclerview.widget.RecyclerView>
+
+            <com.google.android.material.tabs.TabLayout
+                android:id="@+id/placeTabLayout"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:fitsSystemWindows="false"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:tabRippleColor="@null">
+
+                <com.google.android.material.tabs.TabItem
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:icon="@drawable/ic_dashboard_black_24dp" />
+
+                <com.google.android.material.tabs.TabItem
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:icon="@drawable/ic_dashboard_black_24dp" />
+            </com.google.android.material.tabs.TabLayout>
+                   <LinearLayout
+                       android:layout_width="match_parent"
+                       android:layout_height="wrap_content"
+                       android:orientation="vertical"
+                       android:scrollbars="vertical"
+                       >
+                       <ScrollView
+                           android:layout_width="match_parent"
+                           android:layout_height="match_parent"
+                           >
+                       <androidx.recyclerview.widget.RecyclerView
+                           android:id="@+id/imageTab"
+                           android:name="com.example.mapmates.ui.home.ImageFragment"
+                           android:layout_width="match_parent"
+                           android:layout_height="wrap_content"
+                           android:layout_marginLeft="16dp"
+                           android:layout_marginRight="16dp"
+                           app:layoutManager="LinearLayoutManager"
+                           tools:listitem="@layout/fragment_image"
+
+                           />
+                       </ScrollView>
+
+                       <ScrollView
+                           android:layout_width="match_parent"
+                           android:layout_height="match_parent"
+                           >
+                       <androidx.recyclerview.widget.RecyclerView
+                           android:id="@+id/notesTab"
+                           android:layout_width="match_parent"
+                           android:layout_height="wrap_content"
+                           android:layout_marginLeft="16dp"
+                           android:layout_marginRight="16dp"
+                           app:layoutManager="LinearLayoutManager"
+                           tools:listitem="@layout/fragment_notes"
+                           android:visibility="gone"
+
+                           />
+                       </ScrollView>
+
+                   </LinearLayout>
+
+        </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+
