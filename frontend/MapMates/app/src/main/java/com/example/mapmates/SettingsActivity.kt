@@ -174,11 +174,9 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     private fun leaveGroupCall(userName: String, groupID: String): String {
-        val url = "https://mapsapp-1-m9050519.deta.app/groups/$groupID/remove_user"
+        val url = "https://mapsapp-1-m9050519.deta.app/groups/$groupID/remove_user?user_name=$userName"
         val mediaType = "application/json; charset=utf-8".toMediaType()
-        val requestJSON = JSONObject().apply {
-            put("user_name", userName)
-        }
+        val requestJSON = JSONObject()
 
         val requestBody = requestJSON.toString().toRequestBody(mediaType)
         val request = Request.Builder()
