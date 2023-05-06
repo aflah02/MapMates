@@ -14,8 +14,9 @@ import com.example.mapmates.ui.home.placeholder.PlaceholderContent.PlaceholderIt
  * TODO: Replace the implementation with code for your data type.
  */
 class MyNotesRecyclerViewAdapter(
-    private val notes: List<String>,
-    private val uploader: List<Bitmap>
+    val notes: List<String>,
+    val uploader: List<Bitmap>,
+    private val listener: OnGroupItemClickListener
 ) : RecyclerView.Adapter<MyNotesRecyclerViewAdapter.ViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -33,6 +34,9 @@ class MyNotesRecyclerViewAdapter(
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         holder.noteView.text = notes[position]
         holder.uploaderView.setImageBitmap(uploader[position])
+        holder.itemView.setOnClickListener {
+            listener.onImageNoteClick(position, "note");
+        }
     }
 
     override fun getItemCount(): Int = notes.size

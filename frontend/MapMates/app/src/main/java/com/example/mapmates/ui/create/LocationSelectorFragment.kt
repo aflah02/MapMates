@@ -1,5 +1,6 @@
 package com.example.mapmates.ui.create
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -7,27 +8,27 @@ import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.text.TextWatcher
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.annotation.DrawableRes
 import androidx.appcompat.content.res.AppCompatResources
-import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.commit
 import com.example.mapmates.R
-import com.example.mapmates.databinding.FragmentExploreBinding
 import com.example.mapmates.databinding.FragmentLocationSelectorBinding
+import com.example.mapmates.ui.home.GroupModel
+import com.example.mapmates.ui.home.GroupsAdapter
+import com.example.mapmates.utils.JsonParserHelper
 import com.example.mapmates.utils.LocationPermissionHelper
+import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+import com.google.android.material.snackbar.Snackbar
+import com.jaredrummler.materialspinner.MaterialSpinner
 import com.mapbox.android.gestures.MoveGestureDetector
 import com.mapbox.geojson.Point
 import com.mapbox.maps.CameraOptions
 import com.mapbox.maps.MapView
 import com.mapbox.maps.Style
-import com.mapbox.maps.extension.style.expressions.dsl.generated.interpolate
-import com.mapbox.maps.plugin.LocationPuck2D
 import com.mapbox.maps.plugin.annotation.annotations
 import com.mapbox.maps.plugin.annotation.generated.PointAnnotationManager
 import com.mapbox.maps.plugin.annotation.generated.PointAnnotationOptions
@@ -38,7 +39,11 @@ import com.mapbox.maps.plugin.gestures.gestures
 import com.mapbox.maps.plugin.locationcomponent.OnIndicatorPositionChangedListener
 import com.mapbox.maps.plugin.locationcomponent.location
 import com.mapbox.maps.plugin.scalebar.scalebar
+import okhttp3.*
+import timber.log.Timber
+import java.io.IOException
 import java.lang.ref.WeakReference
+
 
 /**
  * A simple [Fragment] subclass.
@@ -50,6 +55,11 @@ class LocationSelectorFragment : Fragment() {
     private lateinit var pointAnnotationManager: PointAnnotationManager
     private var _binding: FragmentLocationSelectorBinding? = null
     private val binding get() = _binding!!
+    private lateinit var spinner: MaterialSpinner
+    private lateinit var groupsList: ArrayList<GroupModel>
+    private lateinit var nextFab: ExtendedFloatingActionButton
+    var nameEntered = false
+    var groupSelected = false
 
     private lateinit var locationPermissionHelper : LocationPermissionHelper
 
@@ -86,6 +96,7 @@ class LocationSelectorFragment : Fragment() {
         _binding = FragmentLocationSelectorBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
+        groupsList = ArrayList()
         mapView = binding.mapView3
         locationPermissionHelper = LocationPermissionHelper(WeakReference(requireActivity()))
         locationPermissionHelper.checkPermissions {
@@ -93,8 +104,10 @@ class LocationSelectorFragment : Fragment() {
         }
         pointAnnotationManager = mapView.annotations.createPointAnnotationManager()
         mapView.getMapboxMap().addOnCameraChangeListener(onCameraChangeListener)
-        val nextFab = binding.nextFab
+
+        nextFab = binding.nextFab
         val nameField = binding.nameField
+
         nextFab.isEnabled = false
         nextFab.setOnClickListener {
             // replace current fragment with new fragment
@@ -102,6 +115,7 @@ class LocationSelectorFragment : Fragment() {
             bundle.putString("name", nameField.text.toString())
             bundle.putDouble("latitude", mapView.getMapboxMap().cameraState.center.latitude())
             bundle.putDouble("longitude", mapView.getMapboxMap().cameraState.center.longitude())
+            bundle.putString("groupId", groupsList[spinner.selectedIndex].groupId)
 
             val newFragment = CreateFragment()
             newFragment.arguments = bundle
@@ -119,7 +133,8 @@ class LocationSelectorFragment : Fragment() {
             }
 
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                nextFab.isEnabled = s.toString().trim().isNotEmpty()
+                nameEntered = s.toString().trim().isNotEmpty()
+                nextFab.isEnabled = nameEntered && groupSelected
             }
 
             override fun afterTextChanged(s: android.text.Editable?) {
@@ -127,6 +142,10 @@ class LocationSelectorFragment : Fragment() {
             }
         }
         nameField.addTextChangedListener(nameFieldTextWatcher)
+
+        spinner = binding.mySpinner
+//        spinner.setItems("Home", "Work", "School", "Other", "Group 1", "Group 2", "Group 3")
+        getGroupDetails("Aflah")
         return root
     }
 
@@ -177,7 +196,39 @@ class LocationSelectorFragment : Fragment() {
         mapView.onStop()
     }
 
+    private fun getGroupDetails(username: String) {
+        var responseString : String? = null
+        val client = OkHttpClient()
+        val request = Request.Builder()
+            .url("https://mapsapp-1-m9050519.deta.app/users/$username/all_group_details")
+            .build()
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                Timber.tag("groups").e(e.message.toString())
+                Toast.makeText(requireContext(), e.message.toString(), Toast.LENGTH_SHORT).show()
+            }
+            @SuppressLint("NotifyDataSetChanged")
+            override fun onResponse(call: Call, response: Response) {
+                responseString = response.body?.string()
+                if (!response.isSuccessful) {
+                    return
+                }
+                groupsList = JsonParserHelper().parseGroupsDataJson(responseString!!)
+                groupsList.add(0, GroupModel("friends", "Friends", "420", R.drawable.ic_profile))
+                // Run on UI thread
+                requireActivity().runOnUiThread {
+                    // update spinner
+                    spinner.setItems(groupsList.map { it.groupName })
+                    groupSelected = true
+                    nextFab.isEnabled = nameEntered && groupSelected
+                }
 
+                Timber.tag("Groups").i(responseString.toString())
+            }
+        }
+        )
+
+    }
     override fun onDestroyView() {
         super.onDestroyView()
         mapView.location

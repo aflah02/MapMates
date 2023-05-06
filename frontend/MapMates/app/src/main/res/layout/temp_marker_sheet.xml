@@ -127,5 +127,21 @@
 
         </LinearLayout>
 
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/uploadFab"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginBottom="10dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:textAlignment="center"
+        app:backgroundTint="@color/white"
+        android:src="@drawable/ic_create"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:fabCustomSize="50dp"
+        tools:ignore="RtlCompat" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
 

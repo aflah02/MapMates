@@ -1,13 +1,10 @@
 package com.example.mapmates.ui.home
 
 import android.graphics.Bitmap
-import android.media.Image
 import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
-import com.example.mapmates.R
 import com.example.mapmates.databinding.FragmentImageBinding
 
 import com.example.mapmates.ui.home.placeholder.PlaceholderContent.PlaceholderItem
@@ -19,7 +16,8 @@ import com.example.mapmates.ui.home.placeholder.PlaceholderContent.PlaceholderIt
 class MyImageRecyclerViewAdapter(
     val images: MutableList<Bitmap>,
     val uploader: MutableList<Bitmap>,
-    val uploaderNames: MutableList<String>
+    val uploaderNames: MutableList<String>,
+    private val listener: OnGroupItemClickListener
 ) : RecyclerView.Adapter<MyImageRecyclerViewAdapter.ViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -36,6 +34,9 @@ class MyImageRecyclerViewAdapter(
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         holder.imageView.setImageBitmap(images[position])
         holder.uploaderView.setImageBitmap(uploader[position])
+        holder.itemView.setOnClickListener(View.OnClickListener {
+            listener.onImageNoteClick(position, "image");
+        })
     }
 
     override fun getItemCount(): Int = images.size
