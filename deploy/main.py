@@ -9,6 +9,8 @@ import base64
 from urllib.parse import unquote
 from bson import ObjectId
 from typing import List
+import string
+import random
 pydantic.json.ENCODERS_BY_TYPE[ObjectId]=str
 from PIL import Image
 import io
@@ -54,7 +56,7 @@ async def login_user(userCredentials: UserCredentials):
 
 # Register a new user (takes in just username and password)
 @app.post("/register")
-async def register(username: str, password: str):
+async def register(username: str, password: str, full_name: str, email: str, bio: str):
 	# check if username already exists
 	if(users.find_one({"username": username})):
 		raise HTTPException(status_code=400, detail="Username already exists")
@@ -64,6 +66,9 @@ async def register(username: str, password: str):
 	user = {
         "_id": str(int(max_id) + 2),
         "username": username,
+        "full_name": full_name,
+        "email": email,
+        "bio": bio,
         "password": hashed_password,
         "userfriends": [],
         "groups": [],
@@ -82,28 +87,24 @@ async def read_users():
 async def read_user(user_name: str):
     return users.find_one({"username": user_name})
 
+class imagePayload(BaseModel):
+    image: str
+
 
 @app.post("/users")
-async def create_user(username: str, password: str, userfriends: list, groups: list, markers: list, profile_picture: UploadFile = File(...)):
+async def create_user(username: str, password: str, imageID: str):
     hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
     max_id = users.find_one(sort=[("_id", -1)])["_id"]
-
-    im = Image.open(profile_picture)
-    image_bytes = io.BytesIO()
-    im.save(image_bytes, format='JPEG')
-    image = {
-        'data': image_bytes.getvalue(),
-    }
-    profile_pic = profile_picture_collection.insert_one(image).inserted_id
 
     user = {
         "username": username,
         "password": hashed_password,
-        "userfriends": userfriends,
-        "groups": groups,
-        "markers": markers,
-        "profile_picture": profile_pic,
+        "userfriends": [],
+        "groups": [],
+        "markers": [],
+        "profile_picture": imageID,
         "pending_friend_requests": [],
+        "_id": str(int(max_id) + 2),
     }
     result = users.insert_one(user)
     return {"_id": str(result.inserted_id)}
@@ -170,6 +171,51 @@ async def add_group(username: str, group_id: str):
         }
         groups.update_one({"_id": group_id}, groups_update)
         return {"message": "User added to group successfully"}
+
+class GroupPayload(BaseModel):
+    name: str
+    users: str
+# create new group
+@app.post("/users/{user_name}/creategroup")
+async def create_group(user_name: str, group_details: GroupPayload):
+    group_name = group_details.name
+    group_users = group_details.users
+    group_users = group_users.split("<DELIMITER069>")
+    # filter empty strings
+    group_users = list(filter(None, group_users))
+    max_id = groups.find_one(sort=[("_id", -1)])["_id"]
+
+    current_invite_codes = list(groups.find_one({"_id": "0"})["invite_codes"])
+
+    def random_string(length):
+        letters = string.ascii_lowercase
+        return ''.join(random.choice(letters) for i in range(length))
+    
+    while True:
+        invite_code = random_string(6)
+        if invite_code not in current_invite_codes:
+            break
+    group = {
+        "_id": str(int(max_id) + 2),
+        "name": group_name,
+        "invite_code": invite_code,
+        "users": group_users,
+    }
+
+    result = groups.insert_one(group)
+
+    # add group to user
+    user_groups = users.find_one({"username": user_name})["groups"]
+    user_groups.append(str(int(max_id) + 2))
+    update = {
+        "$set": {
+            "groups": user_groups
+        }
+    }
+    users.update_one({"username": user_name}, update)
+
+    return {"_id": str(result.inserted_id)}
+
 
 @app.post("/users/{user_name}/{friend_name}/sendfriendrequest")
 async def send_friend_request(user_name: str, friend_name: str):
@@ -581,6 +627,17 @@ async def upload_marker_image_base64(user_name: str, payload: imagePayload):
     image_id = marker_image_collection.insert_one(image).inserted_id
     return {"message": "Image uploaded successfully", "image_id": str(image_id)}
 
+# upload profile picture as base64 url encoded string
+@app.post("/users/{user_name}/upload_profile_picture_url_encoded_base64")
+async def upload_profile_picture_base64(user_name: str, payload: imagePayload):
+    imgstring = unquote(payload.image)
+    imgdata = base64.b64decode(imgstring)
+    image = {
+        "data": imgdata
+    }
+    image_id = profile_picture_collection.insert_one(image).inserted_id
+    return {"message": "Image uploaded successfully", "image_id": str(image_id)}
+
 # Get markers for a user
 @app.get("/users/{user_name}/markers")
 async def get_markers(user_name: str):
@@ -749,6 +806,19 @@ async def add_user_to_group(group_id: str, user_name: str):
     groups.update_one({"_id": group_id}, update)
     return {"message": "User added to group successfully"}
 
+# Add a new user to a group based on group_invite_code
+@app.put("/groups/{group_invite_code}/add_user_by_invite_code")
+async def add_user_to_group_by_invite_code(group_invite_code: str, user_name: str):
+    current_users = groups.find_one({"group_invite_code": group_invite_code})["users"]
+    current_users.append(user_name)
+    update = {
+        "$set": {
+            "users": current_users,
+        }
+    }
+    groups.update_one({"group_invite_code": group_invite_code}, update)
+    return {"message": "User added to group successfully"}
+
 # Remove a user from a group
 @app.put("/groups/{group_id}/remove_user")
 async def remove_user_from_group(group_id: str, user_name: str):
@@ -792,9 +862,3 @@ async def delete_group(group_id: str):
             }
             users.update_one({"_id": user["_id"]}, update)
     return {"message": "Group deleted successfully"}
-
-
-
-
-
-
