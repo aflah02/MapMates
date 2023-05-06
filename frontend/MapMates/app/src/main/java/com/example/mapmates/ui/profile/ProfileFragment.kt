@@ -35,9 +35,9 @@ class ProfileFragment : Fragment() {
         uploadButton = view.findViewById(R.id.addPicture)
         editBioButton = view.findViewById(R.id.editBioButton)
         saveBioButton = view.findViewById(R.id.saveBioButton)
-
+        val UserName = "Aflah"
 //        TODO: get person picture put is in this link
-        Picasso.get().load("https://picsum.photos/200").into(profilePicture)
+        Picasso.get().load("https://mapsapp-1-m9050519.deta.app/users/$UserName/profile_picture").into(profilePicture)
 
         editBioButton.setOnClickListener {
             userBio.isEnabled = true
@@ -47,6 +47,9 @@ class ProfileFragment : Fragment() {
         }
         saveBioButton.setOnClickListener {
 //            TODO: post the value of edit text button
+            val newBio = userBio.text.toString()
+            userBio.setText(newBio)
+            
             userBio.inputType = InputType.TYPE_NULL
             userBio.isEnabled = false
             saveBioButton.visibility = View.GONE

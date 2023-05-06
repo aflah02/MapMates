@@ -3,29 +3,25 @@ package com.example.mapmates
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
-import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
 import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.mapmates.ui.people.friends.FriendData
-import com.example.mapmates.GroupAllData
-import com.example.mapmates.ui.people.friends.FriendsAdapter
-import com.example.mapmates.ui.people.groups.AddContactData
 import com.example.mapmates.ui.people.groups.GroupMemberAdapter
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
-import org.json.JSONArray
 import org.json.JSONObject
 import timber.log.Timber
 import java.io.IOException
 import java.util.concurrent.CountDownLatch
+
 
 class SettingsActivity : AppCompatActivity() {
     private lateinit var groupTitle:TextView
@@ -177,7 +173,6 @@ class SettingsActivity : AppCompatActivity() {
         val url = "https://mapsapp-1-m9050519.deta.app/groups/$groupID/remove_user?user_name=$userName"
         val mediaType = "application/json; charset=utf-8".toMediaType()
         val requestJSON = JSONObject()
-
         val requestBody = requestJSON.toString().toRequestBody(mediaType)
         val request = Request.Builder()
             .addHeader("accept","application/json")

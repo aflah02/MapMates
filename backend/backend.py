@@ -84,6 +84,7 @@ async def read_users():
     return [user for user in users.find()]
 
 
+
 @app.get("/users/{user_name}")
 async def read_user(user_name: str):
     return users.find_one({"username": user_name})
@@ -136,6 +137,17 @@ async def update_user(username: str, password: str, userfriends: list, groups: l
     }
     users.update_one({"username": username}, update)
     return {"message": "User updated successfully"}
+
+# Update User Bio
+@app.put("/users/{user_name}/bio")
+async def update_user_bio(user_name: str, bio: str):
+    update = {
+        "$set": {
+            "bio": bio,
+        }
+    }
+    users.update_one({"username": user_name}, update)
+    return {"message": "User bio updated successfully"}
 
 # get user groups
 @app.get("/users/{user_name}/groups")
@@ -446,7 +458,10 @@ async def get_friend_only_markers(user_name: str):
     for marker in all_user_markers:
         print(marker)
         if marker["friends_can_see"] == True:
-            markers.append(marker)
+            markers.append({
+                "username": user_name,
+                "marker": marker
+            })
     # get user friends
     user_friends = users.find_one({"username": user_name})["userfriends"]
     for friend in user_friends:
@@ -455,7 +470,10 @@ async def get_friend_only_markers(user_name: str):
         print(friend_markers)
         for marker in friend_markers:
             if marker["friends_can_see"] == True:
-                markers.append(marker)
+                markers.append({
+                    "username": friend,
+                    "marker": marker
+                })
     return {"markers": markers}
 
 # delete some data from marker
@@ -957,8 +975,11 @@ async def add_user_to_group_by_invite_code(group_invite_code: str, user_name: st
     return {"message": "User added to group successfully"}
 
 # Remove a user from a group
+@app.put("/groups/{group_id}/remove_user")
 async def remove_user_from_group(group_id: str, user_name: str):
     create_users = groups.find_one({"_id": group_id})["users"]
+    if user_name not in create_users:
+        return {"message": "User not in group"}
     create_users.remove(user_name)
     update = {
         "$set": {
@@ -977,6 +998,7 @@ async def remove_user_from_group(group_id: str, user_name: str):
         }
     }
     users.update_one({"username": user_name}, update)
+    return {"message": "User removed from group successfully"}
 
 # get all groups for a user
 @app.get("/users/{user_name}/all_group_details")
@@ -1012,8 +1034,4 @@ async def delete_group(group_id: str):
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, port=8000)
-
-
-
-
+    uvicorn.run(app)
