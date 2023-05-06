@@ -1,5 +1,6 @@
 package com.example.mapmates
 
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
@@ -97,5 +98,12 @@ class CreateGroupActivity : AppCompatActivity() {
         }
         Log.d("selectedFriends", groupTitle.text.toString())
 //        do Back pressed here to back to the GroupFragment
+        createButton.setOnClickListener {
+            val intent = Intent()
+            setResult(RESULT_OK, intent)
+            finish()
+
+        }
+
     }
 }

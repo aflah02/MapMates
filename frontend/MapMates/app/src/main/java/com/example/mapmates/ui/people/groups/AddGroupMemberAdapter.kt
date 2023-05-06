@@ -35,7 +35,8 @@ class AddGroupMemberAdapter(var itemList: List<AddContactData>): RecyclerView.Ad
         holder.contact_name.text = currentItem.name
         Picasso.get().load(currentItem.imageUrl).into(holder.profile_picture)
         holder.contact_number.text = currentItem.number
-        holder.contact_selected.isChecked = selectedContacts.contains(currentItem)
+//        holder.contact_selected.isChecked = selectedContacts.contains(currentItem)
+        holder.contact_selected.isChecked = currentItem.isSelected
         holder.contact_selected.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
                 selectedContacts.add(currentItem)
