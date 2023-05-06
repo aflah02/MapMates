@@ -142,7 +142,7 @@ async def update_user(username: str, password: str, userfriends: list, groups: l
 async def get_user_groups(user_name: str):
     user = users.find_one({"username": user_name})
     if user:
-        return {"groups": user["groups"]}
+        return {"groups": user["groups"], "group_ids": user["_id"]}
     else:
         return {"message": "Invalid username"}
 
