@@ -87,6 +87,13 @@ class GroupOptionsBottomSheetFragment() : BottomSheetDialogFragment() {
         joinGroup.setOnClickListener {
             Toast.makeText(requireContext(),"Entered ${codeGroup.text}",Toast.LENGTH_SHORT).show()
 //            TODO: Post this code to add a group on response ok go back, on fail response display toast no group found
+            val apiJoinResponse = joinGroup(codeGroup.text.toString(), "Aflah")
+            if (apiJoinResponse != ""){
+                Toast.makeText(requireContext(),"Joined ${codeGroup.text}",Toast.LENGTH_SHORT).show()
+            }
+            else{
+                Toast.makeText(requireContext(),"No group found",Toast.LENGTH_SHORT).show()
+            }
         }
 
         return view
@@ -119,6 +126,44 @@ class GroupOptionsBottomSheetFragment() : BottomSheetDialogFragment() {
 
             override fun onResponse(call: Call, response: Response) {
                 Log.i("CreateFragment", "Successfully created group")
+                APIresponse = response.body!!.string()
+                latch.countDown()
+            }
+        })
+
+        latch.await()
+
+        return APIresponse
+
+    }
+
+    private fun joinGroup(GroupInviteCode: String, UserName: String): String{
+        val url = "https://mapsapp-1-m9050519.deta.app/groups/$GroupInviteCode/add_user_by_invite_code?user_name=$UserName"
+        val mediaType = "application/json; charset=utf-8".toMediaType()
+        val requestJSON = JSONObject()
+
+        val requestBody = requestJSON.toString().toRequestBody(mediaType)
+        val request = Request.Builder()
+            .addHeader("accept","application/json")
+            .addHeader("Content-Type","application/json")
+            .url(url)
+            .post(requestBody)
+            .build()
+        val client = OkHttpClient()
+
+        val latch = CountDownLatch(1)
+
+        var APIresponse = ""
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                Log.i("ErrorError",  e.toString())
+                Log.e("CreateFragment", "Failed to join group")
+                latch.countDown()
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                Log.i("CreateFragment", "Successfully joined group")
                 APIresponse = response.body!!.string()
                 latch.countDown()
             }

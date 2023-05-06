@@ -37,6 +37,9 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var memberList:List<FriendData>
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        var groupID = intent.getStringExtra("groupID")
+        Log.d("groupID", groupID.toString())
+
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_settings)
         //TODO: get group title, group members in the form of friends data like friend fragment using API call using setPageDetails()
@@ -44,7 +47,7 @@ class SettingsActivity : AppCompatActivity() {
         groupCode = findViewById(R.id.groupCode)
         copyButton = findViewById(R.id.copyButton)
         groupMembers = findViewById(R.id.GrpMembersRecyclerView)
-        setPageDetails()
+        setPageDetails(groupID)
         leaveButton = findViewById(R.id.leaveButton)
         copyButton.setOnClickListener{
             val clipboardManager = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
@@ -55,16 +58,14 @@ class SettingsActivity : AppCompatActivity() {
 
         leaveButton.setOnClickListener {
             val userName = "Mohit"
-            val groupID = "1"
-            val leaveGroupResponse = leaveGroupCall(userName, groupID)
+            val leaveGroupResponse = groupID?.let { it1 -> leaveGroupCall(userName, it1) }
         }
     }
-    private fun setPageDetails(){
+    private fun setPageDetails(groupID: String?){
         groupMembers.layoutManager = LinearLayoutManager(this)
         adapter = GroupMemberAdapter(emptyList<FriendData>())
         groupMembers.adapter = adapter
-        val groupID = "1"
-        val getGroupDataResponse = getGroupData(groupID)
+        val getGroupDataResponse = groupID?.let { getGroupData(it) }
         val groupData = parseJson(getGroupDataResponse)
         val inviteCode = groupData.invite_code
         val group_id = groupData._id

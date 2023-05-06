@@ -75,8 +75,8 @@ class GroupsFragment : Fragment() {
             val jsonObjectArray = parseJson(jsonString)
             if (jsonObjectArray != null) {
                 for(item in jsonObjectArray){
-                    Log.d("Groups",item)
-                    groupList.add(GroupData(item,"https://picsum.photos/200"))
+//                    Log.d("Groups", item.toString())
+                    groupList.add(item)
                 }
             }
         }
@@ -86,20 +86,24 @@ class GroupsFragment : Fragment() {
     }
 
 
-    private fun parseJson(jsonString: String): ArrayList<String>? {
+    private fun parseJson(jsonString: String): ArrayList<GroupData>? {
 
         val jsonObject = JSONObject(jsonString)
-        val groupList = ArrayList<String>()
+        val groupDataList = ArrayList<GroupData>()
 
         if (jsonObject.has("groups")) {
-            val friendRequests = jsonObject.getJSONArray("groups")
-            for (i in 0 until friendRequests.length()) {
-                val name = friendRequests.getString(i)
-                groupList.add(name)
+            val groupIDs = jsonObject.getJSONArray("groups")
+            val groupNames = jsonObject.getJSONArray("group_names")
+            val group_invite_codes = jsonObject.getJSONArray("group_invite_codes")
+            for (i in 0 until groupIDs.length()) {
+                val groupID = groupIDs[i].toString()
+                val groupName = groupNames[i].toString()
+                val groupInviteCode = group_invite_codes[i].toString()
+                groupDataList.add(GroupData(groupName, "https://picsum.photos/200", groupID, groupInviteCode))
             }
         }
 
-        return groupList
+        return groupDataList
     }
 
     fun getGroupDetails(username: String): String? {
@@ -127,6 +131,7 @@ class GroupsFragment : Fragment() {
         }
         )
         latch.await()
+        Log.d("Groups",responseString.toString())
         return responseString
     }
 }

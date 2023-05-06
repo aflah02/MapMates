@@ -141,8 +141,17 @@ async def update_user(username: str, password: str, userfriends: list, groups: l
 @app.get("/users/{user_name}/groups")
 async def get_user_groups(user_name: str):
     user = users.find_one({"username": user_name})
+    print(user)
     if user:
-        return {"groups": user["groups"], "group_ids": user["_id"]}
+        group_names = []
+        group_invite_codes = []
+        group_ids = user["groups"]
+        for group_id in group_ids:
+            print(group_id)
+            group = groups.find_one({"_id": group_id})
+            group_names.append(group["group_name"])
+            group_invite_codes.append(group["invite_code"])
+        return {"groups": user["groups"], "group_names": group_names, "group_invite_codes": group_invite_codes}
     else:
         return {"message": "Invalid username"}
 
@@ -428,6 +437,68 @@ async def get_markers(group_id: str):
         return {"markers": markers}
     except:
         return {"message": "Invalid group_id"}
+    
+# get friend only markers for a user
+@app.get("/users/{user_name}/friend_only_markers")
+async def get_friend_only_markers(user_name: str):
+    markers = []
+    all_user_markers = users.find_one({"username": user_name})["markers"]
+    for marker in all_user_markers:
+        print(marker)
+        if marker["friends_can_see"] == True:
+            markers.append(marker)
+    # get user friends
+    user_friends = users.find_one({"username": user_name})["userfriends"]
+    for friend in user_friends:
+        print(friend)
+        friend_markers = users.find_one({"username": friend})["markers"]
+        print(friend_markers)
+        for marker in friend_markers:
+            if marker["friends_can_see"] == True:
+                markers.append(marker)
+    return {"markers": markers}
+
+# delete some data from marker
+@app.post("/users/{user_name}/delete_marker_data")
+async def delete_marker_data(user_name: str, marker_id: str, data_type: str, position: str):
+    # get user markers
+    user_markers = users.find_one({"username": user_name})["markers"]
+    # get marker
+    marker = None
+    for m in user_markers:
+        if str(m["_id"]) == marker_id:
+            marker = m
+            break
+    if marker is None:
+        return {"message": "Marker not found"}
+    # delete data
+    if data_type == "image":
+        ls_images_updated = marker["image"]
+        ls_images_updated.pop(int(position))
+        ls_image_uploaders_updated = marker["image_uploaders"]
+        ls_image_uploaders_updated.pop(int(position))
+        update = {
+            "$set": {
+                "image": ls_images_updated,
+                "image_uploaders": ls_image_uploaders_updated
+            }
+        }
+    elif data_type == "note":
+        ls_notes_updated = marker["notes"]
+        ls_notes_updated.pop(int(position))
+        ls_notes_uploaders_updated = marker["notes_uploaders"]
+        ls_notes_uploaders_updated.pop(int(position))
+        update = {
+            "$set": {
+                "notes": ls_notes_updated,
+                "notes_uploaders": ls_notes_uploaders_updated
+            }
+        }
+    else:
+        return {"message": "Invalid data_type"}
+    # update marker
+    users.update_one({"username": user_name}, update)
+    return {"message": "Data deleted successfully"}
 
 class MarkerPayload(BaseModel):
     name: str
@@ -529,18 +600,22 @@ async def add_marker(username: str, payload: MarkerPayload):
 class imagePayload(BaseModel):
     image: str
 
-class imageIDsPayload(BaseModel):
+class imageIDsandNotesPayload(BaseModel):
     marker_id: str
     imageIDs: str
+    notes: str
 # add images to marker
-@app.post("/users/{user_name}/add_images_to_marker")
-async def add_image_to_marker(user_name: str, imageIDsPayload: imageIDsPayload):
+@app.post("/users/{user_name}/add_images_and_notes_to_marker")
+async def add_images_and_notes_to_marker(user_name: str, imageIDsandNotesPayload: imageIDsandNotesPayload):
     # Get the marker
-    imageIDs = imageIDsPayload.imageIDs
-    marker_id = imageIDsPayload.marker_id
+    imageIDs = imageIDsandNotesPayload.imageIDs
+    marker_id = imageIDsandNotesPayload.marker_id
+    notes = imageIDsandNotesPayload.notes
     imageIDs = list(imageIDs.split("<DELIMITER069>"))
+    notes = list(notes.split("<DELIMITER069>"))
     # filter out empty strings
     imageIDs = list(filter(None, imageIDs))
+    notes = list(filter(None, notes))
     marker = None
     for m in users.find_one({"username": user_name})["markers"]:
         if str(m["_id"]) == marker_id:
@@ -552,16 +627,27 @@ async def add_image_to_marker(user_name: str, imageIDsPayload: imageIDsPayload):
     # Add the image to the marker
     ls_image_id = marker["image"]
     ls_image_uploaders = marker["image_uploaders"]
+    ls_notes = marker["notes"]
+    ls_notes_uploaders = marker["notes_uploaders"]
     print("Before:")
     print(ls_image_id)
     print(ls_image_uploaders)
+    print(ls_notes)
+    print(ls_notes_uploaders)
     for image_id in imageIDs:
         ls_image_id.append(ObjectId(image_id))
         ls_image_uploaders.append(user_name)
+    for note in notes:
+        ls_notes.append(note)
+        ls_notes_uploaders.append(user_name)
     print(ls_image_id)
     print(ls_image_uploaders)
+    print(ls_notes)
+    print(ls_notes_uploaders)
     marker["image"] = ls_image_id
     marker["image_uploaders"] = ls_image_uploaders
+    marker["notes"] = ls_notes
+    marker["notes_uploaders"] = ls_notes_uploaders
     # Update the marker
     ls_markers = users.find_one({"username": user_name})["markers"]
     for i in range(len(ls_markers)):
@@ -781,9 +867,14 @@ async def create_group(group_name: str, user_name: str):
         group_invite_code = random_string(6)
         if group_invite_code not in set_of_group_invite_codes:
             break
+    max_id = 0
+    for group in groups.find():
+        if int(group["_id"]) > max_id:
+            max_id = int(group["_id"])
+    max_id += 1
     group = {
-        "_id": group_name,
-        "users": [],
+        "_id": str(max_id),
+        "users": [user_name],
         "invite_code": group_invite_code,
         "group_name": group_name,
     }
@@ -839,13 +930,30 @@ async def add_user_to_group(group_id: str, user_name: str):
 @app.put("/groups/{group_invite_code}/add_user_by_invite_code")
 async def add_user_to_group_by_invite_code(group_invite_code: str, user_name: str):
     current_users = groups.find_one({"invite_code": group_invite_code})["users"]
+    print("current_users", current_users)
     current_users.append(user_name)
+    print("current_users_after", current_users)
     update = {
         "$set": {
             "users": current_users,
         }
     }
-    groups.update_one({"group_invite_code": group_invite_code}, update)
+    groups.update_one({"invite_code": group_invite_code}, update)
+    print("updated")
+    print(groups.find_one({"invite_code": group_invite_code})["users"])
+    print("updated")
+    # Get user groups
+    user_groups = users.find_one({"username": user_name})["groups"]
+    # Add group to user groups
+    group_id = groups.find_one({"invite_code": group_invite_code})["_id"]
+    user_groups.append(group_id)
+    # Update user groups
+    update = {
+        "$set": {
+            "groups": user_groups,
+        }
+    }
+    users.update_one({"username": user_name}, update)
     return {"message": "User added to group successfully"}
 
 # Remove a user from a group
@@ -873,6 +981,7 @@ async def get_all_group_details(user_name: str):
             "_id": details["_id"],
             "group_name": details["group_name"],
             "users": details["users"],
+            "invite_code": details["invite_code"],
         })
     # Return the groups
     return group_details

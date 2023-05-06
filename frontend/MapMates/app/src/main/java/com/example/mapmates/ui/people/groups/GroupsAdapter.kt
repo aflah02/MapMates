@@ -1,6 +1,7 @@
 package com.example.mapmates.ui.people.groups
 
 import android.content.Intent
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -23,13 +24,15 @@ class GroupsAdapter(var itemList: List<GroupData>) : RecyclerView.Adapter<Groups
 
     override fun onBindViewHolder(holder: GroupViewHolder, position: Int) {
         val currentItem = itemList[position]
-        holder.peopleGroupName.text = currentItem.title
+        holder.peopleGroupName.text = currentItem.groupName
         Picasso.get().load(currentItem.imageUrl).into(holder.peopleGroupImage)
 
         holder.peopleGroupSettings.setOnClickListener {
             // Handle button click for this item
             val context = holder.itemView.context
             val intent = Intent(context, SettingsActivity::class.java)
+            Log.d("GroupAdapter", "groupID: ${currentItem.groupID}")
+            intent.putExtra("groupID", currentItem.groupID)
             context.startActivity(intent)
         }
         holder.itemView.setOnClickListener{
