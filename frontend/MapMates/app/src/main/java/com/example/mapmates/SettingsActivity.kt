@@ -140,7 +140,6 @@ class SettingsActivity : AppCompatActivity() {
         val name = jsObj.getString("username")
         val image_url = "https://mapsapp-1-m9050519.deta.app/users/$name/profile_picture"
         val bio = jsObj.getString("bio")
-        val members = jsObj.getJSONArray("users")
         val friendData = FriendData(name, image_url, bio)
         return friendData
     }
