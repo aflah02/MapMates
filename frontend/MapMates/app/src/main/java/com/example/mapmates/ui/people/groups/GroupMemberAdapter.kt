@@ -23,7 +23,7 @@ class GroupMemberAdapter(var itemList: List<FriendData>) : RecyclerView.Adapter<
         val currentItem = itemList[position]
         holder.contact_name.text = currentItem.name
         Picasso.get().load(currentItem.imageUrl).into(holder.profile_picture)
-        holder.contact_number.text = currentItem.number
+        holder.contact_number.text = currentItem.bio
     }
 
     override fun getItemCount(): Int {

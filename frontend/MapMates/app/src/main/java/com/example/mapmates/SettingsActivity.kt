@@ -80,12 +80,12 @@ class SettingsActivity : AppCompatActivity() {
         if (jsonString == null) {
             return GroupAllData("","","", emptyList())
         }
-        val jsArray = JSONArray(jsonString)
-        val jsObj = jsArray.getJSONObject(0)
+        val jsObj = JSONObject(jsonString)
+//        val jsObj = jsArray.getJSONObject(0)
         val group_id = jsObj.getString("_id")
         val group_name = jsObj.getString("group_name")
         val invite_code = jsObj.getString("invite_code")
-        val members = jsObj.getString("g_data_string")
+        val members = jsObj.getString("users_as_string")
         val membersListArr = members.split("<DELIMITER069>")
         val membersListRemoveEmptyStrings = membersListArr.filter { it.isNotEmpty() }
         val membersList = membersListRemoveEmptyStrings.map { it.trim() }
@@ -135,10 +135,10 @@ class SettingsActivity : AppCompatActivity() {
         if (jsonString == null) {
             return FriendData("","","")
         }
-        val jsArray = JSONArray(jsonString)
-        val jsObj = jsArray.getJSONObject(0)
+        val jsObj = JSONObject(jsonString)
+//        val jsObj = jsArray.getJSONObject(0)
         val name = jsObj.getString("username")
-        val image_url = jsObj.getString("https://mapsapp-1-m9050519.deta.app/users/$name/profile_picture")
+        val image_url = "https://mapsapp-1-m9050519.deta.app/users/$name/profile_picture"
         val bio = jsObj.getString("bio")
         val members = jsObj.getJSONArray("users")
         val friendData = FriendData(name, image_url, bio)

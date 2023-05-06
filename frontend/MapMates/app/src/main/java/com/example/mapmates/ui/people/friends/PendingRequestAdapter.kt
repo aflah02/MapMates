@@ -28,7 +28,7 @@ class PendingRequestsAdapter(private val activity: Activity,private var requests
         val currentItem = requests[holder.adapterPosition]
         holder.contact_name.text = currentItem.name
         Picasso.get().load(currentItem.imageUrl).into(holder.profile_picture)
-        holder.contact_number.text = currentItem.number
+        holder.contact_number.text = currentItem.bio
         val userName = "Aflah" // replace with the user name of the logged-in user
         val friendName = currentItem.name // get the name of the friend whose request is being accepted
         holder.acceptButton.setOnClickListener {

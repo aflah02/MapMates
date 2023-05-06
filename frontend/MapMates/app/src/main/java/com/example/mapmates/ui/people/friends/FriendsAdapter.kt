@@ -28,7 +28,7 @@ class FriendsAdapter(var itemList: List<FriendData>) : RecyclerView.Adapter<Frie
         val currentItem = itemList[position]
         holder.contact_name.text = currentItem.name
         Picasso.get().load(currentItem.imageUrl).into(holder.profile_picture)
-        holder.contact_number.text = currentItem.number
+        holder.contact_number.text = currentItem.bio
         holder.itemView.setOnClickListener{
             val context = holder.itemView.context
             val intent = Intent(context, FriendActivityProfile::class.java)
