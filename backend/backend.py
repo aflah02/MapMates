@@ -766,15 +766,23 @@ async def read_group(group_id: str):
 
 
 @app.post("/groups")
-async def create_group(group_name: str, users: list):
-    max_id = groups.find_one(sort=[("_id", -1)])["_id"]
+async def create_group(group_name: str):
+    set_of_group_invite_codes = set([group["invite_code"] for group in groups.find()])
+    def random_string(length):
+        letters = string.ascii_lowercase
+        return ''.join(random.choice(letters) for i in range(length))
+    while True:
+        group_invite_code = random_string(6)
+        if group_invite_code not in set_of_group_invite_codes:
+            break
     group = {
-        "_id": str(int(max_id) + 1),
+        "_id": group_name,
+        "users": [],
+        "invite_code": group_invite_code,
         "group_name": group_name,
-        "users": users,
     }
-    result = groups.insert_one(group)
-    return {"_id": str(result.inserted_id)}
+    groups.insert_one(group)
+    return {"message": "Group created successfully", "invite_code": group_invite_code}
 
 # get group members
 @app.get("/groups/{group_id}/members")
@@ -810,7 +818,7 @@ async def add_user_to_group(group_id: str, user_name: str):
 # Add a new user to a group based on group_invite_code
 @app.put("/groups/{group_invite_code}/add_user_by_invite_code")
 async def add_user_to_group_by_invite_code(group_invite_code: str, user_name: str):
-    current_users = groups.find_one({"group_invite_code": group_invite_code})["users"]
+    current_users = groups.find_one({"invite_code": group_invite_code})["users"]
     current_users.append(user_name)
     update = {
         "$set": {

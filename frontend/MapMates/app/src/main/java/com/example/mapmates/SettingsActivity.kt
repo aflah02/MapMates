@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.widget.Button
 import android.widget.ImageButton
 import android.widget.TextView
@@ -18,7 +19,10 @@ import com.example.mapmates.ui.people.friends.FriendsAdapter
 import com.example.mapmates.ui.people.groups.AddContactData
 import com.example.mapmates.ui.people.groups.GroupMemberAdapter
 import okhttp3.*
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
+import org.json.JSONObject
 import timber.log.Timber
 import java.io.IOException
 import java.util.concurrent.CountDownLatch
@@ -170,32 +174,41 @@ class SettingsActivity : AppCompatActivity() {
         return responseString
     }
 
-    private fun leaveGroupCall(userName: String, groupID: String): String? {
-        var responseString : String? = null
-        val client = OkHttpClient()
+    private fun leaveGroupCall(userName: String, groupID: String): String {
+        val url = "https://mapsapp-1-m9050519.deta.app/groups/$groupID/remove_user?user_name=$userName"
+        val mediaType = "application/json; charset=utf-8".toMediaType()
+        val requestJSON = JSONObject()
+
+        val requestBody = requestJSON.toString().toRequestBody(mediaType)
         val request = Request.Builder()
-            .url("https://mapsapp-1-m9050519.deta.app/groups/$groupID/remove_user?user_name=$userName")
+            .addHeader("accept","application/json")
+            .addHeader("Content-Type","application/json")
+            .url(url)
+            .post(requestBody)
             .build()
+        val client = OkHttpClient()
+
         val latch = CountDownLatch(1)
+
+        var APIresponse = ""
+
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
-                Timber.tag("Group Data Fetch").e(e.message.toString())
+                Log.i("ErrorError",  e.toString())
+                Log.e("CreateFragment", "Failed to leave group")
                 latch.countDown()
             }
 
             override fun onResponse(call: Call, response: Response) {
-                responseString = response.body?.string()
-                if (!response.isSuccessful) {
-                    latch.countDown()
-                    return
-                }
-                Timber.tag("Group Data Fetch").i(responseString.toString())
+                Log.i("CreateFragment", "Successfully left group")
+                APIresponse = response.body!!.string()
                 latch.countDown()
             }
-        }
-        )
-        latch.await()
-        return responseString
-    }
+        })
 
+        latch.await()
+
+        return APIresponse
+
+    }
 }

@@ -7,6 +7,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -18,6 +19,12 @@ import android.widget.Toast
 import com.example.mapmates.CreateGroupActivity
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.example.mapmates.R
+import okhttp3.*
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.RequestBody.Companion.toRequestBody
+import org.json.JSONObject
+import java.io.IOException
+import java.util.concurrent.CountDownLatch
 
 
 class GroupOptionsBottomSheetFragment() : BottomSheetDialogFragment() {
@@ -65,7 +72,9 @@ class GroupOptionsBottomSheetFragment() : BottomSheetDialogFragment() {
             createGroup.visibility = View.GONE
             groupTitle.visibility = View.GONE
 //            TODO:Post An API to make a group here!!!
+            val inviteCode = createGroup(groupTitle.text.toString())
 //            TODO:Set the generated Code as the response here!!!
+            generatedCode.text = inviteCode
         }
         copyButton.setOnClickListener{
             val clipboardManager = requireActivity().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
@@ -75,9 +84,47 @@ class GroupOptionsBottomSheetFragment() : BottomSheetDialogFragment() {
         }
         joinGroup.setOnClickListener {
             Toast.makeText(requireContext(),"Entered ${codeGroup.text}",Toast.LENGTH_SHORT).show()
-//            TODO:Post this code to add a group on response ok go back, on fail response display toast no group found
+//            TODO: Post this code to add a group on response ok go back, on fail response display toast no group found
         }
 
         return view
+    }
+
+    private fun createGroup(GroupName: String): String{
+        val url = "https://mapsapp-1-m9050519.deta.app/groups?group_name=$GroupName"
+        val mediaType = "application/json; charset=utf-8".toMediaType()
+        val requestJSON = JSONObject()
+
+        val requestBody = requestJSON.toString().toRequestBody(mediaType)
+        val request = Request.Builder()
+            .addHeader("accept","application/json")
+            .addHeader("Content-Type","application/json")
+            .url(url)
+            .post(requestBody)
+            .build()
+        val client = OkHttpClient()
+
+        val latch = CountDownLatch(1)
+
+        var APIresponse = ""
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                Log.i("ErrorError",  e.toString())
+                Log.e("CreateFragment", "Failed to create group")
+                latch.countDown()
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                Log.i("CreateFragment", "Successfully created group")
+                APIresponse = response.body!!.string()
+                latch.countDown()
+            }
+        })
+
+        latch.await()
+
+        return APIresponse
+
     }
 }
