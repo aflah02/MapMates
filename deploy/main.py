@@ -139,6 +139,7 @@ async def update_user(username: str, password: str, userfriends: list, groups: l
 
 class BioPayload(BaseModel):
     bio: str
+
 # Update User Bio
 @app.put("/users/{user_name}/bio")
 async def update_user_bio(user_name: str, BioPayload: BioPayload):
@@ -413,9 +414,29 @@ async def validate_user(username: str, password: str):
 async def get_profile_picture(user_name: str):
     # Get the user's profile picture ID
     profile_picture_id = users.find_one({"username": user_name})["profile_picture"]
-    
+    # print(profile_picture_id)
     # Get the profile picture
-    profile_picture = profile_picture_collection.find_one({"_id": profile_picture_id})
+    image_id = str(profile_picture_id)
+    for image in profile_picture_collection.find():
+        if str(image["_id"]) == image_id:
+            profile_picture = image
+            break
+    if profile_picture is None:
+        return {"message": "Profile picture not found"}
+    # print(profile_picture)
+    # Return the profile picture
+    return Response(content=io.BytesIO(profile_picture['data']).getvalue(), media_type="image/jpeg")
+
+# get profile pic by image_id
+@app.get("/users/{image_id}/get_profile_picture_from_img_id")
+async def get_profile_picture_from_img_id(image_id: str):
+    profile_picture = None
+    for image in profile_picture_collection.find():
+        if str(image["_id"]) == image_id:
+            profile_picture = image
+            break
+    if profile_picture is None:
+        return {"message": "Image not found"}
     # Return the profile picture
     return Response(content=io.BytesIO(profile_picture['data']).getvalue(), media_type="image/jpeg")
 
@@ -681,6 +702,8 @@ async def add_images_and_notes_to_marker(user_name: str, imageIDsandNotesPayload
     }
     users.update_one({"username": user_name}, update)
     return {"message": "Images added successfully"}
+
+
     
 # delete image from marker
 @app.post("/users/{user_name}/{marker_id}/{image_id}/delete_image_from_marker")
@@ -743,6 +766,12 @@ async def upload_profile_picture_base64(user_name: str, payload: imagePayload):
         "data": imgdata
     }
     image_id = profile_picture_collection.insert_one(image).inserted_id
+    update = {
+        "$set": {
+            "profile_picture": str(image_id)
+        }
+    }
+    users.update_one({"username": user_name}, update)
     return {"message": "Image uploaded successfully", "image_id": str(image_id)}
 
 # Get markers for a user
@@ -1033,6 +1062,4 @@ async def delete_group(group_id: str):
             }
             users.update_one({"_id": user["_id"]}, update)
     return {"message": "Group deleted successfully"}
-
-
 
