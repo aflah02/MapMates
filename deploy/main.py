@@ -137,9 +137,12 @@ async def update_user(username: str, password: str, userfriends: list, groups: l
     users.update_one({"username": username}, update)
     return {"message": "User updated successfully"}
 
+class BioPayload(BaseModel):
+    bio: str
 # Update User Bio
 @app.put("/users/{user_name}/bio")
-async def update_user_bio(user_name: str, bio: str):
+async def update_user_bio(user_name: str, BioPayload: BioPayload):
+    bio = BioPayload.bio
     update = {
         "$set": {
             "bio": bio,
