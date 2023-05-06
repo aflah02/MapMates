@@ -72,7 +72,7 @@ class GroupOptionsBottomSheetFragment() : BottomSheetDialogFragment() {
             createGroup.visibility = View.GONE
             groupTitle.visibility = View.GONE
 //            TODO:Post An API to make a group here!!!
-            val inviteCode = createGroup(groupTitle.text.toString())
+            val inviteCode = createGroup(groupTitle.text.toString(), "Aflah")
 //            TODO:Set the generated Code as the response here!!!
             generatedCode.text = inviteCode
         }
@@ -90,8 +90,8 @@ class GroupOptionsBottomSheetFragment() : BottomSheetDialogFragment() {
         return view
     }
 
-    private fun createGroup(GroupName: String): String{
-        val url = "https://mapsapp-1-m9050519.deta.app/groups?group_name=$GroupName"
+    private fun createGroup(GroupName: String, UserName: String): String{
+        val url = "https://mapsapp-1-m9050519.deta.app/groups?group_name=$GroupName&user_name=$UserName"
         val mediaType = "application/json; charset=utf-8".toMediaType()
         val requestJSON = JSONObject()
 

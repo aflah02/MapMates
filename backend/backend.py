@@ -772,7 +772,7 @@ async def read_group(group_id: str):
 
 
 @app.post("/groups")
-async def create_group(group_name: str):
+async def create_group(group_name: str, user_name: str):
     set_of_group_invite_codes = set([group["invite_code"] for group in groups.find()])
     def random_string(length):
         letters = string.ascii_lowercase
@@ -788,6 +788,20 @@ async def create_group(group_name: str):
         "group_name": group_name,
     }
     groups.insert_one(group)
+    # get group id of group just created
+    group_id = groups.find_one({"invite_code": group_invite_code})["_id"]
+    # get user groups
+    user_groups = users.find_one({"username": user_name})["groups"]
+    # add group to user groups
+    user_groups.append(group_id)
+    # update user groups
+    update = {
+        "$set": {
+            "groups": user_groups,
+        }
+    }
+    users.update_one({"username": user_name}, update)
+
     return {"message": "Group created successfully", "invite_code": group_invite_code}
 
 # get group members
