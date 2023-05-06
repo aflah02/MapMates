@@ -13,6 +13,7 @@ import android.view.ViewGroup
 import kotlinx.coroutines.Dispatchers
 import android.content.ContentResolver
 import android.content.Context
+import android.graphics.Bitmap
 import android.provider.MediaStore
 import android.text.Editable
 import android.text.TextWatcher
@@ -23,9 +24,13 @@ import okhttp3.*
 import java.io.IOException
 import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat.startActivityForResult
+import androidx.core.graphics.drawable.toBitmap
 import androidx.core.net.toFile
 import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.mapmates.R
+import com.example.mapmates.ui.home.OnGroupItemClickListener
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
@@ -38,7 +43,7 @@ import java.util.concurrent.CountDownLatch
 
 //Write a fragment class with constructor parameters for name, latitude, and longitude
 
-class CreateFragment() : Fragment() {
+class CreateFragment() : Fragment() , OnGroupItemClickListener{
 
     private val PERMISSION_CODE = 1000
     private val IMAGE_PICK_CODE = 1001
@@ -49,8 +54,9 @@ class CreateFragment() : Fragment() {
     private lateinit var submitButton: Button
     private lateinit var nextButton: Button
     private lateinit var previousButton: Button
-    private lateinit var imageSwitchDisplay: ImageSwitcher
     private var selectedImageUris: ArrayList<Uri>?= null
+    private lateinit var imageRecyclerView: RecyclerView
+    private lateinit var imageList : ArrayList<Bitmap>
 
     // Current position/index of selected image
     private var position = 0
@@ -108,7 +114,13 @@ class CreateFragment() : Fragment() {
             }
         })
 
-//        selectedImageUris = ArrayList()
+        imageList = ArrayList<Bitmap>()
+        val adapter = ImageUploadAdapter(imageList, listener = this)
+        imageRecyclerView = view.findViewById(R.id.imageUploadRecycler)
+        imageRecyclerView.layoutManager = GridLayoutManager(requireActivity(), 3)
+        imageRecyclerView.adapter = adapter
+
+        selectedImageUris = ArrayList()
 //        nameEditText = view.findViewById(R.id.nameEditText)
 //        notesEditText = view.findViewById(R.id.notesEditText)
 //        addImageButton = view.findViewById(R.id.addImageButton)
@@ -382,6 +394,7 @@ class CreateFragment() : Fragment() {
         intent.type = "image/*"
         intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
         intent.action = Intent.ACTION_GET_CONTENT
+        activity?.overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
         startActivityForResult(Intent.createChooser(intent, "Select Image(s)"), PICK_IMAGES_CODE)
     }
 
@@ -402,7 +415,14 @@ class CreateFragment() : Fragment() {
                     // Remove repeat images
                     selectedImageUris = ArrayList(selectedImageUris!!.toSet())
                     // set the first image to imageSwitcher
-                    imageSwitchDisplay.setImageURI(selectedImageUris!![0])
+                    //Convert image uris to list of bitmap
+                    imageList = ArrayList<Bitmap>()
+                    for (i in 0 until selectedImageUris!!.size){
+                        imageList.add(MediaStore.Images.Media.getBitmap(requireContext().contentResolver, selectedImageUris!![i]))
+                    }
+
+                    val adapter = ImageUploadAdapter(imageList, listener = this)
+                    imageRecyclerView.adapter = adapter
                     position = 0
                 }
                 else{
@@ -413,10 +433,23 @@ class CreateFragment() : Fragment() {
                     selectedImageUris!!.add(imageUri!!)
                     // Remove repeat images
                     selectedImageUris = ArrayList(selectedImageUris!!.toSet())
-                    imageSwitchDisplay.setImageURI(selectedImageUris!![0])
+                    imageList = ArrayList<Bitmap>()
+                    for (i in 0 until selectedImageUris!!.size){
+                        imageList.add(MediaStore.Images.Media.getBitmap(requireContext().contentResolver, selectedImageUris!![i]))
+                    }
+
+                    val adapter = ImageUploadAdapter(imageList, listener = this)
+                    imageRecyclerView.adapter = adapter
                     position = 0
                 }
             }
         }
     }
+
+    override fun onGroupItemClick(position: Int) {
+//        Toast.makeText(requireContext(), "Group item clicked", Toast.LENGTH_SHORT).show()
+        pickImagesIntent()
+    }
+
+
 }
