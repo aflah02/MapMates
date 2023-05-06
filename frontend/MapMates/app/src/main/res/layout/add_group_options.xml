@@ -5,41 +5,45 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <Button
-        android:id="@+id/btnCreateGroup"
-        android:layout_width="222dp"
-        android:layout_height="46dp"
-        android:layout_marginStart="93dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="98dp"
-        android:text="Create"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+<!--    <Button-->
+<!--        android:id="@+id/btnCreateGroup"-->
+<!--        android:layout_width="222dp"-->
+<!--        android:layout_height="46dp"-->
+<!--        android:layout_marginStart="93dp"-->
+<!--        android:layout_marginEnd="98dp"-->
+<!--        android:text="Create"-->
+<!--        app:layout_constraintEnd_toEndOf="parent"-->
+<!--        app:layout_constraintHorizontal_bias="0.0"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        tools:layout_editor_absoluteY="342dp" />-->
 
     <Button
         android:id="@+id/btnJoinGroup"
-        android:layout_width="220dp"
-        android:layout_height="41dp"
-        android:layout_marginStart="95dp"
-        android:layout_marginTop="15dp"
-        android:layout_marginEnd="96dp"
-        android:layout_marginBottom="30dp"
+        android:layout_width="110dp"
+        android:layout_height="40dp"
+        android:layout_marginStart="32dp"
+        android:layout_marginTop="68dp"
         android:text="Join"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/groupCode" />
+        app:layout_constraintStart_toEndOf="@+id/groupCode"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/btnCreateGroup"
+        android:layout_width="110dp"
+        android:layout_height="40dp"
+        android:layout_marginStart="32dp"
+        android:layout_marginTop="165dp"
+        android:text="Create"
+        app:layout_constraintStart_toEndOf="@+id/groupTitle"
+        app:layout_constraintTop_toBottomOf="@+id/btnJoinGroup" />
 
     <EditText
         android:id="@+id/groupCode"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="100dp"
-        android:layout_marginTop="20dp"
-        android:layout_marginEnd="100dp"
+        android:layout_marginStart="50dp"
+        android:layout_marginTop="65dp"
+        android:layout_marginEnd="150dp"
         android:ems="10"
         android:hint="Enter group code"
         android:inputType="textPersonName"
@@ -47,6 +51,64 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btnCreateGroup" />
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <EditText
+        android:id="@+id/groupTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="50dp"
+        android:layout_marginTop="62dp"
+        android:layout_marginEnd="150dp"
+        android:layout_marginBottom="100dp"
+        android:ems="10"
+        android:hint="Enter group title"
+        android:inputType="textPersonName"
+        android:text=""
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView2" />
+
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="164dp"
+        android:layout_marginTop="77dp"
+        android:layout_marginEnd="164dp"
+        android:text="---------Or---------"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/groupCode" />
+
+    <TextView
+        android:id="@+id/generatedCode"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="96dp"
+        android:layout_marginTop="84dp"
+        android:layout_marginBottom="100dp"
+        android:text="Sample text"
+        android:textIsSelectable="true"
+        android:textSize="18sp"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView2" />
+
+    <ImageButton
+        android:id="@+id/copyButton"
+        android:layout_width="54dp"
+        android:layout_height="56dp"
+        android:layout_marginStart="128dp"
+        android:layout_marginTop="165dp"
+        android:background="@android:color/transparent"
+        app:layout_constraintStart_toEndOf="@+id/generatedCode"
+        app:layout_constraintTop_toBottomOf="@+id/btnJoinGroup"
+        android:visibility="invisible"
+        app:srcCompat="@drawable/baseline_content_copy_24" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
