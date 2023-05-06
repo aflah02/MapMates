@@ -761,7 +761,13 @@ async def read_groups():
 
 @app.get("/groups/{group_id}")
 async def read_group(group_id: str):
-    return groups.find_one({"_id": group_id})
+    g_data = groups.find_one({"_id": group_id})
+    g_data_members = g_data["users"]
+    g_data_string = ""
+    for member in g_data_members:
+        g_data_string += member + "<DELIMITER069>"
+    g_data["users_as_string"] = g_data_string
+    return g_data
 
 
 @app.post("/groups")
@@ -870,7 +876,6 @@ async def delete_group(group_id: str):
             }
             users.update_one({"_id": user["_id"]}, update)
     return {"message": "Group deleted successfully"}
-
 
 
 

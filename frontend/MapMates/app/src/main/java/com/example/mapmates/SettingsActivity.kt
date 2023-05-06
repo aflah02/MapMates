@@ -85,12 +85,10 @@ class SettingsActivity : AppCompatActivity() {
         val group_id = jsObj.getString("_id")
         val group_name = jsObj.getString("group_name")
         val invite_code = jsObj.getString("invite_code")
-        val members = jsObj.getJSONArray("users")
-        // Add members to ArrayList
-        val membersList = ArrayList<String>()
-        for(j in 0 until members.length()){
-            membersList.add(members.getString(j))
-        }
+        val members = jsObj.getString("g_data_string")
+        val membersListArr = members.split("<DELIMITER069>")
+        val membersListRemoveEmptyStrings = membersListArr.filter { it.isNotEmpty() }
+        val membersList = membersListRemoveEmptyStrings.map { it.trim() }
         val gData = GroupAllData(group_id, group_name, invite_code, membersList)
         return gData
     }
