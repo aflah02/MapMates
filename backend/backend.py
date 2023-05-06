@@ -957,7 +957,6 @@ async def add_user_to_group_by_invite_code(group_invite_code: str, user_name: st
     return {"message": "User added to group successfully"}
 
 # Remove a user from a group
-@app.put("/groups/{group_id}/remove_user")
 async def remove_user_from_group(group_id: str, user_name: str):
     create_users = groups.find_one({"_id": group_id})["users"]
     create_users.remove(user_name)
@@ -967,7 +966,17 @@ async def remove_user_from_group(group_id: str, user_name: str):
         }
     }
     groups.update_one({"_id": group_id}, update)
-    return {"message": "User removed from group successfully"}
+    # get user groups
+    user_groups = users.find_one({"username": user_name})["groups"]
+    # remove group from user groups
+    user_groups.remove(group_id)
+    # update user groups
+    update = {
+        "$set": {
+            "groups": user_groups,
+        }
+    }
+    users.update_one({"username": user_name}, update)
 
 # get all groups for a user
 @app.get("/users/{user_name}/all_group_details")

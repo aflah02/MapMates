@@ -57,8 +57,9 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         leaveButton.setOnClickListener {
-            val userName = "Mohit"
+            val userName = "Aflah"
             val leaveGroupResponse = groupID?.let { it1 -> leaveGroupCall(userName, it1) }
+            onBackPressed()
         }
     }
     private fun setPageDetails(groupID: String?){
@@ -173,16 +174,18 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     private fun leaveGroupCall(userName: String, groupID: String): String {
-        val url = "https://mapsapp-1-m9050519.deta.app/groups/$groupID/remove_user?user_name=$userName"
+        val url = "https://mapsapp-1-m9050519.deta.app/groups/$groupID/remove_user"
         val mediaType = "application/json; charset=utf-8".toMediaType()
-        val requestJSON = JSONObject()
+        val requestJSON = JSONObject().apply {
+            put("user_name", userName)
+        }
 
         val requestBody = requestJSON.toString().toRequestBody(mediaType)
         val request = Request.Builder()
             .addHeader("accept","application/json")
             .addHeader("Content-Type","application/json")
             .url(url)
-            .post(requestBody)
+            .put(requestBody)
             .build()
         val client = OkHttpClient()
 
@@ -205,7 +208,7 @@ class SettingsActivity : AppCompatActivity() {
         })
 
         latch.await()
-
+        Log.i("Response", APIresponse)
         return APIresponse
 
     }

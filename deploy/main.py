@@ -966,6 +966,18 @@ async def remove_user_from_group(group_id: str, user_name: str):
         }
     }
     groups.update_one({"_id": group_id}, update)
+    # get user groups
+    user_groups = users.find_one({"username": user_name})["groups"]
+    # remove group from user groups
+    user_groups.remove(group_id)
+    # update user groups
+    update = {
+        "$set": {
+            "groups": user_groups,
+        }
+    }
+    users.update_one({"username": user_name}, update)
+    
     return {"message": "User removed from group successfully"}
 
 # get all groups for a user
