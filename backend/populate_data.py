@@ -191,7 +191,9 @@ def build_users(client, user_friends, group_vs_users):
         return ''.join(random.choice(letters) for i in range(length))
 
     user_names = ["Aflah", "Aadit", "Mohit", "Kush", "Ritwick", "Neemesh", "Sohum", "Kushagra", "Nishaant", "Abhik"]
-
+    user_full_names = ["Aflah", "Aadit", "Mohit", "Kush", "Ritwick", "Neemesh", "Sohum", "Kushagra", "Nishaant", "Abhik"]
+    user_emails = [user_names[i] + "@email.com" for i in range(len(user_names))]
+    user_bios = ["I am a student at IIIT Delhi"]*len(user_names)
     # Populate the collection with 10 random entries
     for i in range(10):
 
@@ -254,6 +256,9 @@ def build_users(client, user_friends, group_vs_users):
         
         user = {
             "username": user_names[i],
+            "full_name": user_full_names[i],
+            "email": user_emails[i],
+            "bio": user_bios[i],
             "password": hashed_password,
             "userfriends": userfriends,
             "groups": groups,
@@ -274,14 +279,26 @@ def build_groups(client, group_vs_users):
     # Create a collection named "groups"
     groups = db["groups"]
 
+    # random group invite code
+    def random_string(length):
+        letters = string.ascii_lowercase
+        return ''.join(random.choice(letters) for i in range(length))
+
+    set_of_group_invite_codes = set()
     # Populate the collection with group_vs_users
     for i, group in enumerate(group_vs_users):
         random.seed(i)
+        while True:
+            group_invite_code = random_string(6)
+            if group_invite_code not in set_of_group_invite_codes:
+                break
         group = {
             "_id": str(group),
+            "invite_code": group_invite_code,
             "group_name": "Group " + str(group),
             "users": group_vs_users[group],
         }
+        set_of_group_invite_codes.add(group_invite_code)
         groups.insert_one(group)
 
     # Print the contents of the "groups" collection
