@@ -1,39 +1,31 @@
 package com.example.mapmates.ui.home
 
 import android.annotation.SuppressLint
+import android.app.Dialog
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
+import android.opengl.Visibility
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.annotation.DrawableRes
 import androidx.appcompat.content.res.AppCompatResources
-import androidx.core.content.ContentProviderCompat.requireContext
+import androidx.cardview.widget.CardView
 import androidx.core.graphics.drawable.toBitmap
-import androidx.core.view.ViewCompat.NestedScrollType
-import androidx.core.widget.NestedScrollView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import androidx.viewpager.widget.PagerAdapter
-import androidx.viewpager.widget.ViewPager
 import com.example.mapmates.R
 import com.example.mapmates.databinding.FragmentHomeBinding
-import com.example.mapmates.ui.home.placeholder.PlaceholderContent
-import com.example.mapmates.ui.people.PeoplePageAdapter
-import com.example.mapmates.ui.people.friends.FriendsFragment
-import com.example.mapmates.ui.people.groups.GroupsFragment
 import com.example.mapmates.utils.JsonParserHelper
 import com.example.mapmates.utils.LocationPermissionHelper
 import com.example.mapmates.utils.ProfileAdapter
@@ -42,37 +34,24 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.tabs.TabLayout
-import com.google.android.material.tabs.TabLayout.GONE
-import com.google.android.material.tabs.TabLayout.Tab
-import com.google.gson.JsonParser
 import com.mapbox.android.gestures.MoveGestureDetector
 import com.mapbox.geojson.Point
 import com.mapbox.maps.*
-import com.mapbox.maps.extension.style.expressions.dsl.generated.interpolate
-import com.mapbox.maps.extension.style.expressions.generated.Expression.Companion.linear
-import com.mapbox.maps.plugin.LocationPuck2D
-import com.mapbox.maps.plugin.animation.camera
 import com.mapbox.maps.plugin.annotation.annotations
 import com.mapbox.maps.plugin.annotation.generated.PointAnnotationManager
 import com.mapbox.maps.plugin.annotation.generated.PointAnnotationOptions
 import com.mapbox.maps.plugin.annotation.generated.createPointAnnotationManager
-import com.mapbox.maps.plugin.compass.compass
 import com.mapbox.maps.plugin.gestures.OnMoveListener
 import com.mapbox.maps.plugin.gestures.gestures
-import com.mapbox.maps.plugin.locationcomponent.OnIndicatorBearingChangedListener
 import com.mapbox.maps.plugin.locationcomponent.OnIndicatorPositionChangedListener
 import com.mapbox.maps.plugin.locationcomponent.location
-import com.mapbox.maps.plugin.scalebar.scalebar
-import com.mapbox.maps.viewannotation.ViewAnnotationManager
 import com.squareup.picasso.Picasso
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import okhttp3.*
-import org.json.JSONObject
 import timber.log.Timber
 import java.io.IOException
 import java.lang.ref.WeakReference
-import java.util.concurrent.CountDownLatch
 
 class HomeFragmentViewModel : ViewModel(){
     var selectedGroup:Int = -1;
@@ -185,16 +164,18 @@ class HomeFragment : Fragment(), OnGroupItemClickListener {
     private fun createBottomMarkerDialog() {
         markerSheetDialog = BottomSheetDialog(requireContext())
         markerSheetDialog.setContentView(R.layout.temp_marker_sheet)
-        markerSheetDialog.behavior.setBottomSheetCallback(object :
-            BottomSheetBehavior.BottomSheetCallback() {
-            override fun onStateChanged(bottomSheet: View, newState: Int) {
-               if(newState == BottomSheetBehavior.STATE_DRAGGING)
-                   markerSheetDialog.behavior.state = BottomSheetBehavior.STATE_EXPANDED
-            }
-
-            override fun onSlide(bottomSheet: View, slideOffset: Float) {
-            }
-            });
+        markerSheetDialog.behavior.state = BottomSheetBehavior.STATE_EXPANDED
+        markerSheetDialog.behavior.peekHeight = 600
+//        markerSheetDialog.behavior.setBottomSheetCallback(object :
+//            BottomSheetBehavior.BottomSheetCallback() {
+//            override fun onStateChanged(bottomSheet: View, newState: Int) {
+//               if(newState == BottomSheetBehavior.STATE_DRAGGING)
+//                   markerSheetDialog.behavior.state = BottomSheetBehavior.STATE_EXPANDED
+//            }
+//
+//            override fun onSlide(bottomSheet: View, slideOffset: Float) {
+//            }
+//            });
 //        val scroller :NestedScrollView =markerSheetDialog.findViewById(R.id.test)
         val closeButton : ImageButton = markerSheetDialog.findViewById(R.id.closeDialog)!!
 //        val viewFlipper: ViewFlipper = markerSheetDialog.findViewById(R.id.viewFlipper)!!
@@ -315,6 +296,50 @@ class HomeFragment : Fragment(), OnGroupItemClickListener {
         groupSheetDialog.dismiss()
     }
 
+    override fun onImageNoteClick(position: Int, s: String) {
+        //Popup a layout
+        val dialog = Dialog(requireContext())
+        dialog.setContentView(R.layout.image_note_popup)
+        val imageView = dialog.findViewById<ImageView>(R.id.image)
+        val profile = dialog.findViewById<ImageView>(R.id.profile_picture)
+        val popupUserName = dialog.findViewById<TextView>(R.id.user_name)
+        val noteCard = dialog.findViewById<CardView>(R.id.note_card)
+        val delete = dialog.findViewById<ExtendedFloatingActionButton>(R.id.deleteFab)
+        val note = dialog.findViewById<TextView>(R.id.note)
+        if(s == "note"){
+            imageView.visibility = View.GONE
+            noteCard.visibility = View.VISIBLE
+            val temp_adapter = notesRecyclerView.adapter!! as MyNotesRecyclerViewAdapter
+            note.text = temp_adapter.notes[position]
+            popupUserName.text = markersList[currentMarker].noteUploaders[position]
+            profile.setImageBitmap(temp_adapter.uploader[position])
+        }
+        else{
+            imageView.visibility = View.VISIBLE
+            noteCard.visibility = View.GONE
+            val temp_adapter = imageRecyclerView.adapter!! as MyImageRecyclerViewAdapter
+            imageView.setImageBitmap(temp_adapter.images[position])
+            popupUserName.text = temp_adapter.uploaderNames[position]
+            profile.setImageBitmap(temp_adapter.uploader[position])
+        }
+        if(popupUserName.text != "Aflah"){
+            delete.visibility = View.GONE
+        }
+        else{
+            delete.visibility = View.VISIBLE
+        }
+        delete.setOnClickListener(View.OnClickListener {
+            if(s == "note"){
+                Toast.makeText(requireContext(), "Note Deleted", Toast.LENGTH_SHORT).show()
+            }
+            else{
+                Toast.makeText(requireContext(), "Image Deleted", Toast.LENGTH_SHORT).show()
+            }
+            dialog.dismiss()
+        });
+        dialog.show()
+    }
+
     private fun getGroupDetails(username: String) {
         var responseString : String? = null
         val client = OkHttpClient()
@@ -403,16 +428,24 @@ class HomeFragment : Fragment(), OnGroupItemClickListener {
                         imageRecyclerViewAdapter.uploader[i] = stringToBitmap[imageRecyclerViewAdapter.uploaderNames[i]]!!
                     }
                 }
+                val imageBitmaps = mutableListOf<Bitmap>()
+                for(i in 0 until markersList[idx].notes.size){
+                    imageBitmaps.add(stringToBitmap[markersList[idx].noteUploaders[i]]!!)
+                }
+                val notesRecyclerViewAdapter =
+                    MyNotesRecyclerViewAdapter(markersList[idx].notes, imageBitmaps,this@HomeFragment)
+                notesRecyclerView.adapter = notesRecyclerViewAdapter
                 imageRecyclerViewAdapter.notifyDataSetChanged()
                 profileRecyclerViewAdapter.notifyDataSetChanged()
+                notesRecyclerViewAdapter.notifyDataSetChanged()
             }
         }
 
         val imageRecyclerViewAdapter =
-            MyImageRecyclerViewAdapter(mutableListOf(), mutableListOf(), mutableListOf())
+            MyImageRecyclerViewAdapter(mutableListOf(), mutableListOf(), mutableListOf(),this)
         imageRecyclerView.adapter = imageRecyclerViewAdapter
         val notesRecyclerViewAdapter =
-            MyNotesRecyclerViewAdapter(listOf(), listOf())
+            MyNotesRecyclerViewAdapter(listOf(), listOf(),this)
         notesRecyclerView.adapter = notesRecyclerViewAdapter
 
         GlobalScope.launch {
@@ -438,12 +471,8 @@ class HomeFragment : Fragment(), OnGroupItemClickListener {
             requireActivity().runOnUiThread {
                 if(currentMarker != idx) return@runOnUiThread
                 val imageRecyclerViewAdapter =
-                    MyImageRecyclerViewAdapter(imageBitmaps, imageUploaderBitmaps, imageUploaderNames)
+                    MyImageRecyclerViewAdapter(imageBitmaps, imageUploaderBitmaps, imageUploaderNames,this@HomeFragment)
                 imageRecyclerView.adapter = imageRecyclerViewAdapter
-                val notesRecyclerViewAdapter =
-                    MyNotesRecyclerViewAdapter(markersList[idx].notes, imageBitmaps)
-                notesRecyclerView.adapter = notesRecyclerViewAdapter
-
             }
         }
 

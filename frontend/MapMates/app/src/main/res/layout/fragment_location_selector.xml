@@ -21,6 +21,7 @@
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
         app:boxBackgroundColor="@color/white"
         android:layout_marginTop="35dp"
+        android:id="@+id/name_field_layout"
         android:layout_marginStart="15dp"
         android:layout_marginEnd="15dp"
         android:layout_width="match_parent"
@@ -59,4 +60,15 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         tools:ignore="RtlCompat" />
+
+    <com.jaredrummler.materialspinner.MaterialSpinner
+        android:id="@+id/my_spinner"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@+id/name_field_layout"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginBottom="30dp"
+        android:layout_marginEnd="20dp"
+        />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
