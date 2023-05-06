@@ -14,19 +14,19 @@ import kotlinx.coroutines.Dispatchers
 import android.content.ContentResolver
 import android.content.Context
 import android.provider.MediaStore
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.Base64
+import android.widget.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.*
 import java.io.IOException
-import android.widget.Button
-import android.widget.EditText
-import android.widget.ImageSwitcher
-import android.widget.ImageView
-import android.widget.Toast
 import androidx.annotation.RequiresApi
+import androidx.core.app.ActivityCompat.startActivityForResult
 import androidx.core.net.toFile
 import androidx.fragment.app.Fragment
 import com.example.mapmates.R
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
 import org.json.JSONObject
@@ -36,7 +36,9 @@ import java.io.InputStream
 import java.net.URLEncoder
 import java.util.concurrent.CountDownLatch
 
-class CreateFragment : Fragment() {
+//Write a fragment class with constructor parameters for name, latitude, and longitude
+
+class CreateFragment() : Fragment() {
 
     private val PERMISSION_CODE = 1000
     private val IMAGE_PICK_CODE = 1001
@@ -59,64 +61,112 @@ class CreateFragment : Fragment() {
 
     @SuppressLint("Range")
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+
         val view = inflater.inflate(R.layout.newmarkerformlayout, container, false)
-        selectedImageUris = ArrayList()
-        nameEditText = view.findViewById(R.id.nameEditText)
-        notesEditText = view.findViewById(R.id.notesEditText)
-        addImageButton = view.findViewById(R.id.addImageButton)
-        submitButton = view.findViewById(R.id.submitButton)
-        nextButton = view.findViewById(R.id.nextButton)
-        previousButton = view.findViewById(R.id.previousButton)
-        imageSwitchDisplay = view.findViewById(R.id.imageSwitcher)
-        var applicationContext = requireActivity().applicationContext
-//        imageSwitchDisplay.setFactory { ImageView(applicationContext) }
-        imageSwitchDisplay.setFactory {
-            val myView = ImageView(applicationContext)
-            myView.scaleType = ImageView.ScaleType.FIT_CENTER
-            myView
+
+        val name = arguments?.getString("name")
+        val latitude = arguments?.getDouble("latitude")
+        val longitude = arguments?.getDouble("longitude")
+
+        val addNotesButton: FloatingActionButton = view.findViewById(R.id.addNotesButton)
+        val notesContainer: LinearLayout = view.findViewById(R.id.notesContainer)
+        val notesText: EditText = view.findViewById(R.id.note_adder)
+        val markerNameTextView: TextView = view.findViewById(R.id.markerNameTextView)
+        markerNameTextView.text = name.toString().trim()
+
+        addNotesButton.setOnClickListener {
+            val newNote = TextView(requireActivity())
+            // set text size to 20sp, layout_margin to 10dp, and center align
+            newNote.textSize = 20f
+            newNote.textAlignment = View.TEXT_ALIGNMENT_CENTER
+            // set margin to 10dp
+            val params = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            params.setMargins(0, 10, 0, 10)
+            newNote.text = notesText.text.toString().trim()
+            notesContainer.addView(newNote)
+            notesText.text.clear()
+            addNotesButton.isEnabled = false
         }
-        addImageButton.setOnClickListener {
-            pickImagesIntent()
-        }
+        addNotesButton.isEnabled = false
 
-        submitButton.setOnClickListener {
-            val imageURIs = selectedImageUris
-
-            // Upload the images
-            val context = requireActivity().applicationContext
-            val imageIDs = ArrayList<String>()
-            for (uri in imageURIs!!){
-                val encodedImage = getImageAsURLEncodedBinaryString(context.contentResolver, uri)
-                val imageID = uploadImage(encodedImage!!)
-                imageIDs.add(imageID!!)
+        // TextWatcher for edit text
+        notesText.addTextChangedListener(object: TextWatcher {
+            override fun afterTextChanged(s: Editable?) {
+                // do nothing
             }
-            Log.i("Image IDs", imageIDs.toString())
-//            uploadMarker(imageIDs)
-            updateMarker(imageIDs)
-            Log.i("Upload", "Marker uploaded")
 
-        }
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+                // do nothing
+            }
 
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                // if text is empty, hide the button
+                addNotesButton.isEnabled = !s.toString().trim().isEmpty()
+            }
+        })
 
-        nextButton.setOnClickListener {
-            if (position < selectedImageUris!!.size - 1){
-                position++
-                imageSwitchDisplay.setImageURI(selectedImageUris!![position])
-            }
-            else{
-                Toast.makeText(requireActivity(), "No more images", Toast.LENGTH_SHORT).show()
-            }
-        }
-
-        previousButton.setOnClickListener {
-            if (position > 0){
-                position--
-                imageSwitchDisplay.setImageURI(selectedImageUris!![position])
-            }
-            else{
-                Toast.makeText(requireActivity(), "No more images", Toast.LENGTH_SHORT).show()
-            }
-        }
+//        selectedImageUris = ArrayList()
+//        nameEditText = view.findViewById(R.id.nameEditText)
+//        notesEditText = view.findViewById(R.id.notesEditText)
+//        addImageButton = view.findViewById(R.id.addImageButton)
+//        submitButton = view.findViewById(R.id.submitButton)
+//        nextButton = view.findViewById(R.id.nextButton)
+//        previousButton = view.findViewById(R.id.previousButton)
+//        imageSwitchDisplay = view.findViewById(R.id.imageSwitcher)
+//
+//        Toast.makeText(requireActivity(), "Name: $name, Latitude: $latitude, Longitude: $longitude", Toast.LENGTH_SHORT).show()
+//        var applicationContext = requireActivity().applicationContext
+////        imageSwitchDisplay.setFactory { ImageView(applicationContext) }
+//        imageSwitchDisplay.setFactory {
+//            val myView = ImageView(applicationContext)
+//            myView.scaleType = ImageView.ScaleType.FIT_CENTER
+//            myView
+//        }
+//        addImageButton.setOnClickListener {
+//            pickImagesIntent()
+//        }
+//
+//        submitButton.setOnClickListener {
+//            val imageURIs = selectedImageUris
+//
+//            // Upload the images
+//            val context = requireActivity().applicationContext
+//            val imageIDs = ArrayList<String>()
+//            for (uri in imageURIs!!){
+//                val encodedImage = getImageAsURLEncodedBinaryString(context.contentResolver, uri)
+//                val imageID = uploadImage(encodedImage!!)
+//                imageIDs.add(imageID!!)
+//            }
+//            Log.i("Image IDs", imageIDs.toString())
+////            uploadMarker(imageIDs)
+//            updateMarker(imageIDs)
+//            Log.i("Upload", "Marker uploaded")
+//
+//        }
+//
+//
+//        nextButton.setOnClickListener {
+//            if (position < selectedImageUris!!.size - 1){
+//                position++
+//                imageSwitchDisplay.setImageURI(selectedImageUris!![position])
+//            }
+//            else{
+//                Toast.makeText(requireActivity(), "No more images", Toast.LENGTH_SHORT).show()
+//            }
+//        }
+//
+//        previousButton.setOnClickListener {
+//            if (position > 0){
+//                position--
+//                imageSwitchDisplay.setImageURI(selectedImageUris!![position])
+//            }
+//            else{
+//                Toast.makeText(requireActivity(), "No more images", Toast.LENGTH_SHORT).show()
+//            }
+//        }
 
         return view
     }

@@ -6,6 +6,7 @@ import android.graphics.Canvas
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.os.Bundle
+import android.text.TextWatcher
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -93,16 +94,39 @@ class LocationSelectorFragment : Fragment() {
         pointAnnotationManager = mapView.annotations.createPointAnnotationManager()
         mapView.getMapboxMap().addOnCameraChangeListener(onCameraChangeListener)
         val nextFab = binding.nextFab
+        val nameField = binding.nameField
+        nextFab.isEnabled = false
         nextFab.setOnClickListener {
             // replace current fragment with new fragment
+            val bundle = Bundle()
+            bundle.putString("name", nameField.text.toString())
+            bundle.putDouble("latitude", mapView.getMapboxMap().cameraState.center.latitude())
+            bundle.putDouble("longitude", mapView.getMapboxMap().cameraState.center.longitude())
+
             val newFragment = CreateFragment()
+            newFragment.arguments = bundle
             val transaction = parentFragmentManager.beginTransaction()
 //            transaction.remove(this)
             transaction.replace(R.id.nav_host_fragment_activity_main, newFragment)
-            transaction.setReorderingAllowed(true)
             transaction.addToBackStack(null)
+            transaction.setReorderingAllowed(true)
             transaction.commit()
         }
+        // create onTextChangeListener for nameField with TextWatcher
+        val nameFieldTextWatcher = object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+                // do nothing
+            }
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                nextFab.isEnabled = s.toString().trim().isNotEmpty()
+            }
+
+            override fun afterTextChanged(s: android.text.Editable?) {
+                // do nothing
+            }
+        }
+        nameField.addTextChangedListener(nameFieldTextWatcher)
         return root
     }
 

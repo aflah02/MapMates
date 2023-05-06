@@ -2,68 +2,111 @@
 
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:id="@+id/newMarkerFormLayout"
     android:padding="16dp">
 
-    <EditText
-        android:id="@+id/nameEditText"
+
+    <TextView
+        android:id="@+id/markerNameTextView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Name" />
+        android:textSize="30sp"
+        android:textAlignment="center"
+        android:text="Marker Name"
+        android:textStyle="bold"
+        android:layout_margin="30dp"
+        />
 
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/nestedScrollView"
+        android:layout_width="match_parent"
+        android:layout_height="200dp">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:id="@+id/notesContainer"
+            >
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
 
-    <EditText
-        android:id="@+id/notesEditText"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Notes" />
-
-    <Button
-        android:id="@+id/addImageButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Add Images" />
-
-<!--    Image View with default image -->
-    <ImageSwitcher
-        android:id="@+id/imageSwitcher"
-        android:layout_width="match_parent"
-        android:layout_height="250dp"
-        android:layout_marginTop="10dp"
-        android:layout_marginBottom="10dp"
-        android:layout_gravity="center_horizontal"
+        android:orientation="horizontal"
+        android:layout_gravity="center"
         >
-    </ImageSwitcher>
 
-<!--    Next and Previous Button-->
-    <RelativeLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        >
-    <Button
-        android:id="@+id/previousButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:text="Prev" />
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            app:boxBackgroundColor="@color/white"
+            android:layout_weight="1"
+            android:layout_margin="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Add a note"
+            app:endIconDrawable="@drawable/ic_create"
+            >
 
-        <Button
-            android:id="@+id/nextButton"
+            <com.google.android.material.textfield.TextInputEditText
+                android:id = "@+id/note_adder"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="text"
+                android:maxLength="250"
+                android:maxLines="1"
+                />
+        </com.google.android.material.textfield.TextInputLayout>
+
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/addNotesButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="right"
-            android:layout_alignParentRight="true"
-            android:text="Next" />
-
-    </RelativeLayout>
-
-    <Button
-        android:id="@+id/submitButton"
+            android:layout_margin="10dp"
+            android:backgroundTint="@color/purple_200"
+            android:layout_weight="0"
+            android:clickable="true"
+            app:srcCompat="@drawable/ic_create" />
+    </LinearLayout>
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/nestedScrollView2"
+        android:layout_width="match_parent"
+        android:layout_height="200dp">
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/imageTab"
+        android:name="com.example.mapmates.ui.home.ImageFragment"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Submit" />
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        app:layoutManager="LinearLayoutManager"
+        tools:listitem="@layout/fragment_image"
 
+        />
+
+    </androidx.core.widget.NestedScrollView>
+
+    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+        android:id="@+id/nextFab"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginTop="30dp"
+        android:layout_marginBottom="70dp"
+        android:clickable="true"
+        android:textAllCaps="false"
+        android:focusable="true"
+        android:text="Upload I"
+        android:textAlignment="center"
+        app:backgroundTint="@color/white"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:ignore="RtlCompat" />
 </LinearLayout>
