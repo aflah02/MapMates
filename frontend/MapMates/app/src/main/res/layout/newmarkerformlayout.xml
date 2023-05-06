@@ -5,6 +5,7 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:id="@+id/newMarkerFormLayout"
     android:padding="16dp">
 
     <EditText
@@ -13,11 +14,6 @@
         android:layout_height="wrap_content"
         android:hint="Name" />
 
-    <EditText
-        android:id="@+id/descriptionEditText"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Description" />
 
     <EditText
         android:id="@+id/notesEditText"

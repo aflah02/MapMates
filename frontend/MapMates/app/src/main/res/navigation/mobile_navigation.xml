@@ -19,9 +19,9 @@
 
     <fragment
         android:id="@+id/navigation_create"
-        android:name="com.example.mapmates.ui.create.CreateFragment"
+        android:name="com.example.mapmates.ui.create.LocationSelectorFragment"
         android:label="@string/title_create"
-        tools:layout="@layout/fragment_create" />
+        tools:layout="@layout/fragment_location_selector" />
 
     <fragment
         android:id="@+id/navigation_people"

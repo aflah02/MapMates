@@ -260,15 +260,14 @@ class HomeFragment : Fragment(), OnGroupItemClickListener {
         for (i in 0 until groupsRecyclerView.childCount) {
             val holder = groupsRecyclerView.getChildViewHolder(groupsRecyclerView.getChildAt(i))
             if(i == position) {
-                // select
                 holder.itemView.findViewById<TextView>(R.id.groupName).setTextColor(Color.DKGRAY)
+                if(groupsList[i].isShowing) {
+                    groupSheetDialog.dismiss()
+                    return
+                }
+                // select
                 // get groupName
                 groupsList[i].isShowing = true
-            }
-            else {
-                // deselect
-                holder.itemView.findViewById<TextView>(R.id.groupName).setTextColor(Color.GRAY)
-                groupsList[i].isShowing = false
             }
         }
         // reset markers
@@ -385,24 +384,9 @@ class HomeFragment : Fragment(), OnGroupItemClickListener {
                     }
                 });
             }
-            //Add fragments for image and notes
         }
 
     }
-
-//    private fun updateMarkerPage(matchId: Long) {
-//        var idx = -1
-//        for (i in 0 until markerIdList.size){
-//            if(markerIdList[i] == matchId){
-//                idx = i
-//            }
-//        }
-//        currentMarker = idx
-//        if(idx == -1) return
-//        // Setup Notes and names
-//        val adapter = MarkerNotesAdapter(markersList[idx].notes, markersList[idx].noteUploaders)
-//        markerNotesRecyclerView.adapter = adapter
-//        val markerName: TextView = markerSheetDialog.findViewById(R.id.markerHeading)!!
 
     private fun getAndUpdateMarkerDetails(groupId: String) {
         if(groupId == "friends") {
@@ -437,12 +421,12 @@ class HomeFragment : Fragment(), OnGroupItemClickListener {
         })
     }
     private fun onMapReady() {
-        mapView.scalebar.updateSettings {
-            enabled = false
-        }
-        mapView.compass.updateSettings {
-            enabled = false
-        }
+//        mapView.scalebar.updateSettings {
+//            enabled = false
+//        }
+//        mapView.compass.updateSettings {
+//            enabled = false
+//        }
         mapView.getMapboxMap().setCamera(
             CameraOptions.Builder()
                 .zoom(14.0)
@@ -466,26 +450,6 @@ class HomeFragment : Fragment(), OnGroupItemClickListener {
         val locationComponentPlugin = mapView.location
         locationComponentPlugin.updateSettings {
             this.enabled = true
-            this.locationPuck = LocationPuck2D(
-                bearingImage = context?.let {
-                    AppCompatResources.getDrawable(
-                        it,
-                        R.drawable.ic_launcher_foreground,
-                    )
-                },
-                scaleExpression = interpolate {
-                    linear()
-                    zoom()
-                    stop {
-                        literal(0.0)
-                        literal(0.6)
-                    }
-                    stop {
-                        literal(20.0)
-                        literal(1.0)
-                    }
-                }.toJson()
-            )
         }
         locationComponentPlugin.addOnIndicatorPositionChangedListener(onIndicatorPositionChangedListener)
     }

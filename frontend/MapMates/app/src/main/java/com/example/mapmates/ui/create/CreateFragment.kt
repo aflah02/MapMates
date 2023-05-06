@@ -62,7 +62,6 @@ class CreateFragment : Fragment() {
         val view = inflater.inflate(R.layout.newmarkerformlayout, container, false)
         selectedImageUris = ArrayList()
         nameEditText = view.findViewById(R.id.nameEditText)
-        descriptionEditText = view.findViewById(R.id.descriptionEditText)
         notesEditText = view.findViewById(R.id.notesEditText)
         addImageButton = view.findViewById(R.id.addImageButton)
         submitButton = view.findViewById(R.id.submitButton)
