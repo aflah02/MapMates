@@ -516,30 +516,41 @@ async def delete_marker_data(user_name: str, marker_id: str, data_type: str, pos
         return {"message": "Marker not found"}
     # delete data
     if data_type == "image":
+        print("image")
+        # print("Before")
+        
         ls_images_updated = marker["image"]
+        print(ls_images_updated)
         ls_images_updated.pop(int(position))
+        print(ls_images_updated)
+        
         ls_image_uploaders_updated = marker["image_uploaders"]
+        print(ls_image_uploaders_updated)
         ls_image_uploaders_updated.pop(int(position))
-        update = {
-            "$set": {
-                "image": ls_images_updated,
-                "image_uploaders": ls_image_uploaders_updated
-            }
-        }
+        print(ls_image_uploaders_updated)
+        for m in user_markers:
+            if str(m["_id"]) == marker_id:
+                m["image"] = ls_images_updated
+                m["image_uploaders"] = ls_image_uploaders_updated
     elif data_type == "note":
+        print("note")
         ls_notes_updated = marker["notes"]
+        print(ls_notes_updated)
         ls_notes_updated.pop(int(position))
+        print(ls_notes_updated)
         ls_notes_uploaders_updated = marker["notes_uploaders"]
+        print(ls_notes_uploaders_updated)
         ls_notes_uploaders_updated.pop(int(position))
-        update = {
-            "$set": {
-                "notes": ls_notes_updated,
-                "notes_uploaders": ls_notes_uploaders_updated
-            }
-        }
+        print(ls_notes_uploaders_updated)
+        for m in user_markers:
+            if str(m["_id"]) == marker_id:
+                m["notes"] = ls_notes_updated
+                m["notes_uploaders"] = ls_notes_uploaders_updated
     else:
         return {"message": "Invalid data_type"}
     # update marker
+    update = {"$set": {"markers": user_markers}}
+    print(update)
     users.update_one({"username": user_name}, update)
     return {"message": "Data deleted successfully"}
 
