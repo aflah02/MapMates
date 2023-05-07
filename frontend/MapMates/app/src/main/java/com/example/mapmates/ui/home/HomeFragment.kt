@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.Dialog
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
@@ -26,6 +27,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.mapmates.EntryActivity
 import com.example.mapmates.R
 import com.example.mapmates.databinding.FragmentHomeBinding
 import com.example.mapmates.ui.create.CreateFragment
@@ -115,7 +117,13 @@ class HomeFragment : Fragment(), OnGroupItemClickListener {
 
         // get username from shared preferences
         val sharedPrefs = requireActivity().getSharedPreferences("Login", MODE_PRIVATE)
-        username = sharedPrefs.getString("Username",null)!!
+        username = sharedPrefs.getString("Username",null).toString()
+        if(username.isBlank()){
+            //Run EntryActivity
+            val intent = Intent(requireActivity(), EntryActivity::class.java)
+            startActivity(intent)
+            activity?.overridePendingTransition(android.R.anim.fade_in,android.R.anim.fade_out)
+        }
 
         mapView = binding.mapView
         locationPermissionHelper = LocationPermissionHelper(WeakReference(requireActivity()))
@@ -389,11 +397,11 @@ class HomeFragment : Fragment(), OnGroupItemClickListener {
         dialog.show()
     }
     private fun queryToDeleteData(dusername: String, markerId: String, type: String, position: Int) {
-        Toast.makeText(
-            requireContext(),
-            "$dusername, $markerId, $type, $position",
-            Toast.LENGTH_SHORT
-        ).show()
+//        Toast.makeText(
+//            requireContext(),
+//            "$dusername, $markerId, $type, $position",
+//            Toast.LENGTH_SHORT
+//        ).show()
         val query = "https://mapsapp-1-m9050519.deta.app/users/$dusername/delete_marker_data?marker_id=$markerId&data_type=$type&position=$position"
         val url = query
         val mediaType = "application/json; charset=utf-8".toMediaType()
@@ -403,7 +411,7 @@ class HomeFragment : Fragment(), OnGroupItemClickListener {
 //        requestJSON.put("data_type", type)
 //        requestJSON.put("position", "$position")
 
-        Toast.makeText(requireContext(), requestJSON.toString(), Toast.LENGTH_LONG).show()
+//        Toast.makeText(requireContext(), requestJSON.toString(), Toast.LENGTH_LONG).show()
         Timber.tag("Delfrag").i(requestJSON.toString())
 
         val requestBody = requestJSON.toString().toRequestBody(mediaType)

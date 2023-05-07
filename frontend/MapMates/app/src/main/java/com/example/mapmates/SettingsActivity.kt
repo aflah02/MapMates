@@ -45,6 +45,7 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var groupPicture:ImageView
     private lateinit var adapter:GroupMemberAdapter
     private lateinit var memberList:List<FriendData>
+    private var user = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         var groupID = intent.getStringExtra("groupID")
@@ -52,6 +53,7 @@ class SettingsActivity : AppCompatActivity() {
 
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_settings)
+
         //TODO: get group title, group members in the form of friends data like friend fragment using API call using setPageDetails()
         groupTitle = findViewById(R.id.GroupTitle)
         groupCode = findViewById(R.id.groupCode)
@@ -71,9 +73,19 @@ class SettingsActivity : AppCompatActivity() {
             Toast.makeText(this, "Text copied to clipboard", Toast.LENGTH_LONG).show()
         }
 
+        //Load SharedPrefs user
+        val sharedPrefs = getSharedPreferences("Login", Context.MODE_PRIVATE)
+        user = sharedPrefs.getString("Username",null).toString()
+        if(user.isBlank()){
+            //Run EntryActivity
+            val intent = Intent(this, EntryActivity::class.java)
+            startActivity(intent)
+            overridePendingTransition(android.R.anim.fade_in,android.R.anim.fade_out)
+        }
+
         leaveButton.setOnClickListener {
-            val userName = "Aflah"
-            val leaveGroupResponse = groupID?.let { it1 -> leaveGroupCall(userName, it1) }
+
+            val leaveGroupResponse = groupID?.let { it1 -> leaveGroupCall(user, it1) }
             onBackPressed()
         }
         editTitle.setOnClickListener {

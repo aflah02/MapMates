@@ -1,5 +1,6 @@
 package com.example.mapmates
 
+import android.content.Context
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -18,6 +19,7 @@ class FriendActivityProfile : AppCompatActivity() {
     private lateinit var tempContact: TextView
     private lateinit var tempImage: ImageView
     private lateinit var tempButton: Button
+    private var user = ""
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -35,10 +37,17 @@ class FriendActivityProfile : AppCompatActivity() {
         tempName.text = friendName
         tempContact.text = friendContact
         Picasso.get().load(friendProfilePic).into(tempImage)
+        val sharedPrefs = getSharedPreferences("Login", Context.MODE_PRIVATE)
+        user = sharedPrefs.getString("Username",null).toString()
+        if(user.isBlank()){
+            //Run EntryActivity
+            val intent = Intent(this, EntryActivity::class.java)
+            startActivity(intent)
+            overridePendingTransition(android.R.anim.fade_in,android.R.anim.fade_out)
+        }
         tempButton.setOnClickListener{
-            val userName = "Aflah" // replace with the user name of the logged-in user
             // get the name of the friend whose request is being accepted
-            val url = "https://mapsapp-1-m9050519.deta.app/users/$userName/$friendName/removefriend"
+            val url = "https://mapsapp-1-m9050519.deta.app/users/$user/$friendName/removefriend"
             val client = OkHttpClient()
             val request = Request.Builder()
                 .url(url)

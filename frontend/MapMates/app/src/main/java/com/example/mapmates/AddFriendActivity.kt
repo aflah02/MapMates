@@ -1,5 +1,7 @@
 package com.example.mapmates
 
+import android.content.Context
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.SearchView
@@ -21,11 +23,20 @@ class AddFriendActivity : AppCompatActivity() {
     private lateinit var searchViewFriends: SearchView
     private lateinit var searchResultAdapter: GlobalFriendsAdapter
     private lateinit var searchResults: List<RequestFriendData>
+    private var user = ""
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add_friend)
         globalNames = findViewById(R.id.global_recycler_view)
         setFriendsRecycler()
+        val sharedPrefs = getSharedPreferences("Login", Context.MODE_PRIVATE)
+        user = sharedPrefs.getString("Username",null).toString()
+        if(user.isBlank()){
+            //Run EntryActivity
+            val intent = Intent(this, EntryActivity::class.java)
+            startActivity(intent)
+            overridePendingTransition(android.R.anim.fade_in,android.R.anim.fade_out)
+        }
 
         searchViewFriends = findViewById(R.id.global_search_view)
         searchFriends()
@@ -62,7 +73,7 @@ class AddFriendActivity : AppCompatActivity() {
 
     private fun getGlobalPeople(): List<RequestFriendData> {
         val friendsList = mutableListOf<RequestFriendData>()
-        val jsonString = globalJsonCall("Aflah")
+        val jsonString = globalJsonCall(user)
         if(jsonString!=null){
             val jsonObjectArray = parseJson(jsonString)
             if (jsonObjectArray != null) {
@@ -118,7 +129,7 @@ class AddFriendActivity : AppCompatActivity() {
     }
     private fun getFilteredPeople(text: String): List<RequestFriendData> {
         val friendsList = mutableListOf<RequestFriendData>()
-        val jsonString = filteredJsonCall("Aflah",text)
+        val jsonString = filteredJsonCall(user,text)
         if(jsonString!=null){
             val jsonObjectArray = parseJson(jsonString)
             if (jsonObjectArray != null) {

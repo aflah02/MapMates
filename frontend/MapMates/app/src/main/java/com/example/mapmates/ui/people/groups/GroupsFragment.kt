@@ -1,5 +1,6 @@
 package com.example.mapmates.ui.people.groups
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -10,6 +11,7 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.mapmates.AddFriendActivity
+import com.example.mapmates.EntryActivity
 import com.example.mapmates.R
 import com.example.mapmates.SettingsActivity
 import com.example.mapmates.ui.people.friends.FriendData
@@ -28,6 +30,7 @@ class GroupsFragment : Fragment() {
 
     private lateinit var groupRecyclerView: RecyclerView
     private lateinit var adapter: GroupsAdapter
+    private var user = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -69,8 +72,16 @@ class GroupsFragment : Fragment() {
 
     private fun getGroupList(): List<GroupData> {
         val groupList = mutableListOf<GroupData>()
+        val sharedPrefs = requireActivity().getSharedPreferences("Login", Context.MODE_PRIVATE)
+        user = sharedPrefs.getString("Username",null).toString()
+        if(user.isBlank()){
+            //Run EntryActivity
+            val intent = Intent(requireActivity(), EntryActivity::class.java)
+            startActivity(intent)
+            activity?.overridePendingTransition(android.R.anim.fade_in,android.R.anim.fade_out)
+        }
 
-        val jsonString = getGroupDetails("Aflah")
+        val jsonString = getGroupDetails(user)
         if(jsonString!=null){
             val jsonObjectArray = parseJson(jsonString)
             if (jsonObjectArray != null) {

@@ -2,6 +2,7 @@ package com.example.mapmates.ui.profile
 
 import android.app.Activity.RESULT_OK
 import android.content.ContentResolver
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import com.squareup.picasso.Picasso
@@ -21,6 +22,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import com.example.mapmates.EntryActivity
 import com.example.mapmates.R
 import com.example.mapmates.ui.people.friends.FriendData
 import com.squareup.picasso.MemoryPolicy
@@ -45,12 +47,20 @@ class ProfileFragment : Fragment() {
     private lateinit var userName: TextView
     private lateinit var userBio: EditText
     private lateinit var logoutButton: Button
+    private var user = ""
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.fragment_profile, container, false)
         profilePicture = view.findViewById(R.id.profile_picture)
 //        TODO: Set name, Username and Bio
-        val user = "Aflah"
+        val sharedPrefs = requireActivity().getSharedPreferences("Login", Context.MODE_PRIVATE)
+        user = sharedPrefs.getString("Username",null).toString()
+        if(user.isBlank()){
+            //Run EntryActivity
+            val intent = Intent(requireActivity(), EntryActivity::class.java)
+            startActivity(intent)
+            activity?.overridePendingTransition(android.R.anim.fade_in,android.R.anim.fade_out)
+        }
         val uInfo = getUserInfo(user)?.let { parseJson(it) }
         name = view.findViewById(R.id.nameView)
         userName = view.findViewById(R.id.userNameView)
@@ -62,9 +72,7 @@ class ProfileFragment : Fragment() {
         editBioButton = view.findViewById(R.id.editBioButton)
         saveBioButton = view.findViewById(R.id.saveBioButton)
         logoutButton = view.findViewById(R.id.logoutButton)
-        val UserName = "Aflah"
-//        TODO: get person picture put is in this link
-        Picasso.get().load("https://mapsapp-1-m9050519.deta.app/users/$UserName/profile_picture").into(profilePicture)
+        Picasso.get().load("https://mapsapp-1-m9050519.deta.app/users/$user/profile_picture").into(profilePicture)
 
         editBioButton.setOnClickListener {
             userBio.isEnabled = true
@@ -76,7 +84,7 @@ class ProfileFragment : Fragment() {
 //            TODO: post the value of edit text button
             val newBio = userBio.text.toString()
             userBio.setText(newBio)
-            setBioCall(UserName, newBio)
+            setBioCall(user, newBio)
             userBio.inputType = InputType.TYPE_NULL
             userBio.isEnabled = false
             saveBioButton.visibility = View.GONE
@@ -137,7 +145,7 @@ class ProfileFragment : Fragment() {
 
     private fun uploadImage(encodedImage: String): String? {
         var imageID : String? = null
-        val url = "https://mapsapp-1-m9050519.deta.app/users/Aflah/upload_profile_picture_url_encoded_base64"
+        val url = "https://mapsapp-1-m9050519.deta.app/users/$user/upload_profile_picture_url_encoded_base64"
         val mediaType = "application/json; charset=utf-8".toMediaType()
         val requestJSON = JSONObject()
         requestJSON.put("image", encodedImage)
@@ -252,7 +260,7 @@ class ProfileFragment : Fragment() {
         var responseString : String? = null
         val client = OkHttpClient()
         val request = Request.Builder()
-            .url("https://mapsapp-1-m9050519.deta.app/users/Aflah")
+            .url("https://mapsapp-1-m9050519.deta.app/users/$user")
             .build()
         val latch = CountDownLatch(1)
         client.newCall(request).enqueue(object : Callback {

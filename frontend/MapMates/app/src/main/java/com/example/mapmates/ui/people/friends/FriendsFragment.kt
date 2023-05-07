@@ -1,13 +1,16 @@
 package com.example.mapmates.ui.people.friends
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.SearchView
+import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.mapmates.*
@@ -24,7 +27,7 @@ class FriendsFragment : Fragment() {
     private lateinit var searchViewFriends: SearchView
     private lateinit var friendsList: List<FriendData>
     private lateinit var pendingRequestButton: ImageButton
-
+    private var username = ""
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,6 +42,15 @@ class FriendsFragment : Fragment() {
         val view = inflater.inflate(R.layout.fragment_friends, container, false)
         pendingRequestButton = view.findViewById(R.id.pendingRequestButton)
         friendsRecyclerView = view.findViewById(R.id.friendCardRecyclerView)
+
+        val sharedPrefs = requireActivity().getSharedPreferences("Login", Context.MODE_PRIVATE)
+        username = sharedPrefs.getString("Username",null).toString()
+        if(username.isBlank()){
+            //Run EntryActivity
+            val intent = Intent(requireActivity(), EntryActivity::class.java)
+            startActivity(intent)
+            activity?.overridePendingTransition(android.R.anim.fade_in,android.R.anim.fade_out)
+        }
         setFriendsRecycler()
 
         searchViewFriends = view.findViewById(R.id.searchViewFriends)
@@ -93,7 +105,7 @@ class FriendsFragment : Fragment() {
     private fun getFriendsList(): List<FriendData> {
         val friendsList = mutableListOf<FriendData>()
 
-        val jsonString = getFriendsDetails("Aflah")
+        val jsonString = getFriendsDetails(username)
         if(jsonString!=null){
             val jsonObjectArray = parseJson(jsonString)
             if (jsonObjectArray != null) {
