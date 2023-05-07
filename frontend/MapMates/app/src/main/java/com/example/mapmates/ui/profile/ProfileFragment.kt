@@ -13,6 +13,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.ImageView
@@ -42,6 +43,7 @@ class ProfileFragment : Fragment() {
     private lateinit var name: TextView
     private lateinit var userName: TextView
     private lateinit var userBio: EditText
+    private lateinit var logoutButton: Button
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.fragment_profile, container, false)
@@ -58,6 +60,7 @@ class ProfileFragment : Fragment() {
         uploadButton = view.findViewById(R.id.addPicture)
         editBioButton = view.findViewById(R.id.editBioButton)
         saveBioButton = view.findViewById(R.id.saveBioButton)
+        logoutButton = view.findViewById(R.id.logoutButton)
         val UserName = "Aflah"
 //        TODO: get person picture put is in this link
         Picasso.get().load("https://mapsapp-1-m9050519.deta.app/users/$UserName/profile_picture").into(profilePicture)
@@ -88,6 +91,9 @@ class ProfileFragment : Fragment() {
 //            Log.d("ProfileFragment", "onCreateViewINTENT: $intent")
             startActivityForResult(intent, 123)
 //            Log.d("startingActivity", "onCreateView: 123")
+        }
+        logoutButton.setOnClickListener {
+//            TODO: Do the logout function here!!!
         }
 
         return view

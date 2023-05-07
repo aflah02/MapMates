@@ -3,10 +3,15 @@ package com.example.mapmates
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
+import android.text.InputType
 import android.util.Log
+import android.view.View
 import android.widget.Button
+import android.widget.EditText
 import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -14,6 +19,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.mapmates.ui.people.friends.FriendData
 import com.example.mapmates.ui.people.groups.GroupMemberAdapter
+import com.squareup.picasso.Picasso
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -24,11 +30,15 @@ import java.util.concurrent.CountDownLatch
 
 
 class SettingsActivity : AppCompatActivity() {
-    private lateinit var groupTitle:TextView
+    private lateinit var groupTitle:EditText
     private lateinit var groupCode:TextView
     private lateinit var groupMembers:RecyclerView
     private lateinit var leaveButton:Button
     private lateinit var copyButton:ImageButton
+    private lateinit var editTitle:ImageButton
+    private lateinit var saveTitle:ImageButton
+    private lateinit var changePicture:ImageButton
+    private lateinit var groupPicture:ImageView
     private lateinit var adapter:GroupMemberAdapter
     private lateinit var memberList:List<FriendData>
 
@@ -43,6 +53,11 @@ class SettingsActivity : AppCompatActivity() {
         groupCode = findViewById(R.id.groupCode)
         copyButton = findViewById(R.id.copyButton)
         groupMembers = findViewById(R.id.GrpMembersRecyclerView)
+        groupPicture = findViewById(R.id.groupPicture)
+        editTitle = findViewById(R.id.editTitleButton)
+        saveTitle = findViewById(R.id.saveTitleButton)
+        changePicture = findViewById(R.id.changePicture)
+
         setPageDetails(groupID)
         leaveButton = findViewById(R.id.leaveButton)
         copyButton.setOnClickListener{
@@ -57,6 +72,27 @@ class SettingsActivity : AppCompatActivity() {
             val leaveGroupResponse = groupID?.let { it1 -> leaveGroupCall(userName, it1) }
             onBackPressed()
         }
+        editTitle.setOnClickListener {
+            groupTitle.isEnabled = true
+            editTitle.visibility = View.GONE
+            groupTitle.inputType = InputType.TYPE_CLASS_TEXT
+            saveTitle.visibility = View.VISIBLE
+        }
+        saveTitle.setOnClickListener {
+//            TODO: post the value of edit text string
+            val groupTitleText = groupTitle.text.toString()
+            groupTitle.setText(groupTitleText)
+//            setBioCall(UserName, newBio)
+            groupTitle.inputType = InputType.TYPE_NULL
+            groupTitle.isEnabled = false
+            saveTitle.visibility = View.GONE
+            editTitle.visibility = View.VISIBLE
+
+        }
+
+        changePicture.setOnClickListener {
+//            TODO: Change group picture using API
+        }
     }
     private fun setPageDetails(groupID: String?){
         groupMembers.layoutManager = LinearLayoutManager(this)
@@ -69,14 +105,15 @@ class SettingsActivity : AppCompatActivity() {
         val group_name = groupData.title
         val memberList = groupData.members
         val groupMemberDetails = getGroupMemberDetails(memberList)
-        groupTitle.text = group_name
+        Picasso.get().load(groupData.imageUrl).into(groupPicture)
+        groupTitle.setText(group_name)
         groupCode.text = inviteCode
         adapter.updateList(groupMemberDetails)
     }
 
     private fun parseJson(jsonString: String?): GroupAllData {
         if (jsonString == null) {
-            return GroupAllData("","","", emptyList())
+            return GroupAllData("","","", emptyList(),"")
         }
         val jsObj = JSONObject(jsonString)
 //        val jsObj = jsArray.getJSONObject(0)
@@ -87,7 +124,8 @@ class SettingsActivity : AppCompatActivity() {
         val membersListArr = members.split("<DELIMITER069>")
         val membersListRemoveEmptyStrings = membersListArr.filter { it.isNotEmpty() }
         val membersList = membersListRemoveEmptyStrings.map { it.trim() }
-        val gData = GroupAllData(group_id, group_name, invite_code, membersList)
+//        TODO: replace this URL with response from JSON by editing API backend
+        val gData = GroupAllData(group_id, group_name, invite_code, membersList,"https://picsum.photos/200")
         return gData
     }
     private fun getGroupData(groupID: String): String? {
