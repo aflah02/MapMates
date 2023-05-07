@@ -479,9 +479,12 @@ async def get_markers(group_id: str):
     except:
         return {"message": "Invalid group_id"}
     
+class groupNamePayload(BaseModel):
+    group_name: str
 # update group name
 @app.post("/groups/{group_id}/update_group_name")
-async def update_group_name(group_id: str, new_group_name: str):
+async def update_group_name(group_id: str, groupNamePayload: groupNamePayload):
+    new_group_name = groupNamePayload.group_name
     group_to_update = groups.find_one({"_id": group_id})
     if group_to_update:
         update = {

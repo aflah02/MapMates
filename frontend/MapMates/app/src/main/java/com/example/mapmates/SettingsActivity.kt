@@ -85,6 +85,10 @@ class SettingsActivity : AppCompatActivity() {
         saveTitle.setOnClickListener {
 //            TODO: post the value of edit text string
             val groupTitleText = groupTitle.text.toString()
+            Log.d("About to set", groupTitleText)
+            groupTitle.setText(groupTitleText)
+            groupNameUpdateCall(groupID.toString(), groupTitleText)
+            Log.d("After set", groupTitleText)
             groupTitle.setText(groupTitleText)
 //            setBioCall(UserName, newBio)
             groupTitle.inputType = InputType.TYPE_NULL
@@ -100,6 +104,44 @@ class SettingsActivity : AppCompatActivity() {
             intent.type = "image/*"
             startActivityForResult(intent, 100)
         }
+    }
+
+    private fun groupNameUpdateCall(groupID: String, groupName: String): String {
+        val url = "https://mapsapp-1-m9050519.deta.app/groups/$groupID/update_group_name"
+        val mediaType = "application/json; charset=utf-8".toMediaType()
+        val requestJSON = JSONObject()
+        requestJSON.put("group_name", groupName)
+        val requestBody = requestJSON.toString().toRequestBody(mediaType)
+        val request = Request.Builder()
+            .addHeader("accept","application/json")
+            .addHeader("Content-Type","application/json")
+            .url(url)
+            .post(requestBody)
+            .build()
+        val client = OkHttpClient()
+
+        val latch = CountDownLatch(1)
+
+        var APIresponse = ""
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                Log.i("ErrorError",  e.toString())
+                Log.e("CreateFragment", "Failed to update bio")
+                latch.countDown()
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                Log.i("CreateFragment", "Successfully updated bio")
+                APIresponse = response.body!!.string()
+                latch.countDown()
+            }
+        })
+
+        latch.await()
+        Log.i("Response", APIresponse)
+        return APIresponse
+
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
