@@ -30,6 +30,7 @@ class GroupsFragment : Fragment() {
 
     private lateinit var groupRecyclerView: RecyclerView
     private lateinit var adapter: GroupsAdapter
+    private lateinit var groupList: MutableList<GroupData>
     private var user = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -43,6 +44,7 @@ class GroupsFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_groups, container, false)
 
+        groupList = mutableListOf<GroupData>()
         groupRecyclerView = view.findViewById(R.id.groupCardRecyclerView)
         setGroupRecycler()
 
@@ -64,13 +66,11 @@ class GroupsFragment : Fragment() {
         adapter = GroupsAdapter(emptyList())
         groupRecyclerView.adapter = adapter
 
-        val groupList = getGroupList()
-
-        adapter.updateList(groupList)
+        getGroupList()
     }
 
 
-    private fun getGroupList(): List<GroupData> {
+    private fun getGroupList(){
         val groupList = mutableListOf<GroupData>()
         val sharedPrefs = requireActivity().getSharedPreferences("Login", Context.MODE_PRIVATE)
         user = sharedPrefs.getString("Username",null).toString()
@@ -81,19 +81,7 @@ class GroupsFragment : Fragment() {
             activity?.overridePendingTransition(android.R.anim.fade_in,android.R.anim.fade_out)
         }
 
-        val jsonString = getGroupDetails(user)
-        if(jsonString!=null){
-            val jsonObjectArray = parseJson(jsonString)
-            if (jsonObjectArray != null) {
-                for(item in jsonObjectArray){
-//                    Log.d("Groups", item.toString())
-                    groupList.add(item)
-                }
-            }
-        }
-
-        return groupList
-
+        getGroupDetails(user)
     }
 
 
@@ -117,32 +105,38 @@ class GroupsFragment : Fragment() {
         return groupDataList
     }
 
-    fun getGroupDetails(username: String): String? {
+    fun getGroupDetails(username: String){
         var responseString : String? = null
         val client = OkHttpClient()
         val request = Request.Builder()
             .url("https://mapsapp-1-m9050519.deta.app/users/$username/groups")
             .build()
-        val latch = CountDownLatch(1)
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 Timber.tag("groups").e(e.message.toString())
-                latch.countDown()
             }
 
             override fun onResponse(call: Call, response: Response) {
                 responseString = response.body?.string()
                 if (!response.isSuccessful) {
-                    latch.countDown()
                     return
                 }
+                activity?.runOnUiThread {
+                    val jsonString = responseString
+                    if(jsonString!=null){
+                        val jsonObjectArray = parseJson(jsonString)
+                        if (jsonObjectArray != null) {
+                            for(item in jsonObjectArray){
+//                    Log.d("Groups", item.toString())
+                                groupList.add(item)
+                            }
+                        }
+                    }
+                    adapter.updateList(groupList)
+                }
                 Timber.tag("Groups").i(responseString.toString())
-                latch.countDown()
             }
         }
         )
-        latch.await()
-        Log.d("Groups",responseString.toString())
-        return responseString
     }
 }

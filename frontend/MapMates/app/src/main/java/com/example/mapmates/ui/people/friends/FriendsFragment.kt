@@ -51,6 +51,7 @@ class FriendsFragment : Fragment() {
             startActivity(intent)
             activity?.overridePendingTransition(android.R.anim.fade_in,android.R.anim.fade_out)
         }
+        friendsList = mutableListOf<FriendData>()
         setFriendsRecycler()
 
         searchViewFriends = view.findViewById(R.id.searchViewFriends)
@@ -73,8 +74,7 @@ class FriendsFragment : Fragment() {
         friendsRecyclerView.layoutManager = LinearLayoutManager(activity)
         adapter = FriendsAdapter(emptyList<FriendData>())
         friendsRecyclerView.adapter = adapter
-        friendsList = getFriendsList()
-        adapter.updateList(friendsList)
+        getFriendsDetails(username)
     }
 
     private fun searchFriends(){
@@ -102,23 +102,6 @@ class FriendsFragment : Fragment() {
         }
     }
 
-    private fun getFriendsList(): List<FriendData> {
-        val friendsList = mutableListOf<FriendData>()
-
-        val jsonString = getFriendsDetails(username)
-        if(jsonString!=null){
-            val jsonObjectArray = parseJson(jsonString)
-            if (jsonObjectArray != null) {
-                for(item in jsonObjectArray){
-                    friendsList.add(FriendData(item.first,"https://mapsapp-1-m9050519.deta.app/users/${item.first}/profile_picture",item.second))
-                }
-            }
-        }
-
-        return friendsList
-
-    }
-
     private fun parseJson(jsonString: String): ArrayList<Pair<String, String>>? {
         val jsArray = JSONArray(jsonString)
         val friendsList = ArrayList<Pair<String, String>>()
@@ -136,25 +119,35 @@ class FriendsFragment : Fragment() {
         val request = Request.Builder()
             .url("https://mapsapp-1-m9050519.deta.app/users/$username/friends")
             .build()
-        val latch = CountDownLatch(1)
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 Timber.tag("friendsf").e(e.message.toString())
-                latch.countDown()
             }
 
             override fun onResponse(call: Call, response: Response) {
                 responseString = response.body?.string()
                 if (!response.isSuccessful) {
-                    latch.countDown()
                     return
                 }
+                activity?.runOnUiThread {
+                    val tempFriendsList = mutableListOf<FriendData>()
+                    val jsonString = responseString
+                    if(jsonString!=null){
+                        val jsonObjectArray = parseJson(jsonString)
+                        if (jsonObjectArray != null) {
+                            for(item in jsonObjectArray){
+                                tempFriendsList.add(FriendData(item.first,"https://mapsapp-1-m9050519.deta.app/users/${item.first}/profile_picture",item.second))
+                            }
+                        }
+                    }
+                    friendsList = tempFriendsList
+                    adapter.updateList(friendsList)
+                }
+
                 Timber.tag("Friends").i(responseString.toString())
-                latch.countDown()
             }
         }
         )
-        latch.await()
         return responseString
     }
 }

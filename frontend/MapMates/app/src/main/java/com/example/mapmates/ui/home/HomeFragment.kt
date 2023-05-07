@@ -203,6 +203,7 @@ class HomeFragment : Fragment(), OnGroupItemClickListener {
             val bundle = Bundle()
             bundle.putString("name", markersList[currentMarker].name)
             bundle.putString("markerId", markersList[currentMarker].markerId)
+            bundle.putString("markerHoster", markersList[currentMarker].username)
             markerSheetDialog.dismiss()
             val newFragment = CreateFragment()
             newFragment.arguments = bundle
@@ -315,16 +316,24 @@ class HomeFragment : Fragment(), OnGroupItemClickListener {
             if(i == position) {
                 holder.itemView.findViewById<TextView>(R.id.groupName).setTextColor(Color.DKGRAY)
                 if(groupsList[i].isShowing) {
+                    // set all isShowing to false
+                    for(j in 0 until groupsList.size) {
+                        groupsList[j].isShowing = false
+                    }
+                    groupsList[i].isShowing = true
                     groupSheetDialog.dismiss()
                     return
                 }
                 // select
                 // get groupName
                 groupsList[i].isShowing = true
+            } else {
+                groupsList[i].isShowing = false
             }
         }
         // reset markers
         pointAnnotationManager.deleteAll()
+        currentMarker = -1
         markersList.clear()
         markerIdList.clear()
         getAndUpdateMarkerDetails(groupsList[position].groupId)
@@ -452,6 +461,7 @@ class HomeFragment : Fragment(), OnGroupItemClickListener {
                     return
                 }
                 groupsList = JsonParserHelper().parseGroupsDataJson(responseString!!)
+                Log.i("puss",groupsList.toString())
                 groupsList.add(0, GroupModel("friends", "Friends", "", R.drawable.ic_profile))
                 // Run on UI thread
                 requireActivity().runOnUiThread {
@@ -498,7 +508,7 @@ class HomeFragment : Fragment(), OnGroupItemClickListener {
             uniqueVisitors = allVisitors.distinct() as MutableList<String>
 
         val stringToBitmap = mutableMapOf<String, Bitmap>()
-        val tempProfilePic = resources.getDrawable(R.drawable.ic_dashboard_black_24dp).toBitmap()
+        val tempProfilePic = resources.getDrawable(R.drawable.default_pfp).toBitmap()
         val profilePics : MutableList<Bitmap> = mutableListOf()
         for (i in 0 until uniqueVisitors.size) {
             profilePics.add(tempProfilePic)
@@ -558,13 +568,13 @@ class HomeFragment : Fragment(), OnGroupItemClickListener {
                 val bitmap = picasso.load(imageUrl).get()
 
                 imageBitmaps.add(bitmap)
+                if(currentMarker != idx) return@launch
                 if(stringToBitmap.containsKey(markersList[idx].imageUploaders[ii]))
                     imageUploaderBitmaps.add(stringToBitmap[markersList[idx].imageUploaders[ii]]!!)
                 else
                     imageUploaderBitmaps.add(bitmap)
                 imageUploaderNames.add(markersList[idx].imageUploaders[ii])
 
-                if(currentMarker != idx) return@launch
             }
 
             requireActivity().runOnUiThread {

@@ -61,13 +61,11 @@ class ProfileFragment : Fragment() {
             startActivity(intent)
             activity?.overridePendingTransition(android.R.anim.fade_in,android.R.anim.fade_out)
         }
-        val uInfo = getUserInfo(user)?.let { parseJson(it) }
+
+        getUserInfo()
         name = view.findViewById(R.id.nameView)
         userName = view.findViewById(R.id.userNameView)
         userBio = view.findViewById(R.id.bioTextView)
-        name.text = uInfo?.name
-        userName.text = uInfo?.username
-        userBio.setText(uInfo?.bio)
         uploadButton = view.findViewById(R.id.addPicture)
         editBioButton = view.findViewById(R.id.editBioButton)
         saveBioButton = view.findViewById(R.id.saveBioButton)
@@ -256,32 +254,36 @@ class ProfileFragment : Fragment() {
     }
 
 
-    private fun getUserInfo(userName:String): String? {
+    private fun getUserInfo(){
         var responseString : String? = null
         val client = OkHttpClient()
         val request = Request.Builder()
             .url("https://mapsapp-1-m9050519.deta.app/users/$user")
             .build()
-        val latch = CountDownLatch(1)
+
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 Timber.tag("getUserInfo Failed").e(e.message.toString())
-                latch.countDown()
             }
 
             override fun onResponse(call: Call, response: Response) {
                 responseString = response.body?.string()
                 if (!response.isSuccessful) {
-                    latch.countDown()
                     return
                 }
+
+                // run on main thread
+                val uInfo = responseString?.let { parseJson(it) }
+                Timber.tag("getUserInfo Response").i(uInfo.toString())
+                activity?.runOnUiThread {
+                    name.text = uInfo?.name
+                    userName.text = uInfo?.username
+                    userBio.setText(uInfo?.bio)
+                }
                 Timber.tag("getUserInfo Response").i(responseString.toString())
-                latch.countDown()
             }
         }
         )
-        latch.await()
-        return responseString
     }
 
     override fun onDestroyView() {

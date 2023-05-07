@@ -10,6 +10,9 @@ import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.RecyclerView
 import com.example.mapmates.R
+import com.squareup.picasso.MemoryPolicy
+import com.squareup.picasso.NetworkPolicy
+import com.squareup.picasso.Picasso
 
 class GroupsAdapter(private var groupsList: ArrayList<GroupModel>, private val listener: OnGroupItemClickListener) : RecyclerView.Adapter<GroupsAdapter.GroupsViewHolder>() {
 
@@ -21,7 +24,15 @@ class GroupsAdapter(private var groupsList: ArrayList<GroupModel>, private val l
     override fun onBindViewHolder(holder: GroupsViewHolder, position: Int) {
         holder.groupName.text = groupsList[position].groupName
         holder.groupCount.text = groupsList[position].groupCount
-        holder.groupImage.setImageResource(groupsList[position].groupImage)
+        if(groupsList[position].groupId == "friends"){
+            holder.groupImage.setImageDrawable(null)
+        }
+        else{
+            Picasso.get().load("https://mapsapp-1-m9050519.deta.app/groups/${groupsList[position].groupId}/cover_image")
+                .memoryPolicy(MemoryPolicy.NO_CACHE, MemoryPolicy.NO_STORE)
+                .networkPolicy(NetworkPolicy.NO_CACHE, NetworkPolicy.NO_STORE)
+                .fit().into(holder.groupImage)
+        }
         holder.itemView.setOnClickListener {
             listener.onGroupItemClick(position);
         }

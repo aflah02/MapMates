@@ -157,7 +157,7 @@ class GroupOptionsBottomSheetFragment() : BottomSheetDialogFragment() {
             .addHeader("accept","application/json")
             .addHeader("Content-Type","application/json")
             .url(url)
-            .post(requestBody)
+            .put(requestBody)
             .build()
         val client = OkHttpClient()
 

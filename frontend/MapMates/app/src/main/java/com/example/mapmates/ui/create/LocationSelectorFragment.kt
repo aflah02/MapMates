@@ -229,7 +229,7 @@ class LocationSelectorFragment : Fragment() {
                 groupsList = JsonParserHelper().parseGroupsDataJson(responseString!!)
                 groupsList.add(0, GroupModel("friends", "Friends", "420", R.drawable.ic_profile))
                 // Run on UI thread
-                requireActivity().runOnUiThread {
+                activity?.runOnUiThread {
                     // update spinner
                     spinner.setItems(groupsList.map { it.groupName })
                     groupSelected = true

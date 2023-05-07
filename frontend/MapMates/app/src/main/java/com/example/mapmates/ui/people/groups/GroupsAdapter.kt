@@ -32,17 +32,13 @@ class GroupsAdapter(var itemList: List<GroupData>) : RecyclerView.Adapter<Groups
             .memoryPolicy(MemoryPolicy.NO_CACHE, MemoryPolicy.NO_STORE)
             .networkPolicy(NetworkPolicy.NO_CACHE, NetworkPolicy.NO_STORE)
             .fit().into(holder.peopleGroupImage)
-        holder.peopleGroupSettings.setOnClickListener {
-            // Handle button click for this item
+        holder.itemView.setOnClickListener{
             val context = holder.itemView.context
             val intent = Intent(context, SettingsActivity::class.java)
             Log.d("GroupAdapter", "groupID: ${currentItem.groupID}")
             intent.putExtra("groupID", currentItem.groupID)
             intent.putExtra("GrpImageUrl", currentItem.imageUrl)
             context.startActivity(intent)
-        }
-        holder.itemView.setOnClickListener{
-            Toast.makeText(holder.itemView.context, "Clicked on group", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -58,7 +54,6 @@ class GroupsAdapter(var itemList: List<GroupData>) : RecyclerView.Adapter<Groups
     inner class GroupViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val peopleGroupName: TextView = itemView.findViewById(R.id.peopleGroupName)
         val peopleGroupImage: ImageView = itemView.findViewById(R.id.peopleGroupImage)
-        val peopleGroupSettings: ImageButton = itemView.findViewById(R.id.peopleGroupSettings)
 
     }
 }

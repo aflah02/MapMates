@@ -57,6 +57,16 @@ class JsonParserHelper {
                         imageUploaders.add(imageUploader)
                     }
                 }
+                if (marker.has("images")) {
+                    val imageArray = marker.getJSONArray("images")
+                    val imageUploaderArray = marker.getJSONArray("image_uploaders")
+                    for (j in 0 until imageArray.length()) {
+                        val imageLink = imageArray.getString(j)
+                        val imageUploader = imageUploaderArray.getString(j)
+                        images.add(imageLink)
+                        imageUploaders.add(imageUploader)
+                    }
+                }
                 if (marker.has("notes")) {
                     val noteArray = marker.getJSONArray("notes")
                     val noteUploaderArray = marker.getJSONArray("notes_uploaders")

@@ -66,6 +66,7 @@ class CreateFragment() : Fragment() , OnGroupItemClickListener{
         val longitude = arguments?.getDouble("longitude")
         val markerId = arguments?.getString("markerId")
         val groupId = arguments?.getString("groupId")
+        val markerUploader = arguments?.getString("markerHoster")
 
 
 
@@ -78,7 +79,7 @@ class CreateFragment() : Fragment() , OnGroupItemClickListener{
             startActivity(intent)
             activity?.overridePendingTransition(android.R.anim.fade_in,android.R.anim.fade_out)
         }
-        Toast.makeText(requireActivity(), "Name: $groupId, Latitude: $latitude, Longitude: $longitude", Toast.LENGTH_LONG).show()
+//        Toast.makeText(requireActivity(), "Name: $groupId, Latitude: $latitude, Longitude: $longitude", Toast.LENGTH_LONG).show()
 
         finalNotesTextList = ArrayList()
         val addNotesButton: FloatingActionButton = view.findViewById(R.id.addNotesButton)
@@ -116,7 +117,7 @@ class CreateFragment() : Fragment() , OnGroupItemClickListener{
             if(markerId == null){
                 uploadMarker(name!!, latitude!!, longitude!!, groupId!!)
             } else {
-                updateMarker(markerId)
+                updateMarker(markerId, markerUploader!!)
             }
 //            // remove this fragment from the back stack
             requireActivity().supportFragmentManager.popBackStack()
@@ -147,8 +148,8 @@ class CreateFragment() : Fragment() , OnGroupItemClickListener{
 
         return view
     }
-    private fun updateMarker(markerID: String){
-        val userName = username
+    private fun updateMarker(markerID: String, markerUploader: String){
+        val userName = markerUploader
         val url = "https://mapsapp-1-m9050519.deta.app/users/$userName/add_images_and_notes_to_marker"
         val mediaType = "application/json; charset=utf-8".toMediaType()
         val requestJSON = JSONObject()
@@ -166,6 +167,7 @@ class CreateFragment() : Fragment() , OnGroupItemClickListener{
         requestJSON.put("marker_id", markerID)
         requestJSON.put("imageIDs", imageIDSAsStr)
         requestJSON.put("notes", notes_list_as_str)
+        requestJSON.put("uploaderName", username)
 
         Log.i("CreateFragment", requestJSON.toString())
 

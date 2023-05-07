@@ -28,7 +28,6 @@ class AddFriendActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add_friend)
         globalNames = findViewById(R.id.global_recycler_view)
-        setFriendsRecycler()
         val sharedPrefs = getSharedPreferences("Login", Context.MODE_PRIVATE)
         user = sharedPrefs.getString("Username",null).toString()
         if(user.isBlank()){
@@ -37,6 +36,7 @@ class AddFriendActivity : AppCompatActivity() {
             startActivity(intent)
             overridePendingTransition(android.R.anim.fade_in,android.R.anim.fade_out)
         }
+        setFriendsRecycler()
 
         searchViewFriends = findViewById(R.id.global_search_view)
         searchFriends()
