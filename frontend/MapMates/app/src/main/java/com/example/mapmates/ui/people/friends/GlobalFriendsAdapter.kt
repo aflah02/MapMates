@@ -1,13 +1,17 @@
 package com.example.mapmates.ui.people.friends
 
 import android.app.Activity
+import android.content.Context
+import android.content.Intent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
+import com.example.mapmates.EntryActivity
 import com.example.mapmates.R
 import com.squareup.picasso.Picasso
 import okhttp3.*
@@ -35,7 +39,14 @@ class GlobalFriendsAdapter(var activity: Activity,var searchResults: List<Reques
         }
         holder.requestStatus.setOnClickListener {
             // Call API to post friend request and change request to pending
-            val userName = "Aflah" // replace with the user name of the logged-in user
+            val sharedPrefs = activity.getSharedPreferences("Login", Context.MODE_PRIVATE)
+            val userName = sharedPrefs.getString("Username",null).toString()
+            if(userName.isBlank()){
+                //Run EntryActivity
+                val intent = Intent(activity, EntryActivity::class.java)
+                ContextCompat.startActivity(activity, intent, null)
+                activity.overridePendingTransition(android.R.anim.fade_in,android.R.anim.fade_out)
+            } // replace with the user name of the logged-in user
             val friendName = currentItem.name // get the name of the friend whose request is being accepted
             val url = "https://mapsapp-1-m9050519.deta.app/users/$userName/$friendName/sendfriendrequest"
             val client = OkHttpClient()

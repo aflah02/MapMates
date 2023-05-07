@@ -3,6 +3,7 @@ package com.example.mapmates.ui.people.groups
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Context.MODE_PRIVATE
 import android.content.Intent
 import android.os.Bundle
 import android.text.Editable
@@ -17,6 +18,7 @@ import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
 import com.example.mapmates.CreateGroupActivity
+import com.example.mapmates.EntryActivity
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.example.mapmates.R
 import okhttp3.*
@@ -63,6 +65,14 @@ class GroupOptionsBottomSheetFragment() : BottomSheetDialogFragment() {
             }
             override fun afterTextChanged(s: Editable?) {}
         })
+        val sharedPrefs = requireActivity().getSharedPreferences("Login", MODE_PRIVATE)
+        val username = sharedPrefs.getString("Username",null).toString()
+        if(username.isBlank()){
+            //Run EntryActivity
+            val intent = Intent(requireActivity(), EntryActivity::class.java)
+            startActivity(intent)
+            activity?.overridePendingTransition(android.R.anim.fade_in,android.R.anim.fade_out)
+        }
 
         createGroup.setOnClickListener {
 
@@ -72,7 +82,7 @@ class GroupOptionsBottomSheetFragment() : BottomSheetDialogFragment() {
             createGroup.visibility = View.GONE
             groupTitle.visibility = View.GONE
 //            TODO:Post An API to make a group here!!!
-            val cgResponse = createGroup(groupTitle.text.toString(), "Aflah")
+            val cgResponse = createGroup(groupTitle.text.toString(), username)
 //            TODO:Set the generated Code as the response here!!!
             val parseJson = JSONObject(cgResponse)
             val inviteCode = parseJson.getString("invite_code")
@@ -87,7 +97,7 @@ class GroupOptionsBottomSheetFragment() : BottomSheetDialogFragment() {
         joinGroup.setOnClickListener {
             Toast.makeText(requireContext(),"Entered ${codeGroup.text}",Toast.LENGTH_SHORT).show()
 //            TODO: Post this code to add a group on response ok go back, on fail response display toast no group found
-            val apiJoinResponse = joinGroup(codeGroup.text.toString(), "Aflah")
+            val apiJoinResponse = joinGroup(codeGroup.text.toString(), username)
             if (apiJoinResponse != ""){
                 Toast.makeText(requireContext(),"Joined ${codeGroup.text}",Toast.LENGTH_SHORT).show()
             }

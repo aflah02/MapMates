@@ -24,6 +24,7 @@ import java.io.IOException
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.mapmates.EntryActivity
 import com.example.mapmates.R
 import com.example.mapmates.ui.home.OnGroupItemClickListener
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
@@ -70,8 +71,13 @@ class CreateFragment() : Fragment() , OnGroupItemClickListener{
 
         // get username from shared preferences
         val sharedPrefs = requireActivity().getSharedPreferences("Login", MODE_PRIVATE)
-        username = sharedPrefs.getString("Username",null)!!
-
+        username = sharedPrefs.getString("Username",null).toString()
+        if(username.isBlank()){
+            //Run EntryActivity
+            val intent = Intent(requireActivity(), EntryActivity::class.java)
+            startActivity(intent)
+            activity?.overridePendingTransition(android.R.anim.fade_in,android.R.anim.fade_out)
+        }
         Toast.makeText(requireActivity(), "Name: $groupId, Latitude: $latitude, Longitude: $longitude", Toast.LENGTH_LONG).show()
 
         finalNotesTextList = ArrayList()

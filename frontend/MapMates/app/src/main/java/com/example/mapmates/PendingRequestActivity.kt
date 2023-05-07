@@ -1,5 +1,6 @@
 package com.example.mapmates
 
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -17,10 +18,20 @@ class PendingRequestActivity : AppCompatActivity() {
 
     private lateinit var pendingRequestView: RecyclerView
     private lateinit var adapter: PendingRequestsAdapter
+    private var username = ""
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_pending_request)
+        val sharedPrefs = getSharedPreferences("Login", MODE_PRIVATE)
+        username = sharedPrefs.getString("Username",null).toString()
+        if(username.isBlank()){
+            //Run EntryActivity
+            val intent = Intent(this, EntryActivity::class.java)
+            startActivity(intent)
+            overridePendingTransition(android.R.anim.fade_in,android.R.anim.fade_out)
+        }
 
         pendingRequestView = findViewById(R.id.pendingRequestRecyclerView)
         pendingRequestView.layoutManager = LinearLayoutManager(this)
@@ -33,7 +44,7 @@ class PendingRequestActivity : AppCompatActivity() {
 
     private fun getPendingRequests(): List<FriendData> {
         val friendsList = mutableListOf<FriendData>()
-        val jsonString = friendRequestJsonCall("Aflah")
+        val jsonString = friendRequestJsonCall(username)
         if(jsonString!=null){
             val jsonObjectArray = parseJson(jsonString)
             if (jsonObjectArray != null) {
