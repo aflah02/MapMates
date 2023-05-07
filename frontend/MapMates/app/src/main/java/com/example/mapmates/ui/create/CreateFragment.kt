@@ -2,6 +2,7 @@ package com.example.mapmates.ui.create
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.app.ProgressDialog
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -10,6 +11,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.content.ContentResolver
+import android.content.Context.MODE_PRIVATE
 import android.graphics.Bitmap
 import android.provider.MediaStore
 import android.text.Editable
@@ -26,6 +28,7 @@ import com.example.mapmates.R
 import com.example.mapmates.ui.home.OnGroupItemClickListener
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import kotlinx.coroutines.*
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
 import org.json.JSONObject
@@ -40,8 +43,10 @@ class CreateFragment() : Fragment() , OnGroupItemClickListener{
 
     private lateinit var finalNotesTextList: ArrayList<String>
     private var selectedImageUris: ArrayList<Uri>?= null
+    private lateinit var username: String
     private lateinit var imageRecyclerView: RecyclerView
-    private lateinit var imageList : ArrayList<Bitmap>
+    private lateinit var imageList : ArrayList<String>
+    private lateinit var imageToShow: ArrayList<Bitmap>
 
     // Current position/index of selected image
     private var position = 0
@@ -60,6 +65,12 @@ class CreateFragment() : Fragment() , OnGroupItemClickListener{
         val longitude = arguments?.getDouble("longitude")
         val markerId = arguments?.getString("markerId")
         val groupId = arguments?.getString("groupId")
+
+
+
+        // get username from shared preferences
+        val sharedPrefs = requireActivity().getSharedPreferences("Login", MODE_PRIVATE)
+        username = sharedPrefs.getString("Username",null)!!
 
         Toast.makeText(requireActivity(), "Name: $groupId, Latitude: $latitude, Longitude: $longitude", Toast.LENGTH_LONG).show()
 
@@ -91,11 +102,18 @@ class CreateFragment() : Fragment() , OnGroupItemClickListener{
 
         val uploadFab : ExtendedFloatingActionButton = view.findViewById(R.id.uploadFab)
         uploadFab.setOnClickListener {
+            // Upload all images first
+            for (i in 0 until imageList.size){
+                uploadImage(imageList[i], i)
+            }
+
             if(markerId == null){
-//                uploadMarker(name, latitude, longitude)
+                uploadMarker(name!!, latitude!!, longitude!!, groupId!!)
             } else {
                 updateMarker(markerId)
             }
+//            // remove this fragment from the back stack
+            requireActivity().supportFragmentManager.popBackStack()
         }
 
         // TextWatcher for edit text
@@ -103,19 +121,18 @@ class CreateFragment() : Fragment() , OnGroupItemClickListener{
             override fun afterTextChanged(s: Editable?) {
                 // do nothing
             }
-
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
                 // do nothing
             }
-
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 // if text is empty, hide the button
                 addNotesButton.isEnabled = !s.toString().trim().isEmpty()
             }
         })
 
-        imageList = ArrayList<Bitmap>()
-        val adapter = ImageUploadAdapter(imageList, listener = this)
+        imageList = ArrayList<String>()
+        imageToShow = ArrayList<Bitmap>()
+        val adapter = ImageUploadAdapter(imageToShow, listener = this)
         imageRecyclerView = view.findViewById(R.id.imageUploadRecycler)
         imageRecyclerView.layoutManager = GridLayoutManager(requireActivity(), 3)
         imageRecyclerView.adapter = adapter
@@ -125,8 +142,8 @@ class CreateFragment() : Fragment() , OnGroupItemClickListener{
         return view
     }
     private fun updateMarker(markerID: String){
-        val userName = "Aflah"
-        val url = "https://mapsapp-1-m9050519.deta.app/users/$userName/add_images_to_marker"
+        val userName = username
+        val url = "https://mapsapp-1-m9050519.deta.app/users/$userName/add_images_and_notes_to_marker"
         val mediaType = "application/json; charset=utf-8".toMediaType()
         val requestJSON = JSONObject()
         var imageIDSAsStr = ""
@@ -178,24 +195,25 @@ class CreateFragment() : Fragment() , OnGroupItemClickListener{
         val latitudeAsString = latitude.toString()
         val longitudeAsString = longitude.toString()
         val description = ""
-        val friendCanSee = false
+        val friendCanSee = (groupId == "friends")
         // Convert to string
         val friendCanSeeAsString = friendCanSee.toString()
         val groups_which_can_see = ArrayList<String>()
-        groups_which_can_see.add(groupId)
+        if(!friendCanSee){
+            groups_which_can_see.add(groupId)
+        }
         // Convert to JSONArray
         var imageIDSAsStr = ""
         for (imageID in imageList){
             imageIDSAsStr = imageIDSAsStr.plus(imageID)
             imageIDSAsStr = imageIDSAsStr.plus("<DELIMITER069>")
         }
-        val groups_which_can_see_JSONArray = JSONArray(groups_which_can_see)
         var groupsAsString = ""
         for (group in groups_which_can_see){
             groupsAsString = groupsAsString.plus(group)
             groupsAsString = groupsAsString.plus("<DELIMITER069>")
         }
-        val userName = "Aflah"
+        val userName = username
         val image_uploaders = ArrayList<String>()
         for (i in 0 until imageList.size){
             image_uploaders.add(userName)
@@ -208,7 +226,7 @@ class CreateFragment() : Fragment() , OnGroupItemClickListener{
 
         var note_uploaders_as_str = ""
         for (ii in 0 until finalNotesTextList.size){
-            note_uploaders_as_str = note_uploaders_as_str.plus("Aflah")
+            note_uploaders_as_str = note_uploaders_as_str.plus(username)
             note_uploaders_as_str = note_uploaders_as_str.plus("<DELIMITER069>")
         }
 
@@ -266,9 +284,9 @@ class CreateFragment() : Fragment() , OnGroupItemClickListener{
         latch.await()
 
     }
-    private fun uploadImage(encodedImage: String): String? {
+    private fun uploadImage(encodedImage: String, idx: Int): String {
         var imageID : String? = null
-        val url = "https://mapsapp-1-m9050519.deta.app/users/Aflah/upload_marker_image_url_encoded_base64"
+        val url = "https://mapsapp-1-m9050519.deta.app/users/$username/upload_marker_image_url_encoded_base64"
         val mediaType = "application/json; charset=utf-8".toMediaType()
         val requestJSON = JSONObject()
         requestJSON.put("image", encodedImage)
@@ -281,6 +299,7 @@ class CreateFragment() : Fragment() , OnGroupItemClickListener{
             .post(requestBody)
             .build()
         val client = OkHttpClient()
+
 
         val latch = CountDownLatch(1)
 
@@ -304,12 +323,13 @@ class CreateFragment() : Fragment() , OnGroupItemClickListener{
                     Timber.tag("Login").i(jsonResponse.toString(4))
                 }
                 latch.countDown()
+                imageList[idx] = imageID!!
             }
         }
         )
 
         latch.await()
-        return imageID
+        return "boo"
     }
 
     fun getImageAsURLEncodedBinaryString(contentResolver: ContentResolver, uri: Uri): String? {
@@ -352,14 +372,17 @@ class CreateFragment() : Fragment() , OnGroupItemClickListener{
                     }
                     // Remove repeat images
                     selectedImageUris = ArrayList(selectedImageUris!!.toSet())
+
                     // set the first image to imageSwitcher
                     //Convert image uris to list of bitmap
-                    imageList = ArrayList<Bitmap>()
+                    imageToShow = ArrayList<Bitmap>()
+                    imageList = ArrayList<String>()
                     for (i in 0 until selectedImageUris!!.size){
-                        imageList.add(MediaStore.Images.Media.getBitmap(requireContext().contentResolver, selectedImageUris!![i]))
+                        imageToShow.add(MediaStore.Images.Media.getBitmap(requireContext().contentResolver, selectedImageUris!![i]))
+                        imageList.add(getImageAsURLEncodedBinaryString(requireContext().contentResolver, selectedImageUris!![i])!!)
                     }
 
-                    val adapter = ImageUploadAdapter(imageList, listener = this)
+                    val adapter = ImageUploadAdapter(imageToShow, listener = this)
                     imageRecyclerView.adapter = adapter
                     position = 0
                 }
@@ -371,11 +394,13 @@ class CreateFragment() : Fragment() , OnGroupItemClickListener{
                     selectedImageUris!!.add(imageUri!!)
                     // Remove repeat images
                     selectedImageUris = ArrayList(selectedImageUris!!.toSet())
-                    imageList = ArrayList<Bitmap>()
+                    imageToShow = ArrayList<Bitmap>()
+                    imageList = ArrayList<String>()
                     for (i in 0 until selectedImageUris!!.size){
-                        imageList.add(MediaStore.Images.Media.getBitmap(requireContext().contentResolver, selectedImageUris!![i]))
+                        imageToShow.add(MediaStore.Images.Media.getBitmap(requireContext().contentResolver, selectedImageUris!![i]))
+                        imageList.add(getImageAsURLEncodedBinaryString(requireContext().contentResolver, selectedImageUris!![i])!!)
                     }
-                    val adapter = ImageUploadAdapter(imageList, listener = this)
+                    val adapter = ImageUploadAdapter(imageToShow, listener = this)
                     imageRecyclerView.adapter = adapter
                     position = 0
                 }

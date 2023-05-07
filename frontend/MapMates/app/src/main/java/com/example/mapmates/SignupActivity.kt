@@ -5,7 +5,9 @@ import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.widget.Button
+import android.widget.RelativeLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.RequiresApi
@@ -33,6 +35,7 @@ class SignupActivity : AppCompatActivity() {
         val signupButton : Button = findViewById(R.id.sign_up)
         val userNameView : TextView = findViewById(R.id.username_field)
         val passwordView : TextView = findViewById(R.id.password_field)
+        val fullNameView : TextView = findViewById(R.id.fullname_field)
 
         loginRedirect.setOnClickListener{
             val intent : Intent = Intent(applicationContext,LoginActivity::class.java)
@@ -41,7 +44,7 @@ class SignupActivity : AppCompatActivity() {
         }
 
         signupButton.setOnClickListener {
-            val userId : String? = signUpUser(userNameView.text.toString(),passwordView.text.toString())
+            val userId : String? = signUpUser(userNameView.text.toString(),passwordView.text.toString(), fullNameView.text.toString())
             if(userId == null){
                 Toast.makeText(applicationContext,"Cannot Signup!", Toast.LENGTH_SHORT).show()
             }
@@ -49,6 +52,7 @@ class SignupActivity : AppCompatActivity() {
                 //Store Login Information
                 val sharedPref = getSharedPreferences("Login", MODE_PRIVATE)
                 val ed = sharedPref.edit()
+                ed.putString("Username",userNameView.text.toString())
                 ed.putString("UserId",userId)
                 ed.apply()
 
@@ -63,7 +67,7 @@ class SignupActivity : AppCompatActivity() {
     }
 
     @RequiresApi(33)
-    private fun signUpUser(username : String, password: String): String? {
+    private fun signUpUser(username : String, password: String, full_name: String): String? {
         var userId : String? = null
         //Make the API Call to log in here, fetch the id on successful login else null
         if(username.isBlank() || password.isBlank())return userId
@@ -72,6 +76,9 @@ class SignupActivity : AppCompatActivity() {
         val requestJSON = JSONObject()
         requestJSON.put("username",username)
         requestJSON.put("password",password)
+        requestJSON.put("full_name", "$full_name ")
+        requestJSON.put("email","-")
+        requestJSON.put("bio","-")
 
         val requestBody = requestJSON.toString().toRequestBody(mediaType)
         val request = Request.Builder()
@@ -82,11 +89,12 @@ class SignupActivity : AppCompatActivity() {
             .build()
         val client = OkHttpClient()
 
+        findViewById<RelativeLayout>(R.id.loadingPanel).visibility = View.VISIBLE
         val latch = CountDownLatch(1)
 
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
-                Log.e("Signup API",e.message.toString())
+                Log.e("Signup2",e.message.toString())
                 latch.countDown()
             }
 
@@ -98,13 +106,14 @@ class SignupActivity : AppCompatActivity() {
                     return
                 }
                 userId = jsonResponse.get("id") as String
-                Log.i("Signup",jsonResponse.toString(4))
+                Log.i("Signup2",jsonResponse.toString(4))
                 latch.countDown()
             }
         }
         )
 
         latch.await()
+        findViewById<RelativeLayout>(R.id.loadingPanel).visibility = View.GONE
         Toast.makeText(applicationContext, "User id: $userId", Toast.LENGTH_SHORT).show()
         return userId
     }

@@ -14,8 +14,8 @@ import com.example.mapmates.ui.home.placeholder.PlaceholderContent.PlaceholderIt
  * TODO: Replace the implementation with code for your data type.
  */
 class MyNotesRecyclerViewAdapter(
-    val notes: List<String>,
-    val uploader: List<Bitmap>,
+    val notes: MutableList<String>,
+    val uploader: MutableList<Bitmap>,
     private val listener: OnGroupItemClickListener
 ) : RecyclerView.Adapter<MyNotesRecyclerViewAdapter.ViewHolder>() {
 

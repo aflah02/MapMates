@@ -3,6 +3,7 @@ package com.example.mapmates.ui.home
 import android.annotation.SuppressLint
 import android.app.Dialog
 import android.content.Context
+import android.content.Context.MODE_PRIVATE
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
@@ -10,6 +11,7 @@ import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.opengl.Visibility
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -26,6 +28,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.mapmates.R
 import com.example.mapmates.databinding.FragmentHomeBinding
+import com.example.mapmates.ui.create.CreateFragment
 import com.example.mapmates.utils.JsonParserHelper
 import com.example.mapmates.utils.LocationPermissionHelper
 import com.example.mapmates.utils.ProfileAdapter
@@ -49,15 +52,20 @@ import com.squareup.picasso.Picasso
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import okhttp3.*
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.RequestBody.Companion.toRequestBody
+import org.json.JSONObject
 import timber.log.Timber
 import java.io.IOException
 import java.lang.ref.WeakReference
+import java.util.concurrent.CountDownLatch
 
 class HomeFragmentViewModel : ViewModel(){
     var selectedGroup:Int = -1;
 }
 
 class HomeFragment : Fragment(), OnGroupItemClickListener {
+    private lateinit var username: String
     private lateinit var mapView: MapView
     private lateinit var pointAnnotationManager: PointAnnotationManager
     private var _binding: FragmentHomeBinding? = null
@@ -78,8 +86,10 @@ class HomeFragment : Fragment(), OnGroupItemClickListener {
     private lateinit var notesRecyclerView: RecyclerView
     private lateinit var profileRecyclerView: RecyclerView
     private lateinit var locationPermissionHelper : LocationPermissionHelper
+    private var userLoc : Point = Point.fromLngLat(0.0, 0.0)
 
     private val onIndicatorPositionChangedListener = OnIndicatorPositionChangedListener {
+        userLoc = it
         mapView.getMapboxMap().setCamera(CameraOptions.Builder().center(it).build())
         mapView.gestures.focalPoint = mapView.getMapboxMap().pixelForCoordinate(it)
     }
@@ -103,6 +113,10 @@ class HomeFragment : Fragment(), OnGroupItemClickListener {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
+        // get username from shared preferences
+        val sharedPrefs = requireActivity().getSharedPreferences("Login", MODE_PRIVATE)
+        username = sharedPrefs.getString("Username",null)!!
+
         mapView = binding.mapView
         locationPermissionHelper = LocationPermissionHelper(WeakReference(requireActivity()))
         locationPermissionHelper.checkPermissions {
@@ -116,7 +130,7 @@ class HomeFragment : Fragment(), OnGroupItemClickListener {
         pointAnnotationManager = mapView.annotations.createPointAnnotationManager()
 
         createBottomGroupDialog()
-        getGroupDetails("Aflah")
+        getGroupDetails(username)
         createBottomMarkerDialog()
 
 
@@ -135,10 +149,8 @@ class HomeFragment : Fragment(), OnGroupItemClickListener {
         // Setting up location fab
         val locationFab : FloatingActionButton = binding.locationFab
         locationFab.setOnClickListener{
-            // TODO: get current location and set camera to it
-//            val pt
-//            mapView.getMapboxMap().setCamera(CameraOptions.Builder().center(pt).build())
-//            mapView.gestures.focalPoint = mapView.getMapboxMap().pixelForCoordinate(pt)
+            mapView.getMapboxMap().setCamera(CameraOptions.Builder().center(userLoc).build())
+            mapView.gestures.focalPoint = mapView.getMapboxMap().pixelForCoordinate(userLoc)
         }
         return root
     }
@@ -178,6 +190,21 @@ class HomeFragment : Fragment(), OnGroupItemClickListener {
 //            });
 //        val scroller :NestedScrollView =markerSheetDialog.findViewById(R.id.test)
         val closeButton : ImageButton = markerSheetDialog.findViewById(R.id.closeDialog)!!
+        val uploadFab : FloatingActionButton = markerSheetDialog.findViewById(R.id.uploadFab)!!
+        uploadFab.setOnClickListener {
+            val bundle = Bundle()
+            bundle.putString("name", markersList[currentMarker].name)
+            bundle.putString("markerId", markersList[currentMarker].markerId)
+            markerSheetDialog.dismiss()
+            val newFragment = CreateFragment()
+            newFragment.arguments = bundle
+            val transaction = parentFragmentManager.beginTransaction()
+//            transaction.remove(this)
+            transaction.replace(R.id.nav_host_fragment_activity_main, newFragment)
+            transaction.addToBackStack(null)
+            transaction.setReorderingAllowed(true)
+            transaction.commit()
+        }
 //        val viewFlipper: ViewFlipper = markerSheetDialog.findViewById(R.id.viewFlipper)!!
 //        val prevImage: FloatingActionButton = markerSheetDialog.findViewById(R.id.floatingActionButtonPrev)!!
 //        val nextImage: FloatingActionButton = markerSheetDialog.findViewById(R.id.floatingActionButtonNext)!!
@@ -322,7 +349,7 @@ class HomeFragment : Fragment(), OnGroupItemClickListener {
             popupUserName.text = temp_adapter.uploaderNames[position]
             profile.setImageBitmap(temp_adapter.uploader[position])
         }
-        if(popupUserName.text != "Aflah"){
+        if(popupUserName.text != username){
             delete.visibility = View.GONE
         }
         else{
@@ -330,16 +357,74 @@ class HomeFragment : Fragment(), OnGroupItemClickListener {
         }
         delete.setOnClickListener(View.OnClickListener {
             if(s == "note"){
+                queryToDeleteData(markersList[currentMarker].username, markersList[currentMarker].markerId, "note", position)
+                // Delete element at position from notesRecyclerView
+                val temp_adapter = notesRecyclerView.adapter!! as MyNotesRecyclerViewAdapter
+                temp_adapter.notes.removeAt(position)
+                temp_adapter.uploader.removeAt(position)
+                temp_adapter.notifyItemRemoved(position)
+                temp_adapter.notifyItemRangeChanged(position, temp_adapter.notes.size)
+                // Delete element at position from markersList
+                markersList[currentMarker].noteUploaders.removeAt(position)
+
                 Toast.makeText(requireContext(), "Note Deleted", Toast.LENGTH_SHORT).show()
             }
             else{
+                queryToDeleteData(markersList[currentMarker].username, markersList[currentMarker].markerId, "image", position)
+                // Delete element at position from imageRecyclerView
+                val temp_adapter = imageRecyclerView.adapter!! as MyImageRecyclerViewAdapter
+                temp_adapter.images.removeAt(position)
+                temp_adapter.uploader.removeAt(position)
+                temp_adapter.uploaderNames.removeAt(position)
+                temp_adapter.notifyItemRemoved(position)
+                temp_adapter.notifyItemRangeChanged(position, temp_adapter.images.size)
+                // Delete element at position from markersList
+                markersList[currentMarker].images.removeAt(position)
+                markersList[currentMarker].imageUploaders.removeAt(position)
+
                 Toast.makeText(requireContext(), "Image Deleted", Toast.LENGTH_SHORT).show()
             }
             dialog.dismiss()
         });
         dialog.show()
     }
+    private fun queryToDeleteData(dusername: String, markerId: String, type: String, position: Int) {
+        Toast.makeText(
+            requireContext(),
+            "$dusername, $markerId, $type, $position",
+            Toast.LENGTH_SHORT
+        ).show()
+        val url = "https://mapsapp-1-m9050519.deta.app/users/$dusername/delete_marker_data"
+        val mediaType = "application/json; charset=utf-8".toMediaType()
+        val requestJSON = JSONObject()
+        requestJSON.put("user_name", dusername)
+        requestJSON.put("marker_id", markerId)
+        requestJSON.put("data_type", type)
+        requestJSON.put("position", "$position")
 
+        Toast.makeText(requireContext(), requestJSON.toString(), Toast.LENGTH_LONG).show()
+        Timber.tag("Delfrag").i(requestJSON.toString())
+
+        val requestBody = requestJSON.toString().toRequestBody(mediaType)
+        val request = Request.Builder()
+            .addHeader("accept", "application/json")
+            .addHeader("Content-Type", "application/json")
+            .url(url)
+            .post(requestBody)
+            .build()
+        val client = OkHttpClient()
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                Log.i("ErrorError", e.toString())
+                Log.e("Deleting item", "Failed to delete item")
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                Log.i("Deleting item", "Successfully updated marker")
+            }
+        })
+    }
     private fun getGroupDetails(username: String) {
         var responseString : String? = null
         val client = OkHttpClient()
@@ -358,7 +443,7 @@ class HomeFragment : Fragment(), OnGroupItemClickListener {
                     return
                 }
                 groupsList = JsonParserHelper().parseGroupsDataJson(responseString!!)
-                groupsList.add(0, GroupModel("friends", "Friends", "420", R.drawable.ic_profile))
+                groupsList.add(0, GroupModel("friends", "Friends", "", R.drawable.ic_profile))
                 // Run on UI thread
                 requireActivity().runOnUiThread {
                     // Add friendsList
@@ -367,6 +452,9 @@ class HomeFragment : Fragment(), OnGroupItemClickListener {
 
                     if(viewModel.selectedGroup != -1){
                         onGroupItemClick(viewModel.selectedGroup)
+                    }
+                    else{
+                        onGroupItemClick(0)
                     }
                 }
 
@@ -389,7 +477,6 @@ class HomeFragment : Fragment(), OnGroupItemClickListener {
 
         val markerName: TextView = markerSheetDialog.findViewById(R.id.markerHeading)!!
         markerName.text = markersList[idx].name
-        val username = "Aflah"
         // Setup Notes and names
 //        val adapter = MarkerNotesAdapter(markersList[idx].notes, markersList[idx].noteUploaders)
 //        markerNotesRecyclerView.adapter = adapter
@@ -397,7 +484,10 @@ class HomeFragment : Fragment(), OnGroupItemClickListener {
         val allVisitors = ArrayList<String> ()
         allVisitors.addAll(markersList[idx].imageUploaders)
         allVisitors.addAll(markersList[idx].noteUploaders)
-        val uniqueVisitors = allVisitors.distinct() as MutableList<String>
+        var uniqueVisitors: MutableList<String> = mutableListOf()
+        if(allVisitors.isNotEmpty())
+            uniqueVisitors = allVisitors.distinct() as MutableList<String>
+
         val stringToBitmap = mutableMapOf<String, Bitmap>()
         val tempProfilePic = resources.getDrawable(R.drawable.ic_dashboard_black_24dp).toBitmap()
         val profilePics : MutableList<Bitmap> = mutableListOf()
@@ -445,7 +535,7 @@ class HomeFragment : Fragment(), OnGroupItemClickListener {
             MyImageRecyclerViewAdapter(mutableListOf(), mutableListOf(), mutableListOf(),this)
         imageRecyclerView.adapter = imageRecyclerViewAdapter
         val notesRecyclerViewAdapter =
-            MyNotesRecyclerViewAdapter(listOf(), listOf(),this)
+            MyNotesRecyclerViewAdapter(mutableListOf(), mutableListOf(),this)
         notesRecyclerView.adapter = notesRecyclerViewAdapter
 
         GlobalScope.launch {
@@ -479,18 +569,19 @@ class HomeFragment : Fragment(), OnGroupItemClickListener {
     }
 
     private fun getAndUpdateMarkerDetails(groupId: String) {
-        if(groupId == "friends") {
-            return
-        }
         var responseString : String? = null
         val client = OkHttpClient()
-        val request = Request.Builder()
+        var request = Request.Builder()
             .url("https://mapsapp-1-m9050519.deta.app/groups/$groupId/markers")
             .build()
+        if(groupId == "friends") {
+            request = Request.Builder()
+                .url("https://mapsapp-1-m9050519.deta.app/users/$username/friend_only_markers")
+                .build()
+        }
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 Timber.tag("markers").e(e.message.toString())
-                Toast.makeText(requireContext(), e.message.toString(), Toast.LENGTH_SHORT).show()
             }
             @SuppressLint("NotifyDataSetChanged")
             override fun onResponse(call: Call, response: Response) {
@@ -528,7 +619,6 @@ class HomeFragment : Fragment(), OnGroupItemClickListener {
             initLocationComponent()
             setupGesturesListener()
             mapLoaded = true
-            addAnnotationToMap(28.512, 78.234)
         }
     }
 
@@ -586,7 +676,7 @@ class HomeFragment : Fragment(), OnGroupItemClickListener {
         var annotateId = 0L
         bitmapFromDrawableRes(
             requireContext(),
-            R.drawable.ic_profile
+            R.drawable.purple_marker
         )?.let {
             // Set options for the resulting symbol layer.
             val pointAnnotationOptions: PointAnnotationOptions = PointAnnotationOptions()

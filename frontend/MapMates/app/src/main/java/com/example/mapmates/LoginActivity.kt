@@ -4,7 +4,9 @@ import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.widget.Button
+import android.widget.RelativeLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.RequiresApi
@@ -52,6 +54,7 @@ class LoginActivity : AppCompatActivity() {
                 //Store Login Information
                 val sharedPref = getSharedPreferences("Login", MODE_PRIVATE)
                 val ed = sharedPref.edit()
+                ed.putString("Username",userNameView.text.toString())
                 ed.putString("UserId",userId)
                 ed.apply()
 
@@ -84,6 +87,9 @@ class LoginActivity : AppCompatActivity() {
             .build()
         val client = OkHttpClient()
 
+        // find view by id
+        findViewById<RelativeLayout>(R.id.loadingPanel).visibility = View.VISIBLE
+
         val latch = CountDownLatch(1)
 
         client.newCall(request).enqueue(object : Callback{
@@ -107,6 +113,7 @@ class LoginActivity : AppCompatActivity() {
         )
 
         latch.await()
+        findViewById<RelativeLayout>(R.id.loadingPanel).visibility = View.GONE
         return userId
     }
 

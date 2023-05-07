@@ -6,64 +6,79 @@
     android:layout_height="match_parent"
     tools:context=".LoginActivity">
 
-    <LinearLayout
+    <RelativeLayout
+        android:id="@+id/loadingPanel"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:gravity="center_horizontal"
-        >
+        android:gravity="center"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@+id/linearLayout"
+        app:layout_constraintEnd_toEndOf="parent">
 
-        <ImageView
-            android:layout_marginTop="50dp"
-            android:layout_width="100dp"
-            android:layout_height="100dp"
-            android:hint="App Logo"
-            android:src="@drawable/ic_map"
-            app:tint="@color/purple_200"/>
-
-        <TextView
-            android:layout_marginTop="20dp"
-            android:layout_marginBottom="20dp"
+        <ProgressBar
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:visibility="visible"
+            android:indeterminate="true" />
+
+    </RelativeLayout>
+
+    <LinearLayout
+        android:id="@+id/linearLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center_horizontal"
+        android:orientation="vertical">
+
+        <ImageView
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_marginTop="50dp"
+            android:hint="App Logo"
+            android:src="@drawable/ic_map"
+            app:tint="@color/purple_200" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="20dp"
             android:text="Log In"
-            android:textStyle="bold"
+            android:textColor="@color/white"
             android:textSize="40sp"
-            android:textColor="@color/white" />
+            android:textStyle="bold" />
 
         <com.google.android.material.textfield.TextInputLayout
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-            android:layout_marginTop="10dp"
-            android:layout_marginStart="15dp"
-            android:layout_marginEnd="15dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Username"
-            >
+            android:layout_marginStart="15dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="15dp"
+            android:hint="Username">
+
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/username_field"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                />
+                android:layout_height="wrap_content" />
         </com.google.android.material.textfield.TextInputLayout>
 
 
         <com.google.android.material.textfield.TextInputLayout
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-            android:layout_marginTop="10dp"
-            android:layout_marginStart="15dp"
-            android:layout_marginEnd="15dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:endIconMode="password_toggle"
+            android:layout_marginStart="15dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="15dp"
             android:hint="Password"
-            >
+            app:endIconMode="password_toggle">
+
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/password_field"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="textPassword"
-                />
+                android:inputType="textPassword" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <Button
@@ -72,32 +87,29 @@
             android:layout_height="75dp"
             android:layout_margin="15dp"
             android:text="Log In"
-            android:textSize="20sp"
+            android:textAllCaps="false"
             android:textColor="@color/white"
-            android:textAllCaps="false" />
+            android:textSize="20sp" />
 
         <LinearLayout
-            android:layout_height="wrap_content"
             android:layout_width="match_parent"
-            android:gravity="center_horizontal"
-            >
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Don't have an account? "
-                />
+                android:text="Don't have an account? " />
 
             <TextView
                 android:id="@+id/signup_redirect"
-                android:layout_marginStart="10dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
                 android:clickable="true"
-                android:textColor="@color/purple_200"
-                android:textStyle="bold"
                 android:text="Sign Up"
-                />
+                android:textColor="@color/purple_200"
+                android:textStyle="bold" />
 
         </LinearLayout>
 

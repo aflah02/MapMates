@@ -13,6 +13,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.annotation.DrawableRes
+import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.fragment.app.Fragment
 import com.example.mapmates.R
@@ -55,6 +56,7 @@ class LocationSelectorFragment : Fragment() {
     private lateinit var pointAnnotationManager: PointAnnotationManager
     private var _binding: FragmentLocationSelectorBinding? = null
     private val binding get() = _binding!!
+    private lateinit var username: String
     private lateinit var spinner: MaterialSpinner
     private lateinit var groupsList: ArrayList<GroupModel>
     private lateinit var nextFab: ExtendedFloatingActionButton
@@ -96,6 +98,13 @@ class LocationSelectorFragment : Fragment() {
         _binding = FragmentLocationSelectorBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
+
+        // get username from shared preferences
+        val sharedPrefs = requireActivity().getSharedPreferences("Login",
+            AppCompatActivity.MODE_PRIVATE
+        )
+        username = sharedPrefs.getString("Username",null)!!
+
         groupsList = ArrayList()
         mapView = binding.mapView3
         locationPermissionHelper = LocationPermissionHelper(WeakReference(requireActivity()))
@@ -116,6 +125,10 @@ class LocationSelectorFragment : Fragment() {
             bundle.putDouble("latitude", mapView.getMapboxMap().cameraState.center.latitude())
             bundle.putDouble("longitude", mapView.getMapboxMap().cameraState.center.longitude())
             bundle.putString("groupId", groupsList[spinner.selectedIndex].groupId)
+
+            nameField.text?.clear()
+            nameEntered = false
+            nextFab.isEnabled = false
 
             val newFragment = CreateFragment()
             newFragment.arguments = bundle
@@ -145,7 +158,7 @@ class LocationSelectorFragment : Fragment() {
 
         spinner = binding.mySpinner
 //        spinner.setItems("Home", "Work", "School", "Other", "Group 1", "Group 2", "Group 3")
-        getGroupDetails("Aflah")
+        getGroupDetails(username)
         return root
     }
 
