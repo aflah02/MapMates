@@ -724,6 +724,7 @@ class imageIDsandNotesPayload(BaseModel):
     marker_id: str
     imageIDs: str
     notes: str
+    uploaderName: str
 # add images to marker
 @app.post("/users/{user_name}/add_images_and_notes_to_marker")
 async def add_images_and_notes_to_marker(user_name: str, imageIDsandNotesPayload: imageIDsandNotesPayload):
@@ -731,6 +732,7 @@ async def add_images_and_notes_to_marker(user_name: str, imageIDsandNotesPayload
     imageIDs = imageIDsandNotesPayload.imageIDs
     marker_id = imageIDsandNotesPayload.marker_id
     notes = imageIDsandNotesPayload.notes
+    uploaderName = imageIDsandNotesPayload.uploaderName
     imageIDs = list(imageIDs.split("<DELIMITER069>"))
     notes = list(notes.split("<DELIMITER069>"))
     # filter out empty strings
@@ -756,10 +758,10 @@ async def add_images_and_notes_to_marker(user_name: str, imageIDsandNotesPayload
     print(ls_notes_uploaders)
     for image_id in imageIDs:
         ls_image_id.append(ObjectId(image_id))
-        ls_image_uploaders.append(user_name)
+        ls_image_uploaders.append(uploaderName)
     for note in notes:
         ls_notes.append(note)
-        ls_notes_uploaders.append(user_name)
+        ls_notes_uploaders.append(uploaderName)
     print(ls_image_id)
     print(ls_image_uploaders)
     print(ls_notes)
