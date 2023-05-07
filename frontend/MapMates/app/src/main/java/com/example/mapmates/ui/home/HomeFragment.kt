@@ -394,13 +394,14 @@ class HomeFragment : Fragment(), OnGroupItemClickListener {
             "$dusername, $markerId, $type, $position",
             Toast.LENGTH_SHORT
         ).show()
-        val url = "https://mapsapp-1-m9050519.deta.app/users/$dusername/delete_marker_data"
+        val query = "https://mapsapp-1-m9050519.deta.app/users/$dusername/delete_marker_data?marker_id=$markerId&data_type=$type&position=$position"
+        val url = query
         val mediaType = "application/json; charset=utf-8".toMediaType()
         val requestJSON = JSONObject()
-        requestJSON.put("user_name", dusername)
-        requestJSON.put("marker_id", markerId)
-        requestJSON.put("data_type", type)
-        requestJSON.put("position", "$position")
+//        requestJSON.put("user_name", dusername)
+//        requestJSON.put("marker_id", markerId)
+//        requestJSON.put("data_type", type)
+//        requestJSON.put("position", "$position")
 
         Toast.makeText(requireContext(), requestJSON.toString(), Toast.LENGTH_LONG).show()
         Timber.tag("Delfrag").i(requestJSON.toString())
