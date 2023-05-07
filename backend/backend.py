@@ -746,7 +746,7 @@ async def add_images_and_notes_to_marker(user_name: str, imageIDsandNotesPayload
         return {"message": "Marker not found"}
     print(marker)
     # Add the image to the marker
-    ls_image_id = marker["image"]
+    ls_image_id = marker["images"]
     ls_image_uploaders = marker["image_uploaders"]
     ls_notes = marker["notes"]
     ls_notes_uploaders = marker["notes_uploaders"]
@@ -765,7 +765,7 @@ async def add_images_and_notes_to_marker(user_name: str, imageIDsandNotesPayload
     print(ls_image_uploaders)
     print(ls_notes)
     print(ls_notes_uploaders)
-    marker["image"] = ls_image_id
+    marker["images"] = ls_image_id
     marker["image_uploaders"] = ls_image_uploaders
     marker["notes"] = ls_notes
     marker["notes_uploaders"] = ls_notes_uploaders
