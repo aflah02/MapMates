@@ -1,11 +1,10 @@
 package com.example.mapmates
 
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
-import android.content.Intent
+import android.content.*
+import android.net.Uri
 import android.os.Bundle
 import android.text.InputType
+import android.util.Base64
 import android.util.Log
 import android.view.View
 import android.widget.Button
@@ -15,10 +14,13 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.mapmates.ui.people.friends.FriendData
 import com.example.mapmates.ui.people.groups.GroupMemberAdapter
+import com.squareup.picasso.MemoryPolicy
+import com.squareup.picasso.NetworkPolicy
 import com.squareup.picasso.Picasso
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
@@ -26,6 +28,8 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 import timber.log.Timber
 import java.io.IOException
+import java.io.InputStream
+import java.net.URLEncoder
 import java.util.concurrent.CountDownLatch
 
 
@@ -92,8 +96,42 @@ class SettingsActivity : AppCompatActivity() {
 
         changePicture.setOnClickListener {
 //            TODO: Change group picture using API
+            val intent = Intent(Intent.ACTION_GET_CONTENT)
+            intent.type = "image/*"
+            startActivityForResult(intent, 100)
         }
     }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        // Get User from intent
+        // print all data in intent
+//        Log.d("ProfileFragment", "onActivityResultDATA: $data")
+        if (requestCode == 100 && resultCode == RESULT_OK) {
+            val imageUri: Uri? = data?.data
+            Log.d("ProfileFragment", "onActivityResult: $imageUri")
+            val contentResolver = applicationContext.contentResolver
+            val encodedImage = imageUri?.let {
+                getImageAsURLEncodedBinaryString(contentResolver,
+                    it
+                )
+            }
+//            Log.d("ProfileFragment", "onActivityResult: $encodedImage")
+            val imageID = encodedImage?.let { uploadImage(it) }
+            val group_id = intent.getStringExtra("groupID")
+            val imageURL = "https://mapsapp-1-m9050519.deta.app/groups/$group_id/cover_image"
+            Picasso.get().load(imageURL)
+                .memoryPolicy(MemoryPolicy.NO_CACHE, MemoryPolicy.NO_STORE)
+                .networkPolicy(NetworkPolicy.NO_CACHE, NetworkPolicy.NO_STORE)
+                .fit().into(groupPicture)
+//            Picasso.get().load("https://mapsapp-1-m9050519.deta.app/users/$userName/profile_picture").into(profilePicture)
+            Log.d("SA", "onActivityResult: $imageID")
+        }
+        else{
+            Log.d("SA", "onActivityResult: $resultCode")
+        }
+    }
+
     private fun setPageDetails(groupID: String?){
         groupMembers.layoutManager = LinearLayoutManager(this)
         adapter = GroupMemberAdapter(emptyList<FriendData>())
@@ -105,15 +143,85 @@ class SettingsActivity : AppCompatActivity() {
         val group_name = groupData.title
         val memberList = groupData.members
         val groupMemberDetails = getGroupMemberDetails(memberList)
-        Picasso.get().load(groupData.imageUrl).into(groupPicture)
+        val imageURL = "https://mapsapp-1-m9050519.deta.app/groups/$group_id/cover_image"
+        Picasso.get().load(imageURL)
+            .memoryPolicy(MemoryPolicy.NO_CACHE, MemoryPolicy.NO_STORE)
+            .networkPolicy(NetworkPolicy.NO_CACHE, NetworkPolicy.NO_STORE)
+            .fit().into(groupPicture)
         groupTitle.setText(group_name)
         groupCode.text = inviteCode
         adapter.updateList(groupMemberDetails)
     }
 
+    private fun uploadImage(encodedImage: String): String? {
+        var imageID : String? = null
+        val groupNumber = intent.getStringExtra("groupID")
+        val url = "https://mapsapp-1-m9050519.deta.app/groups/$groupNumber/update_group_cover_image"
+        val mediaType = "application/json; charset=utf-8".toMediaType()
+        val requestJSON = JSONObject()
+        requestJSON.put("image", encodedImage)
+        Log.d("uploadImage", "JSON Constructed")
+        val requestBody = requestJSON.toString().toRequestBody(mediaType)
+        val request = Request.Builder()
+            .addHeader("accept","application/json")
+            .addHeader("Content-Type","application/json")
+            .url(url)
+            .post(requestBody)
+            .build()
+        Log.d("uploadImage", "Request Built")
+        val client = OkHttpClient()
+
+        val latch = CountDownLatch(1)
+
+        client.newCall(request).enqueue(object : Callback{
+            override fun onFailure(call: Call, e: IOException) {
+                Log.e("Login API",e.message.toString())
+                latch.countDown()
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                val responseBody = response.body?.string()
+                Log.d("uploadImage", "Request Executed: ${responseBody}")
+                val responseData = responseBody
+                val jsonResponse = responseData?.let { JSONObject(it) }
+                if (!response.isSuccessful) {
+                    latch.countDown()
+                    return
+                }
+                if (jsonResponse != null) {
+                    imageID = jsonResponse.get("image_id") as String
+                }
+                if (jsonResponse != null) {
+                    Timber.tag("Login").i(jsonResponse.toString(4))
+                }
+                latch.countDown()
+            }
+        }
+        )
+
+        latch.await()
+        Log.d("uploadImage", "Request Executed")
+        return imageID
+    }
+
+    fun getImageAsURLEncodedBinaryString(contentResolver: ContentResolver, uri: Uri): String? {
+        try {
+            val inputStream: InputStream? = contentResolver.openInputStream(uri)
+            val bytes = inputStream?.readBytes()
+            val base64 = Base64.encodeToString(bytes, Base64.DEFAULT)
+            // URL encode the base64 string
+            val urlEncoded = URLEncoder.encode(base64, "UTF-8")
+            return urlEncoded
+
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
+        return null
+    }
+
     private fun parseJson(jsonString: String?): GroupAllData {
         if (jsonString == null) {
-            return GroupAllData("","","", emptyList(),"")
+            return GroupAllData("","","", emptyList())
         }
         val jsObj = JSONObject(jsonString)
 //        val jsObj = jsArray.getJSONObject(0)
@@ -125,7 +233,7 @@ class SettingsActivity : AppCompatActivity() {
         val membersListRemoveEmptyStrings = membersListArr.filter { it.isNotEmpty() }
         val membersList = membersListRemoveEmptyStrings.map { it.trim() }
 //        TODO: replace this URL with response from JSON by editing API backend
-        val gData = GroupAllData(group_id, group_name, invite_code, membersList,"https://picsum.photos/200")
+        val gData = GroupAllData(group_id, group_name, invite_code, membersList)
         return gData
     }
     private fun getGroupData(groupID: String): String? {

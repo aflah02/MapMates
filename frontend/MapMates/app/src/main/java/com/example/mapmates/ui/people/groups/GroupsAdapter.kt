@@ -12,6 +12,8 @@ import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 import com.example.mapmates.R
 import com.example.mapmates.SettingsActivity
+import com.squareup.picasso.MemoryPolicy
+import com.squareup.picasso.NetworkPolicy
 
 import com.squareup.picasso.Picasso
 
@@ -25,8 +27,11 @@ class GroupsAdapter(var itemList: List<GroupData>) : RecyclerView.Adapter<Groups
     override fun onBindViewHolder(holder: GroupViewHolder, position: Int) {
         val currentItem = itemList[position]
         holder.peopleGroupName.text = currentItem.groupName
-        Picasso.get().load(currentItem.imageUrl).into(holder.peopleGroupImage)
-
+//        Picasso.get().load(currentItem.imageUrl).into(holder.peopleGroupImage)
+        Picasso.get().load(currentItem.imageUrl)
+            .memoryPolicy(MemoryPolicy.NO_CACHE, MemoryPolicy.NO_STORE)
+            .networkPolicy(NetworkPolicy.NO_CACHE, NetworkPolicy.NO_STORE)
+            .fit().into(holder.peopleGroupImage)
         holder.peopleGroupSettings.setOnClickListener {
             // Handle button click for this item
             val context = holder.itemView.context

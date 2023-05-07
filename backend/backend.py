@@ -18,6 +18,9 @@ import io
 
 app = FastAPI()
 
+class imagePayload(BaseModel):
+    image: str
+    
 class UserCredentials(BaseModel):
     username: str
     password: str
@@ -91,8 +94,8 @@ async def read_users():
 async def read_user(user_name: str):
     return users.find_one({"username": user_name})
 
-class imagePayload(BaseModel):
-    image: str
+# class imagePayload(BaseModel):
+#     image: str
 
 
 @app.post("/users")
@@ -476,6 +479,66 @@ async def get_markers(group_id: str):
     except:
         return {"message": "Invalid group_id"}
     
+# update group name
+@app.post("/groups/{group_id}/update_group_name")
+async def update_group_name(group_id: str, new_group_name: str):
+    group_to_update = groups.find_one({"_id": group_id})
+    if group_to_update:
+        update = {
+            "$set": {
+                "group_name": new_group_name
+            }
+        }
+        groups.update_one({"_id": group_id}, update)
+        return {"message": "Group name updated successfully"}
+    else:
+        return {"message": "Invalid group_id"}
+
+# class imagePayload(BaseModel):
+#     image: str
+
+# # update group cover image
+# @app.post("/groups/{group_id}/update_group_cover_image")
+# async def update_group_cover_image(group_id: str, imageID: str):
+#     groups = db["groups"]
+#     group_to_update = groups.find_one({"_id": group_id})
+#     if group_to_update:
+#         update = {
+#             "$set": {
+#                 "cover_image": imageID
+#             }
+#         }
+#         groups.update_one({"_id": group_id}, update)
+#         return {"message": "Group cover image updated successfully"}
+#     else:
+#         return {"message": "Invalid group_id"}
+
+# upload group cover image as base64 url encoded string
+@app.post("/groups/{group_id}/update_group_cover_image")
+async def update_group_cover_image(group_id: str, payload: imagePayload):
+    imgstring = unquote(payload.image)
+    imgdata = base64.b64decode(imgstring)
+    image = {
+        "data": imgdata
+    }
+    image_id = db["group_cover_images"].insert_one(image).inserted_id
+    groups = db["groups"]
+    all_groups = groups.find()
+    group_to_update = groups.find_one({"_id": group_id})
+    print(group_to_update)
+    if group_to_update:
+        update = {
+            "$set": {
+                "cover_image": image_id
+            }
+        }
+        print(update)
+        groups.update_one({"_id": group_id}, update)
+        print(groups.find_one({"_id": group_id}))
+        return {"message": "Group cover image updated successfully", "image_id": str(image_id)}
+    else:
+        return {"message": "Invalid group_id"}
+
 # get friend only markers for a user
 @app.get("/users/{user_name}/friend_only_markers")
 async def get_friend_only_markers(user_name: str):
@@ -652,8 +715,8 @@ async def add_marker(username: str, payload: MarkerPayload):
     print("Marker added successfully")
     return {"message": "Marker added successfully"}
 
-class imagePayload(BaseModel):
-    image: str
+# class imagePayload(BaseModel):
+#     image: str
 
 class imageIDsandNotesPayload(BaseModel):
     marker_id: str

@@ -99,7 +99,7 @@ class GroupsFragment : Fragment() {
                 val groupID = groupIDs[i].toString()
                 val groupName = groupNames[i].toString()
                 val groupInviteCode = group_invite_codes[i].toString()
-                groupDataList.add(GroupData(groupName, "https://picsum.photos/200", groupID, groupInviteCode))
+                groupDataList.add(GroupData(groupName, "https://mapsapp-1-m9050519.deta.app/groups/$groupID/cover_image", groupID, groupInviteCode))
             }
         }
 
