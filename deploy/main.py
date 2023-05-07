@@ -32,6 +32,8 @@ groups = db["groups"]
 profile_picture_collection = db["profile_pictures"]
 # marker images collection
 marker_image_collection = db["images"]
+# group_cover_images collection
+group_cover_image_collection = db["group_cover_images"]
 
 # Check if username exists  
 @app.get("/existsUsername/{username}")
@@ -1044,9 +1046,33 @@ async def get_all_group_details(user_name: str):
             "group_name": details["group_name"],
             "users": details["users"],
             "invite_code": details["invite_code"],
+            "cover_image": details["cover_image"],
         })
     # Return the groups
     return group_details
+
+# get group cover image
+@app.get("/groups/{group_id}/cover_image")
+async def get_group_cover_image(group_id: str):
+    cover_image_id = groups.find_one({"_id": group_id})["cover_image"]
+    group_cover_image_collection = db["group_cover_images"]
+    for image in group_cover_image_collection.find():
+        if str(image["_id"]) == str(cover_image_id):
+            print(image)
+            return Response(content=io.BytesIO(image['data']).getvalue(), media_type="image/jpeg")
+    return {"message": "Group cover image not found"}
+
+# get group cover image by image_id
+@app.get("/groups/cover_image/{image_id}")
+async def get_group_cover_image_by_image_id(image_id: str):
+    group_cover_image_collection = db["group_cover_images"]
+    for image in group_cover_image_collection.find():
+        print(str(image["_id"]))
+        if str(image["_id"]) == str(image_id):
+            print(image["_id"])
+            return Response(content=io.BytesIO(image['data']).getvalue(), media_type="image/jpeg")
+    return {"message": "Group cover image not found"}
+
 
 @app.delete("/groups/{group_id}")
 async def delete_group(group_id: str):

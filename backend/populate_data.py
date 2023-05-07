@@ -206,6 +206,7 @@ def build_users(client, user_friends, group_vs_users):
             im = Image.open("assets/Abhik.jpg")
         else:
             im = Image.open("assets/default_user_pic.jpg")
+        print(im)
         image_bytes = io.BytesIO()
         im.save(image_bytes, format='JPEG')
         image = {
@@ -278,6 +279,12 @@ def build_groups(client, group_vs_users):
 
     # Create a collection named "groups"
     groups = db["groups"]
+    group_cover_image_collection = db["group_cover_images"]
+
+    image_files = os.listdir("assets")
+    # keep only images whose name starts with cover
+    image_files = [image_file for image_file in image_files if image_file.startswith("cover")]
+    print(image_files)
 
     # random group invite code
     def random_string(length):
@@ -288,6 +295,17 @@ def build_groups(client, group_vs_users):
     # Populate the collection with group_vs_users
     for i, group in enumerate(group_vs_users):
         random.seed(i)
+        random_cover_image = random.choice(image_files)
+        print(random_cover_image)
+        im = Image.open("assets/" + random_cover_image)
+        print(im)
+        image_bytes = io.BytesIO()
+        im.save(image_bytes, format='JPEG')
+        image = {
+            'data': image_bytes.getvalue(),
+        }
+        cover_image_id = group_cover_image_collection.insert_one(image).inserted_id
+        random.seed(i)
         while True:
             group_invite_code = random_string(6)
             if group_invite_code not in set_of_group_invite_codes:
@@ -297,6 +315,8 @@ def build_groups(client, group_vs_users):
             "invite_code": group_invite_code,
             "group_name": "Group " + str(group),
             "users": group_vs_users[group],
+            "cover_image": cover_image_id,
+
         }
         set_of_group_invite_codes.add(group_invite_code)
         groups.insert_one(group)
