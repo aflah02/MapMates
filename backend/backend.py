@@ -6,12 +6,12 @@ import bcrypt
 from pydantic import BaseModel
 import pydantic
 import base64
+import uvicorn
 from urllib.parse import unquote
 from bson import ObjectId
 from typing import List
 import string
 import random
-import uvicorn
 pydantic.json.ENCODERS_BY_TYPE[ObjectId]=str
 from PIL import Image
 import io
@@ -597,7 +597,7 @@ async def delete_marker_data(user_name: str, marker_id: str, data_type: str, pos
         print(ls_image_uploaders_updated)
         for m in user_markers:
             if str(m["_id"]) == marker_id:
-                m["image"] = ls_images_updated
+                m["images"] = ls_images_updated
                 m["image_uploaders"] = ls_image_uploaders_updated
     elif data_type == "note":
         print("note")
@@ -1168,7 +1168,6 @@ async def delete_group(group_id: str):
             }
             users.update_one({"_id": user["_id"]}, update)
     return {"message": "Group deleted successfully"}
-
 
 if __name__ == "__main__":
     uvicorn.run(app)

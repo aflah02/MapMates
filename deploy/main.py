@@ -596,7 +596,7 @@ async def delete_marker_data(user_name: str, marker_id: str, data_type: str, pos
         print(ls_image_uploaders_updated)
         for m in user_markers:
             if str(m["_id"]) == marker_id:
-                m["image"] = ls_images_updated
+                m["images"] = ls_images_updated
                 m["image_uploaders"] = ls_image_uploaders_updated
     elif data_type == "note":
         print("note")
