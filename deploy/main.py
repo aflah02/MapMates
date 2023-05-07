@@ -584,8 +584,8 @@ async def delete_marker_data(user_name: str, marker_id: str, data_type: str, pos
     if data_type == "image":
         print("image")
         # print("Before")
-        
-        ls_images_updated = marker["image"]
+        print(marker)
+        ls_images_updated = marker["images"]
         print(ls_images_updated)
         ls_images_updated.pop(int(position))
         print(ls_images_updated)
@@ -1167,3 +1167,4 @@ async def delete_group(group_id: str):
             }
             users.update_one({"_id": user["_id"]}, update)
     return {"message": "Group deleted successfully"}
+
