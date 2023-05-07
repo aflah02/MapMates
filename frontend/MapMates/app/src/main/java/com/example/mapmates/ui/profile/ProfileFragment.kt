@@ -19,6 +19,7 @@ import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import com.example.mapmates.R
 import com.example.mapmates.ui.people.friends.FriendData
@@ -94,6 +95,15 @@ class ProfileFragment : Fragment() {
         }
         logoutButton.setOnClickListener {
 //            TODO: Do the logout function here!!!
+            Toast.makeText(context, "Logout", Toast.LENGTH_SHORT).show()
+            // Shared Preferences
+            val sharedPref = activity?.getSharedPreferences("Login", AppCompatActivity.MODE_PRIVATE)
+            val editor = sharedPref?.edit()
+            editor?.putString("Username", null)
+            editor?.putString("UserId", null)
+            editor?.apply()
+            val intent = Intent(context, com.example.mapmates.LoginActivity::class.java)
+            startActivity(intent)
         }
 
         return view
