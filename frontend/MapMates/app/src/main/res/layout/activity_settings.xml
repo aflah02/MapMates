@@ -6,26 +6,40 @@
     android:layout_height="match_parent"
     tools:context=".SettingsActivity">
 
-    <TextView
+    <EditText
         android:id="@+id/GroupTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="149dp"
-        android:layout_marginTop="28dp"
+        android:layout_marginTop="3dp"
+        android:background="@android:color/transparent"
+        android:enabled="false"
+        android:textColor="@color/black"
         android:layout_marginEnd="149dp"
         android:text="Group Title"
         android:textSize="24sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/groupPicture" />
+<!--    <EditText-->
+<!--        android:id="@+id/bioTextView"-->
+<!--        android:layout_width="338dp"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:layout_marginStart="10dp"-->
+<!--        android:layout_marginTop="30dp"-->
+<!--        android:background="@android:color/transparent"-->
+<!--        android:enabled="false"-->
+<!--        android:text="Please Save me"-->
+<!--        android:textColor="@color/black"-->
+<!--        android:textSize="20sp"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:layout_constraintTop_toTopOf="parent" />-->
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/GrpMembersRecyclerView"
-        android:layout_width="396dp"
-        android:layout_height="402dp"
-        android:layout_marginStart="7dp"
-        android:layout_marginTop="39dp"
-        android:layout_marginEnd="8dp"
+        android:layout_width="393dp"
+        android:layout_height="400dp"
+        android:layout_marginTop="6dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/GroupTitle" />
@@ -34,8 +48,8 @@
         android:id="@+id/leaveButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="257dp"
-        android:layout_marginTop="107dp"
+        android:layout_marginStart="280dp"
+        android:layout_marginTop="104dp"
         android:text="Leave"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/GrpMembersRecyclerView" />
@@ -44,8 +58,8 @@
         android:id="@+id/groupCode"
         android:layout_width="wrap_content"
         android:layout_height="33dp"
-        android:layout_marginStart="60dp"
-        android:layout_marginTop="40dp"
+        android:layout_marginStart="68dp"
+        android:layout_marginTop="36dp"
         android:text="Sample Group Code"
         android:textSize="20sp"
         app:layout_constraintStart_toStartOf="parent"
@@ -56,10 +70,59 @@
         android:layout_width="54dp"
         android:layout_height="56dp"
         android:layout_marginStart="44dp"
-        android:layout_marginTop="28dp"
+        android:layout_marginTop="24dp"
         android:background="@android:color/transparent"
         app:layout_constraintStart_toEndOf="@+id/groupCode"
         app:layout_constraintTop_toBottomOf="@+id/GrpMembersRecyclerView"
         app:srcCompat="@drawable/baseline_content_copy_24" />
+
+    <ImageView
+        android:id="@+id/groupPicture"
+        android:layout_width="168dp"
+        android:layout_height="107dp"
+        android:layout_marginStart="121dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="122dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:srcCompat="@tools:sample/backgrounds/scenic" />
+
+    <ImageButton
+        android:id="@+id/changePicture"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="92dp"
+        android:layout_marginEnd="108dp"
+        android:background="@android:color/transparent"
+        android:src="@drawable/baseline_camera_alt_24"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageButton
+        android:id="@+id/editTitleButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="5dp"
+        android:layout_marginTop="135dp"
+        android:background="@android:color/transparent"
+        android:elevation="6dp"
+        android:src="@drawable/baseline_edit_24"
+        app:layout_constraintStart_toEndOf="@+id/GroupTitle"
+        app:layout_constraintTop_toTopOf="parent" />
+
+
+    <ImageButton
+        android:id="@+id/saveTitleButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="5dp"
+        android:layout_marginTop="135dp"
+        android:elevation="6dp"
+        android:visibility="invisible"
+        android:src="@drawable/baseline_save_24"
+        android:background="@android:color/transparent"
+        app:layout_constraintStart_toEndOf="@+id/GroupTitle"
+        app:layout_constraintTop_toTopOf="parent"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

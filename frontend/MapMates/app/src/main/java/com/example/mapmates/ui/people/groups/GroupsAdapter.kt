@@ -33,6 +33,7 @@ class GroupsAdapter(var itemList: List<GroupData>) : RecyclerView.Adapter<Groups
             val intent = Intent(context, SettingsActivity::class.java)
             Log.d("GroupAdapter", "groupID: ${currentItem.groupID}")
             intent.putExtra("groupID", currentItem.groupID)
+            intent.putExtra("GrpImageUrl", currentItem.imageUrl)
             context.startActivity(intent)
         }
         holder.itemView.setOnClickListener{
