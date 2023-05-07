@@ -21,6 +21,8 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.example.mapmates.R
 import com.example.mapmates.ui.people.friends.FriendData
+import com.squareup.picasso.MemoryPolicy
+import com.squareup.picasso.NetworkPolicy
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -30,6 +32,7 @@ import java.io.IOException
 import java.io.InputStream
 import java.net.URLEncoder
 import java.util.concurrent.CountDownLatch
+import kotlin.math.log
 
 class ProfileFragment : Fragment() {
     private lateinit var profilePicture: ImageView
@@ -39,8 +42,6 @@ class ProfileFragment : Fragment() {
     private lateinit var name: TextView
     private lateinit var userName: TextView
     private lateinit var userBio: EditText
-
-
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.fragment_profile, container, false)
@@ -82,8 +83,11 @@ class ProfileFragment : Fragment() {
         uploadButton.setOnClickListener {
             val intent = Intent(Intent.ACTION_GET_CONTENT)
             intent.type = "image/*"
-            intent.putExtra("User", UserName)
+//            intent.putExtra("User", UserName)
+//            Log.d("ProfileFragment", "onCreateView: $UserName")
+//            Log.d("ProfileFragment", "onCreateViewINTENT: $intent")
             startActivityForResult(intent, 123)
+//            Log.d("startingActivity", "onCreateView: 123")
         }
 
         return view
@@ -91,22 +95,37 @@ class ProfileFragment : Fragment() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        val userName  = data?.getStringExtra("User")
+        // Get User from intent
+        val userName = userName.text.toString()
+        // print all data in intent
+//        Log.d("ProfileFragment", "onActivityResultDATA: $data")
+        Log.d("ProfileFragment", "onActivityResultUNAME: $userName")
         if (requestCode == 123 && resultCode == RESULT_OK) {
             val imageUri: Uri? = data?.data
+            Log.d("ProfileFragment", "onActivityResult: $imageUri")
             val encodedImage = imageUri?.let { getImageAsURLEncodedBinaryString(requireContext().contentResolver, it) }
+//            Log.d("ProfileFragment", "onActivityResult: $encodedImage")
             val imageID = encodedImage?.let { uploadImage(it) }
-            Picasso.get().load("https://mapsapp-1-m9050519.deta.app/users/$userName/profile_picture").into(profilePicture)
+            Log.d("ProfileFragment", "onActivityResult: $imageID")
+            Picasso.get().load("https://mapsapp-1-m9050519.deta.app/users/$userName/profile_picture")
+                .memoryPolicy(MemoryPolicy.NO_CACHE,MemoryPolicy.NO_STORE)
+                .networkPolicy(NetworkPolicy.NO_CACHE, NetworkPolicy.NO_STORE)
+                .fit().into(profilePicture);
+//            Picasso.get().load("https://mapsapp-1-m9050519.deta.app/users/$userName/profile_picture").into(profilePicture)
+            Log.d("ProfileFragmentLoadedNewPic", "onActivityResult: $imageID")
+        }
+        else{
+            Log.d("ProfileFragmentAsIncorrectResCode", "onActivityResult: $resultCode")
         }
     }
 
     private fun uploadImage(encodedImage: String): String? {
         var imageID : String? = null
-        val url = "https://mapsapp-1-m9050519.deta.app/users/Aflah/profile_picture"
+        val url = "https://mapsapp-1-m9050519.deta.app/users/Aflah/upload_profile_picture_url_encoded_base64"
         val mediaType = "application/json; charset=utf-8".toMediaType()
         val requestJSON = JSONObject()
         requestJSON.put("image", encodedImage)
-
+        Log.d("uploadImage", "JSON Constructed")
         val requestBody = requestJSON.toString().toRequestBody(mediaType)
         val request = Request.Builder()
             .addHeader("accept","application/json")
@@ -114,6 +133,7 @@ class ProfileFragment : Fragment() {
             .url(url)
             .post(requestBody)
             .build()
+        Log.d("uploadImage", "Request Built")
         val client = OkHttpClient()
 
         val latch = CountDownLatch(1)
@@ -125,7 +145,9 @@ class ProfileFragment : Fragment() {
             }
 
             override fun onResponse(call: Call, response: Response) {
-                val responseData = response.body?.string()
+                val responseBody = response.body?.string()
+                Log.d("uploadImage", "Request Executed: ${responseBody}")
+                val responseData = responseBody
                 val jsonResponse = responseData?.let { JSONObject(it) }
                 if (!response.isSuccessful) {
                     latch.countDown()
@@ -143,6 +165,7 @@ class ProfileFragment : Fragment() {
         )
 
         latch.await()
+        Log.d("uploadImage", "Request Executed")
         return imageID
     }
 
