@@ -55,7 +55,6 @@ class ExploreFragment : Fragment() {
         userLoc = it
         mapView.getMapboxMap().setCamera(CameraOptions.Builder().center(it).build())
         mapView.gestures.focalPoint = mapView.getMapboxMap().pixelForCoordinate(it)
-        Toast.makeText(requireContext(), "Location updated", Toast.LENGTH_SHORT).show()
     }
 
     private val onMoveListener = object : OnMoveListener {
@@ -204,7 +203,6 @@ class ExploreFragment : Fragment() {
         mapView.onLowMemory()
     }
     private fun spawnEvents(){
-        Toast.makeText(requireContext(), "Spawning events", Toast.LENGTH_SHORT).show()
         //Randomly pick 10 coordinates within 50km radius of Point userLoc
         val events = mutableListOf<Point>()
         for(i in 0..9){

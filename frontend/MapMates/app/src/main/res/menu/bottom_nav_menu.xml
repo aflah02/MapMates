@@ -6,10 +6,6 @@
         android:icon="@drawable/home_selector"
         android:title="@string/title_home" />
 
-    <item
-        android:id="@+id/navigation_explore"
-        android:icon="@drawable/explore_selector"
-        android:title="@string/title_explore" />
 
     <item
         android:id="@+id/navigation_create"
