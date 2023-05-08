@@ -59,8 +59,11 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 import timber.log.Timber
 import java.io.IOException
+import java.lang.Math.*
 import java.lang.ref.WeakReference
+import java.util.*
 import java.util.concurrent.CountDownLatch
+import kotlin.collections.ArrayList
 
 class HomeFragmentViewModel : ViewModel(){
     var selectedGroup:Int = -1;
@@ -160,8 +163,10 @@ class HomeFragment : Fragment(), OnGroupItemClickListener {
             mapView.getMapboxMap().setCamera(CameraOptions.Builder().center(userLoc).build())
             mapView.gestures.focalPoint = mapView.getMapboxMap().pixelForCoordinate(userLoc)
         }
+
         return root
     }
+
 
     private fun createBottomGroupDialog() {
         groupSheetDialog = BottomSheetDialog(requireContext())

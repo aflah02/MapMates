@@ -15,6 +15,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContentProviderCompat.requireContext
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.mapmates.ui.people.friends.FriendData
@@ -86,6 +87,10 @@ class SettingsActivity : AppCompatActivity() {
         leaveButton.setOnClickListener {
 
             val leaveGroupResponse = groupID?.let { it1 -> leaveGroupCall(user, it1) }
+            //Broadcast a signal named UpdateUI
+            val intent = Intent("UpdateUI")
+            intent.putExtra("UpdateUI", "true")
+            LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
             onBackPressed()
         }
         editTitle.setOnClickListener {
@@ -112,7 +117,7 @@ class SettingsActivity : AppCompatActivity() {
 
         changePicture.setOnClickListener {
 //            TODO: Change group picture using API
-            val intent = Intent(Intent.ACTION_GET_CONTENT)
+            var intent = Intent(Intent.ACTION_GET_CONTENT)
             intent.type = "image/*"
             startActivityForResult(intent, 100)
         }
@@ -182,6 +187,7 @@ class SettingsActivity : AppCompatActivity() {
             if(groupPicture.drawable == null){
                 groupPicture.setImageResource(R.drawable.default_group)
             }
+
 //            Picasso.get().load("https://mapsapp-1-m9050519.deta.app/users/$userName/profile_picture").into(profilePicture)
             Log.d("SA", "onActivityResult: $imageID")
         }

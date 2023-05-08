@@ -46,7 +46,7 @@ class LoginActivity : AppCompatActivity() {
         }
 
         loginButton.setOnClickListener {
-            val userId : String? = logInUser(userNameView.text.toString(),passwordView.text.toString())
+            val userId : String? = logInUser(userNameView.text.toString().trim(),passwordView.text.toString().trim())
             if(userId == null){
                 Toast.makeText(applicationContext,"Invalid Credentials!",Toast.LENGTH_SHORT).show()
             }
@@ -54,7 +54,7 @@ class LoginActivity : AppCompatActivity() {
                 //Store Login Information
                 val sharedPref = getSharedPreferences("Login", MODE_PRIVATE)
                 val ed = sharedPref.edit()
-                ed.putString("Username",userNameView.text.toString())
+                ed.putString("Username",userNameView.text.toString().trim())
                 ed.putString("UserId",userId)
                 ed.apply()
 

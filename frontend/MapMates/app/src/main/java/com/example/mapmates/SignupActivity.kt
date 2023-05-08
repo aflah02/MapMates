@@ -44,7 +44,7 @@ class SignupActivity : AppCompatActivity() {
         }
 
         signupButton.setOnClickListener {
-            val userId : String? = signUpUser(userNameView.text.toString(),passwordView.text.toString(), fullNameView.text.toString())
+            val userId : String? = signUpUser(userNameView.text.toString().trim(),passwordView.text.toString().trim(), fullNameView.text.toString())
             if(userId == null){
                 Toast.makeText(applicationContext,"Cannot Signup!", Toast.LENGTH_SHORT).show()
             }
@@ -52,7 +52,7 @@ class SignupActivity : AppCompatActivity() {
                 //Store Login Information
                 val sharedPref = getSharedPreferences("Login", MODE_PRIVATE)
                 val ed = sharedPref.edit()
-                ed.putString("Username",userNameView.text.toString())
+                ed.putString("Username",userNameView.text.toString().trim())
                 ed.putString("UserId",userId)
                 ed.apply()
 

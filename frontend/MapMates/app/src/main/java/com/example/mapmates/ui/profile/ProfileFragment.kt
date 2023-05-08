@@ -70,7 +70,10 @@ class ProfileFragment : Fragment() {
         editBioButton = view.findViewById(R.id.editBioButton)
         saveBioButton = view.findViewById(R.id.saveBioButton)
         logoutButton = view.findViewById(R.id.logoutButton)
-        Picasso.get().load("https://mapsapp-1-m9050519.deta.app/users/$user/profile_picture").into(profilePicture)
+        Picasso.get().load("https://mapsapp-1-m9050519.deta.app/users/$user/profile_picture")
+            .memoryPolicy(MemoryPolicy.NO_CACHE,MemoryPolicy.NO_STORE)
+            .networkPolicy(NetworkPolicy.NO_CACHE, NetworkPolicy.NO_STORE)
+            .into(profilePicture)
 
         editBioButton.setOnClickListener {
             userBio.isEnabled = true
@@ -118,7 +121,7 @@ class ProfileFragment : Fragment() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         // Get User from intent
-        val userName = userName.text.toString()
+//        val userName = userName.text.toString()
         // print all data in intent
 //        Log.d("ProfileFragment", "onActivityResultDATA: $data")
         Log.d("ProfileFragment", "onActivityResultUNAME: $userName")
@@ -129,7 +132,7 @@ class ProfileFragment : Fragment() {
 //            Log.d("ProfileFragment", "onActivityResult: $encodedImage")
             val imageID = encodedImage?.let { uploadImage(it) }
             Log.d("ProfileFragment", "onActivityResult: $imageID")
-            Picasso.get().load("https://mapsapp-1-m9050519.deta.app/users/$userName/profile_picture")
+            Picasso.get().load("https://mapsapp-1-m9050519.deta.app/users/$user/profile_picture")
                 .memoryPolicy(MemoryPolicy.NO_CACHE,MemoryPolicy.NO_STORE)
                 .networkPolicy(NetworkPolicy.NO_CACHE, NetworkPolicy.NO_STORE)
                 .fit().into(profilePicture);

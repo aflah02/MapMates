@@ -76,7 +76,7 @@ class GroupOptionsBottomSheetFragment() : BottomSheetDialogFragment() {
 
         createGroup.setOnClickListener {
 
-            Toast.makeText(requireContext(),"Clicked on create",Toast.LENGTH_SHORT).show()
+//            Toast.makeText(requireContext(),"Clicked on create",Toast.LENGTH_SHORT).show()
             generatedCode.visibility = View.VISIBLE
             copyButton.visibility = View.VISIBLE
             createGroup.visibility = View.GONE
@@ -97,15 +97,10 @@ class GroupOptionsBottomSheetFragment() : BottomSheetDialogFragment() {
             Toast.makeText(requireContext(), "Text copied to clipboard", Toast.LENGTH_LONG).show()
         }
         joinGroup.setOnClickListener {
-            Toast.makeText(requireContext(),"Entered ${codeGroup.text}",Toast.LENGTH_SHORT).show()
+//            Toast.makeText(requireContext(),"Entered ${codeGroup.text}",Toast.LENGTH_SHORT).show()
 //            TODO: Post this code to add a group on response ok go back, on fail response display toast no group found
-            val apiJoinResponse = joinGroup(codeGroup.text.toString(), username)
-            if (apiJoinResponse != ""){
-                Toast.makeText(requireContext(),"Joined ${codeGroup.text}",Toast.LENGTH_SHORT).show()
-            }
-            else{
-                Toast.makeText(requireContext(),"No group found",Toast.LENGTH_SHORT).show()
-            }
+            val apiJoinResponse = JSONObject(joinGroup(codeGroup.text.toString(), username))
+            Toast.makeText(requireContext(),apiJoinResponse.getString("message"),Toast.LENGTH_SHORT).show()
         }
 
         return view
