@@ -59,28 +59,41 @@ async def login_user(userCredentials: UserCredentials):
 	
     return {"message": "Login successful", "id" : user["_id"]}
 
+class registerPayload(BaseModel):
+    username: str
+    password: str
+    full_name: str
+    email: str
+    bio: str
+
 # Register a new user (takes in just username and password)
 @app.post("/register")
-async def register(username: str, password: str, full_name: str, email: str, bio: str):
-	# check if username already exists
-	if(users.find_one({"username": username})):
-		raise HTTPException(status_code=400, detail="Username already exists")
+async def register(registerPayload: registerPayload):
+    username = registerPayload.username
+    password = registerPayload.password
+    full_name = registerPayload.full_name
+    email = registerPayload.email
+    bio = registerPayload.bio
+    # check if username already exists
+    if(users.find_one({"username": username})):
+        raise HTTPException(status_code=400, detail="Username already exists")
 
-	hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-	max_id = users.find_one(sort=[("_id", -1)])["_id"]
-	user = {
-        "_id": str(int(max_id) + 2),
-        "username": username,
-        "full_name": full_name,
-        "email": email,
-        "bio": bio,
-        "password": hashed_password,
-        "userfriends": [],
-        "groups": [],
-        "markers": [],
+    hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+    # max_id = users.find_one(sort=[("_id", -1)])["_id"]
+    # print(max_id)
+    user = {
+    "username": username,
+    "full_name": full_name,
+    "email": email,
+    "bio": bio,
+    "password": hashed_password,
+    "userfriends": [],
+    "groups": [],
+    "markers": [],
     }
-	result = users.insert_one(user)
-	return {"_id": str(result.inserted_id)}
+
+    result = users.insert_one(user)
+    return {"id": str(result.inserted_id)}
 
 # Define CRUD operations for the "users" collection
 @app.get("/users")
@@ -692,7 +705,7 @@ async def add_marker(username: str, payload: MarkerPayload):
         "description": description,
         "latitude": latitude,
         "longitude": longitude,
-        "image": image_id,
+        "images": image_id,
         "group_which_can_see": group_which_can_see,
         "friends_can_see": friends_can_see,
         "image_uploaders": image_uploaders,
