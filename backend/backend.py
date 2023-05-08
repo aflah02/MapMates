@@ -645,8 +645,8 @@ async def add_marker(username: str, payload: MarkerPayload):
     image_uploaders = payload.image_uploaders
     notes = payload.notes
     notes_uploaders = payload.notes_uploaders
-    latitude = float(latitude)
-    longitude = float(longitude)
+    # latitude = float(latitude)
+    # longitude = float(longitude)
     friends_can_see = False if friends_can_see.lower() == "false" else True
     image_id  = list(image_id.split("<DELIMITER069>"))
     # filter out empty strings
@@ -686,7 +686,7 @@ async def add_marker(username: str, payload: MarkerPayload):
     for marker in ls_markers:
         if int(marker["_id"]) > max_marker_id:
             max_marker_id = int(marker["_id"])
-    marker_id = max_marker_id + 1
+    marker_id = max_marker_id + 2
     print("Marker ID: " + str(marker_id))
     marker = {
         "name": name,
@@ -699,7 +699,7 @@ async def add_marker(username: str, payload: MarkerPayload):
         "image_uploaders": image_uploaders,
         "notes": notes,
         "notes_uploaders": notes_uploaders,
-        "_id": marker_id
+        "_id": str(marker_id)
     }
     print("Marker: ", marker)
 
