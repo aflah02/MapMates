@@ -1059,7 +1059,16 @@ async def add_user_to_group(group_id: str, user_name: str):
 # Add a new user to a group based on group_invite_code
 @app.put("/groups/{group_invite_code}/add_user_by_invite_code")
 async def add_user_to_group_by_invite_code(group_invite_code: str, user_name: str):
+    invite_codes = [group["invite_code"] for group in groups.find()]
+    if group_invite_code not in invite_codes:
+        return {"message": "Invalid invite code"}
     current_users = groups.find_one({"invite_code": group_invite_code})["users"]
+    # get all invite codes
+    
+    # check if group_invite_code is valid
+
+    if user_name in current_users:
+        return {"message": "User already in group"}
     print("current_users", current_users)
     current_users.append(user_name)
     print("current_users_after", current_users)
@@ -1167,4 +1176,3 @@ async def delete_group(group_id: str):
             }
             users.update_one({"_id": user["_id"]}, update)
     return {"message": "Group deleted successfully"}
-
