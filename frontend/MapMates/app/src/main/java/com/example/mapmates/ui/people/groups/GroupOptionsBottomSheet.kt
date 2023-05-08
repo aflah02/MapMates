@@ -34,7 +34,7 @@ class GroupOptionsBottomSheetFragment() : BottomSheetDialogFragment() {
     private lateinit var joinGroup: Button
     private lateinit var codeGroup: EditText
     private lateinit var groupTitle: EditText
-    private lateinit var generatedCode: TextView
+    private lateinit var generatedCode: EditText
     private lateinit var copyButton: ImageButton
 
     override fun onCreateView(
@@ -81,12 +81,14 @@ class GroupOptionsBottomSheetFragment() : BottomSheetDialogFragment() {
             copyButton.visibility = View.VISIBLE
             createGroup.visibility = View.GONE
             groupTitle.visibility = View.GONE
+            generatedCode.setHint("Generated Code")
+            groupTitle.setHint("")
 //            TODO:Post An API to make a group here!!!
             val cgResponse = createGroup(groupTitle.text.toString(), username)
 //            TODO:Set the generated Code as the response here!!!
             val parseJson = JSONObject(cgResponse)
             val inviteCode = parseJson.getString("invite_code")
-            generatedCode.text = inviteCode
+            generatedCode.setText(inviteCode)
         }
         copyButton.setOnClickListener{
             val clipboardManager = requireActivity().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager

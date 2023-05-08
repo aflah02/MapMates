@@ -6,12 +6,24 @@
     android:layout_height="match_parent"
     tools:context=".PendingRequestActivity">
 
+    <TextView
+        android:id="@+id/nonewreq"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="No new requests"
+        android:textSize="30sp"
+        android:textStyle="bold"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/pendingRequestRecyclerView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
-        android:paddingBottom="120dp"
+        android:layout_marginVertical="50dp"
+        android:layout_marginHorizontal="10dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"

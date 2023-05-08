@@ -13,6 +13,7 @@ import android.widget.TextView
 import androidx.core.content.ContextCompat.startActivity
 import androidx.recyclerview.widget.RecyclerView
 import com.example.mapmates.EntryActivity
+import com.example.mapmates.PendingRequestActivity
 import com.example.mapmates.R
 import com.squareup.picasso.Picasso
 import okhttp3.*
@@ -74,6 +75,10 @@ class PendingRequestsAdapter(private val activity: Activity,private var requests
                         notifyItemRemoved(holder.adapterPosition)
                         notifyItemRangeChanged(holder.adapterPosition, itemCount)
                         hideView(holder.itemView)
+                        if(requests.size == 0){
+                            val pendingRequestActivity = activity as PendingRequestActivity
+                            pendingRequestActivity.noNewReqView.visibility = View.VISIBLE
+                        }
                     }
 
                 } else {

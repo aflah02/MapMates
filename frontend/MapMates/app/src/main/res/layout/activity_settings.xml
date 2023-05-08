@@ -10,17 +10,15 @@
         android:id="@+id/GroupTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="149dp"
-        android:layout_marginTop="3dp"
+        android:layout_marginTop="10dp"
         android:background="@android:color/transparent"
         android:enabled="false"
-        android:textColor="@color/black"
-        android:layout_marginEnd="149dp"
         android:text="Group Title"
+        android:textColor="@color/black"
         android:textSize="24sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/groupPicture" />
+        app:layout_constraintTop_toBottomOf="@+id/cardView6" />
 <!--    <EditText-->
 <!--        android:id="@+id/bioTextView"-->
 <!--        android:layout_width="338dp"-->
@@ -37,9 +35,9 @@
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/GrpMembersRecyclerView"
-        android:layout_width="393dp"
+        android:layout_width="match_parent"
         android:layout_height="400dp"
-        android:layout_marginTop="6dp"
+        android:layout_marginVertical="20dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/GroupTitle" />
@@ -48,68 +46,110 @@
         android:id="@+id/leaveButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="280dp"
-        android:layout_marginTop="104dp"
-        android:text="Leave"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/GrpMembersRecyclerView" />
-
-    <TextView
-        android:id="@+id/groupCode"
-        android:layout_width="wrap_content"
-        android:layout_height="33dp"
-        android:layout_marginStart="68dp"
-        android:layout_marginTop="36dp"
-        android:text="Sample Group Code"
-        android:textSize="20sp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/GrpMembersRecyclerView" />
-
-    <ImageButton
-        android:id="@+id/copyButton"
-        android:layout_width="54dp"
-        android:layout_height="56dp"
-        android:layout_marginStart="44dp"
-        android:layout_marginTop="24dp"
-        android:background="@android:color/transparent"
-        app:layout_constraintStart_toEndOf="@+id/groupCode"
-        app:layout_constraintTop_toBottomOf="@+id/GrpMembersRecyclerView"
-        app:srcCompat="@drawable/baseline_content_copy_24" />
-
-    <ImageView
-        android:id="@+id/groupPicture"
-        android:layout_width="168dp"
-        android:layout_height="107dp"
-        android:layout_marginStart="121dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="122dp"
+        android:layout_marginTop="10dp"
+        android:text="Leave Group"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:srcCompat="@tools:sample/backgrounds/scenic" />
+        app:layout_constraintTop_toBottomOf="@+id/linearLayout2" />
 
-    <ImageButton
-        android:id="@+id/changePicture"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:id="@+id/linearLayout2"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="92dp"
-        android:layout_marginEnd="108dp"
-        android:background="@android:color/transparent"
-        android:src="@drawable/baseline_camera_alt_24"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginVertical="20dp"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:padding="10dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/GrpMembersRecyclerView">
+
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="10dp"
+            android:layout_weight="1">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/groupCode"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:enabled="false"
+                android:text="2721368hdsat32e9" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <ImageButton
+            android:id="@+id/copyButton"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:background="@android:color/transparent"
+            app:layout_constraintStart_toEndOf="@+id/generatedCode"
+            app:layout_constraintTop_toBottomOf="@+id/btnJoinGroup"
+            app:srcCompat="@drawable/baseline_content_copy_24" />
+
+    </LinearLayout>
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cardView6"
+        android:layout_width="150dp"
+        android:layout_height="100dp"
+        android:layout_marginTop="30dp"
+        app:cardCornerRadius="10dp"
+        app:cardElevation="4dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/groupPicture"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:src="@drawable/default_group"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+    </androidx.cardview.widget.CardView>
+
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/materialCardView"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_marginBottom="10dp"
+        app:cardCornerRadius="30dp"
+        app:cardElevation="6dp"
+        app:layout_constraintBottom_toBottomOf="@+id/cardView6"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <ImageButton
+            android:id="@+id/changePicture"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_gravity="center"
+            android:background="@android:color/transparent"
+            android:scaleType="fitCenter"
+            android:src="@drawable/baseline_camera_alt_24"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+    </com.google.android.material.card.MaterialCardView>
+
 
     <ImageButton
         android:id="@+id/editTitleButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="5dp"
-        android:layout_marginTop="135dp"
         android:background="@android:color/transparent"
         android:elevation="6dp"
         android:src="@drawable/baseline_edit_24"
+        app:layout_constraintBottom_toBottomOf="@+id/GroupTitle"
         app:layout_constraintStart_toEndOf="@+id/GroupTitle"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="@+id/GroupTitle" />
 
 
     <ImageButton
@@ -117,12 +157,12 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="5dp"
-        android:layout_marginTop="135dp"
-        android:elevation="6dp"
-        android:visibility="invisible"
-        android:src="@drawable/baseline_save_24"
         android:background="@android:color/transparent"
+        android:elevation="6dp"
+        android:src="@drawable/baseline_save_24"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="@+id/GroupTitle"
         app:layout_constraintStart_toEndOf="@+id/GroupTitle"
-        app:layout_constraintTop_toTopOf="parent"/>
+        app:layout_constraintTop_toTopOf="@+id/GroupTitle" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

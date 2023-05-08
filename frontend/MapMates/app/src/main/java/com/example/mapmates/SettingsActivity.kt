@@ -178,6 +178,10 @@ class SettingsActivity : AppCompatActivity() {
                 .memoryPolicy(MemoryPolicy.NO_CACHE, MemoryPolicy.NO_STORE)
                 .networkPolicy(NetworkPolicy.NO_CACHE, NetworkPolicy.NO_STORE)
                 .fit().into(groupPicture)
+            //check if groupPicture has no image
+            if(groupPicture.drawable == null){
+                groupPicture.setImageResource(R.drawable.default_group)
+            }
 //            Picasso.get().load("https://mapsapp-1-m9050519.deta.app/users/$userName/profile_picture").into(profilePicture)
             Log.d("SA", "onActivityResult: $imageID")
         }
@@ -198,10 +202,16 @@ class SettingsActivity : AppCompatActivity() {
         val memberList = groupData.members
         val groupMemberDetails = getGroupMemberDetails(memberList)
         val imageURL = "https://mapsapp-1-m9050519.deta.app/groups/$group_id/cover_image"
+        groupPicture.setImageResource(R.drawable.default_group)
+
         Picasso.get().load(imageURL)
             .memoryPolicy(MemoryPolicy.NO_CACHE, MemoryPolicy.NO_STORE)
             .networkPolicy(NetworkPolicy.NO_CACHE, NetworkPolicy.NO_STORE)
             .fit().into(groupPicture)
+
+        if(groupPicture.drawable == null){
+            groupPicture.setImageResource(R.drawable.default_group)
+        }
         groupTitle.setText(group_name)
         groupCode.text = inviteCode
         adapter.updateList(groupMemberDetails)

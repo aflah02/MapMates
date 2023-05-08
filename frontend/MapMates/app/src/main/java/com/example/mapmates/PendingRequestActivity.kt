@@ -3,6 +3,8 @@ package com.example.mapmates
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.View
+import android.widget.TextView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.mapmates.ui.people.friends.FriendData
@@ -17,6 +19,7 @@ import java.util.concurrent.CountDownLatch
 class PendingRequestActivity : AppCompatActivity() {
 
     private lateinit var pendingRequestView: RecyclerView
+    lateinit var noNewReqView: TextView
     private lateinit var adapter: PendingRequestsAdapter
     private var username = ""
 
@@ -24,6 +27,7 @@ class PendingRequestActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_pending_request)
+        noNewReqView = findViewById(R.id.nonewreq)
         val sharedPrefs = getSharedPreferences("Login", MODE_PRIVATE)
         username = sharedPrefs.getString("Username",null).toString()
         if(username.isBlank()){
@@ -35,8 +39,14 @@ class PendingRequestActivity : AppCompatActivity() {
 
         pendingRequestView = findViewById(R.id.pendingRequestRecyclerView)
         pendingRequestView.layoutManager = LinearLayoutManager(this)
-        adapter = PendingRequestsAdapter(this,getPendingRequests() as MutableList<FriendData>)
+        val list = getPendingRequests() as MutableList<FriendData>
+        adapter = PendingRequestsAdapter(this,list)
         pendingRequestView.adapter = adapter
+        if(list.size == 0){
+            noNewReqView.visibility= View.VISIBLE
+        }
+
+
     }
 //    pendingList.add(FriendData("John Doe", "https://picsum.photos/200","32094190412"))
 //    pendingList.add(FriendData("Jane Smith", "https://picsum.photos/200","12889421894"))
