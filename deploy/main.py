@@ -24,7 +24,8 @@ class UserCredentials(BaseModel):
     username: str
     password: str
 # Create a MongoClient instance
-client = MongoClient("mongodb+srv://mapmates:mapmates123@mapmatescluster.qr7ojw0.mongodb.net/test")
+CONNECTION_STR = ""
+client = MongoClient(CONNECTION_STR)
 # Get the "master_db" database
 db = client["master_db"]
 # Get the "users" collection
